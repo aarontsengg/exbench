@@ -1,0 +1,810 @@
+diff --git a/guides/deployment/deployment.md b/guides/deployment/deployment.md
+index a0fce4345..02e03f451 100644
+--- a/guides/deployment/deployment.md
++++ b/guides/deployment/deployment.md
+@@ -115,6 +115,35 @@ And that's it. Next, you can use one of our official guides to deploy:
+   * [to Fly.io](fly.html), a PaaS that deploys your servers close to your users with built-in distribution support
+   * and [to Heroku](heroku.html), one of the most popular PaaS.
+ 
++## Clustering and Long-Polling Transports
++
++Phoenix supports two types of transports for its Socket implementation: WebSocket, and Long-Polling. When generating a Phoenix project, you can see the default configuration set in the generated `endpoint.ex` file:
++
++```elixir
++socket "/live", Phoenix.LiveView.Socket,
++  websocket: [connect_info: [session: @session_options]],
++  longpoll: [connect_info: [session: @session_options]]
++```
++
++This configuration tells Phoenix that both the WebSocket and the Long-Polling options are available, and based on the client's network conditions, Phoenix will first attempt to connect to the WebSocket, falling back to the Long-Poll option after the configured timeout found in the generated `app.js` file:
++
++```javascript
++let liveSocket = new LiveSocket("/live", Socket, {
++  longPollFallbackMs: 2500,
++  params: {_csrf_token: csrfToken}
++})
++```
++
++If you are running more than one machine in production, which is the recommended approach in most cases, this automatic fallback comes with an important caveat. If you want Long-Polling to work properly, your application must either:
++
++1. Utilize the Erlang VM's clustering capabilities, so the default `Phoenix.PubSub` adapter can broadcast messages across nodes
++
++2. Choose a different `Phoenix.PubSub` adapter (such as `Phoenix.PubSub.Redis`)
++
++3. Or your deployment option must implement sticky sessions - ensuring that all requests for a specific session go to the same machine
++
++The reason for this is simple. While a WebSocket is a long-lived open connection to the same machine, long-polling works by opening a request to the server, waiting for a timeout or until the open request is fulfilled, and repeating this process. In order to preserve the state of the user's connected socket and to preserve the behaviour of a socket being long-lived, the user's process is kept alive, and each long-poll request attempts to find the user's stateful process. If the stateful process is not reachable, every request will create a new process and a new state, thereby breaking the fact that the socket is long-lived and stateful.
++
+ ## Community Deployment Guides
+ 
+   * [Render](https://render.com) has first class support for Phoenix applications. There are guides for hosting Phoenix with [Mix releases](https://render.com/docs/deploy-phoenix), [Distillery](https://render.com/docs/deploy-phoenix-distillery), and as a [Distributed Elixir Cluster](https://render.com/docs/deploy-elixir-cluster).
+diff --git a/guides/deployment/gigalixir.md b/guides/deployment/gigalixir.md
+index 8b13f3887..78234d33c 100644
+--- a/guides/deployment/gigalixir.md
++++ b/guides/deployment/gigalixir.md
+@@ -180,7 +180,7 @@ ssl_opts: [verify: :verify_none]
+ ## Deploy Time!
+ 
+ Our project is now ready to be deployed on Gigalixir.
+-Be sure you have everything commited to git and run the following command:
++Be sure you have everything committed to git and run the following command:
+ 
+ ```console
+ $ git push gigalixir
+diff --git a/guides/request_lifecycle.md b/guides/request_lifecycle.md
+index f09ad9b26..a55bbea9b 100644
+--- a/guides/request_lifecycle.md
++++ b/guides/request_lifecycle.md
+@@ -275,7 +275,7 @@ For the last piece of this puzzle, we'll need a new template. Since it is for th
+ 
+ To do that, we'll use the special HEEx tags for executing Elixir expressions: `{...}` and `<%= %>`. Notice that EEx tag has an equals sign like this: `<%=` . That means that any Elixir code that goes between those tags will be executed, and the resulting value will replace the tag in the HTML output. If the equals sign were missing, the code would still be executed, but the value would not appear on the page.
+ 
+-Remember our templates are written in HEEx (HTML+EEx). HEEx is a superset of EEx, and thereby supports the EEx `<%= %>` interpolation syntax for interpolating arbitrary blocks of code. In general, the HEEx `{...}` interpolation syntax is preferred anytime there is HTML-aware intepolation to be done – such as within attributes or inline values with a body.
++Remember our templates are written in HEEx (HTML+EEx). HEEx is a superset of EEx, and thereby supports the EEx `<%= %>` interpolation syntax for interpolating arbitrary blocks of code. In general, the HEEx `{...}` interpolation syntax is preferred anytime there is HTML-aware interpolation to be done – such as within attributes or inline values with a body.
+ 
+ The only times `EEx` `<%= %>` interpolation is necessary is for interpolating arbitrary blocks of markup, such as branching logic that injects separate markup trees, or for interpolating values within `<script>` or `<style>` tags.
+ 
+diff --git a/installer/lib/phx_new/ecto.ex b/installer/lib/phx_new/ecto.ex
+index 7672e64a1..bd471acc7 100644
+--- a/installer/lib/phx_new/ecto.ex
++++ b/installer/lib/phx_new/ecto.ex
+@@ -21,7 +21,7 @@ defmodule Phx.New.Ecto do
+     app_path = Path.expand(project.base_path)
+     project_path = Path.dirname(Path.dirname(app_path))
+ 
+-    %Project{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
++    %{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
+   end
+ 
+   def generate(%Project{} = project) do
+diff --git a/installer/lib/phx_new/generator.ex b/installer/lib/phx_new/generator.ex
+index 18a8cd94e..f27d073fc 100644
+--- a/installer/lib/phx_new/generator.ex
++++ b/installer/lib/phx_new/generator.ex
+@@ -242,7 +242,7 @@ defmodule Phx.New.Generator do
+       dev: dev
+     ]
+ 
+-    %Project{project | binding: binding}
++    %{project | binding: binding}
+   end
+ 
+   defp namespaced?(project) do
+diff --git a/installer/lib/phx_new/mailer.ex b/installer/lib/phx_new/mailer.ex
+index 1fd80c1dc..bfa99276e 100644
+--- a/installer/lib/phx_new/mailer.ex
++++ b/installer/lib/phx_new/mailer.ex
+@@ -11,7 +11,7 @@ defmodule Phx.New.Mailer do
+     app_path = Path.expand(project.base_path)
+     project_path = Path.dirname(Path.dirname(app_path))
+ 
+-    %Project{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
++    %{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
+   end
+ 
+   def generate(%Project{} = project) do
+diff --git a/installer/lib/phx_new/single.ex b/installer/lib/phx_new/single.ex
+index 989c4d725..96d389117 100644
+--- a/installer/lib/phx_new/single.ex
++++ b/installer/lib/phx_new/single.ex
+@@ -100,9 +100,9 @@ defmodule Phx.New.Single do
+ 
+   def prepare_project(%Project{app: app, base_path: base_path} = project) when not is_nil(app) do
+     if in_umbrella?(base_path) do
+-      %Project{project | in_umbrella?: true, project_path: Path.dirname(Path.dirname(base_path))}
++      %{project | in_umbrella?: true, project_path: Path.dirname(Path.dirname(base_path))}
+     else
+-      %Project{project | in_umbrella?: false, project_path: base_path}
++      %{project | in_umbrella?: false, project_path: base_path}
+     end
+     |> put_app()
+     |> put_root_app()
+@@ -110,11 +110,11 @@ defmodule Phx.New.Single do
+   end
+ 
+   defp put_app(%Project{base_path: base_path} = project) do
+-    %Project{project | app_path: base_path}
++    %{project | app_path: base_path}
+   end
+ 
+   defp put_root_app(%Project{app: app, opts: opts} = project) do
+-    %Project{
++    %{
+       project
+       | root_app: app,
+         root_mod: Module.concat([opts[:module] || Macro.camelize(app)])
+@@ -122,7 +122,7 @@ defmodule Phx.New.Single do
+   end
+ 
+   defp put_web_app(%Project{app: app} = project) do
+-    %Project{
++    %{
+       project
+       | web_app: app,
+         lib_web_name: "#{app}_web",
+diff --git a/installer/lib/phx_new/umbrella.ex b/installer/lib/phx_new/umbrella.ex
+index 7a309478d..452022dd2 100644
+--- a/installer/lib/phx_new/umbrella.ex
++++ b/installer/lib/phx_new/umbrella.ex
+@@ -28,14 +28,14 @@ defmodule Phx.New.Umbrella do
+     project_path = Path.expand(project.base_path <> "_umbrella")
+     app_path = Path.join(project_path, "apps/#{project.app}")
+ 
+-    %Project{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
++    %{project | in_umbrella?: true, app_path: app_path, project_path: project_path}
+   end
+ 
+   def put_web(%Project{app: app, opts: opts} = project) do
+     web_app = :"#{app}_web"
+     web_namespace = Module.concat([opts[:web_module] || "#{project.app_mod}Web"])
+ 
+-    %Project{
++    %{
+       project
+       | web_app: web_app,
+         lib_web_name: web_app,
+@@ -46,7 +46,7 @@ defmodule Phx.New.Umbrella do
+   end
+ 
+   defp put_root_app(%Project{app: app} = project) do
+-    %Project{
++    %{
+       project
+       | root_app: :"#{app}_umbrella",
+         root_mod: Module.concat(project.app_mod, "Umbrella")
+diff --git a/installer/lib/phx_new/web.ex b/installer/lib/phx_new/web.ex
+index 6f68baf7a..3a899e119 100644
+--- a/installer/lib/phx_new/web.ex
++++ b/installer/lib/phx_new/web.ex
+@@ -61,7 +61,7 @@ defmodule Phx.New.Web do
+     web_path = Path.expand(project.base_path)
+     project_path = Path.dirname(Path.dirname(web_path))
+ 
+-    %Project{
++    %{
+       project
+       | in_umbrella?: true,
+         project_path: project_path,
+diff --git a/installer/templates/phx_assets/app.css b/installer/templates/phx_assets/app.css
+index 378c8f905..5b7776c97 100644
+--- a/installer/templates/phx_assets/app.css
++++ b/installer/templates/phx_assets/app.css
+@@ -2,4 +2,12 @@
+ @import "tailwindcss/components";
+ @import "tailwindcss/utilities";
+ 
++/*
++ * Make LiveView wrapper divs transparent for layout.
++ * This makes it possible to use LiveViews as flex children for example.
++ */
++
++
++[data-phx-root-id] { display: contents }
++
+ /* This file is for your main application CSS */
+diff --git a/installer/templates/phx_assets/topbar.js b/installer/templates/phx_assets/topbar.js
+index 41957274d..0552337c2 100644
+--- a/installer/templates/phx_assets/topbar.js
++++ b/installer/templates/phx_assets/topbar.js
+@@ -1,39 +1,12 @@
+ /**
+  * @license MIT
+- * topbar 2.0.0, 2023-02-04
+- * https://buunguyen.github.io/topbar
+- * Copyright (c) 2021 Buu Nguyen
++ * topbar 3.0.0
++ * http://buunguyen.github.io/topbar
++ * Copyright (c) 2024 Buu Nguyen
+  */
+ (function (window, document) {
+   "use strict";
+ 
+-  // https://gist.github.com/paulirish/1579671
+-  (function () {
+-    var lastTime = 0;
+-    var vendors = ["ms", "moz", "webkit", "o"];
+-    for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+-      window.requestAnimationFrame =
+-        window[vendors[x] + "RequestAnimationFrame"];
+-      window.cancelAnimationFrame =
+-        window[vendors[x] + "CancelAnimationFrame"] ||
+-        window[vendors[x] + "CancelRequestAnimationFrame"];
+-    }
+-    if (!window.requestAnimationFrame)
+-      window.requestAnimationFrame = function (callback, element) {
+-        var currTime = new Date().getTime();
+-        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+-        var id = window.setTimeout(function () {
+-          callback(currTime + timeToCall);
+-        }, timeToCall);
+-        lastTime = currTime + timeToCall;
+-        return id;
+-      };
+-    if (!window.cancelAnimationFrame)
+-      window.cancelAnimationFrame = function (id) {
+-        clearTimeout(id);
+-      };
+-  })();
+-
+   var canvas,
+     currentProgress,
+     showing,
+@@ -88,7 +61,6 @@
+       style.zIndex = 100001;
+       style.display = "none";
+       if (options.className) canvas.classList.add(options.className);
+-      document.body.appendChild(canvas);
+       addEvent(window, "resize", repaint);
+     },
+     topbar = {
+@@ -101,10 +73,11 @@
+         if (delay) {
+           if (delayTimerId) return;
+           delayTimerId = setTimeout(() => topbar.show(), delay);
+-        } else  {
++        } else {
+           showing = true;
+           if (fadeTimerId !== null) window.cancelAnimationFrame(fadeTimerId);
+           if (!canvas) createCanvas();
++          if (!canvas.parentElement) document.body.appendChild(canvas);
+           canvas.style.opacity = 1;
+           canvas.style.display = "block";
+           topbar.progress(0);
+diff --git a/lib/mix/tasks/phx.digest.clean.ex b/lib/mix/tasks/phx.digest.clean.ex
+index 9f5347aac..7426add65 100644
+--- a/lib/mix/tasks/phx.digest.clean.ex
++++ b/lib/mix/tasks/phx.digest.clean.ex
+@@ -46,6 +46,8 @@ defmodule Mix.Tasks.Phx.Digest.Clean do
+       Mix.Task.run("compile", all_args)
+     end
+ 
++    Mix.Task.reenable("phx.digest.clean")
++
+     {:ok, _} = Application.ensure_all_started(:phoenix)
+ 
+     {opts, _, _} = OptionParser.parse(all_args, switches: @switches, aliases: [o: :output])
+diff --git a/lib/phoenix/endpoint.ex b/lib/phoenix/endpoint.ex
+index 5396a79ea..0fceb6f4d 100644
+--- a/lib/phoenix/endpoint.ex
++++ b/lib/phoenix/endpoint.ex
+@@ -828,7 +828,7 @@ defmodule Phoenix.Endpoint do
+       if so, the level
+ 
+     * `:check_origin` - if the transport should check the origin of requests when
+-      the `origin` header is present. May be `true`, `false`, a list of hosts that
++      the `origin` header is present. May be `true`, `false`, a list of URIs that
+       are allowed, or a function provided as MFA tuple. Defaults to `:check_origin`
+       setting at endpoint configuration.
+ 
+@@ -839,8 +839,8 @@ defmodule Phoenix.Endpoint do
+       Only use in development, when the host is truly unknown or when
+       serving clients that do not send the `origin` header, such as mobile apps.
+ 
+-      You can also specify a list of explicitly allowed origins. Wildcards are
+-      supported.
++      You can also specify a list of explicitly allowed origins. Each origin may include
++      scheme, host, and port. Wildcards are supported.
+ 
+           check_origin: [
+             "https://example.com",
+diff --git a/lib/phoenix/router.ex b/lib/phoenix/router.ex
+index 35d869e0c..c055efa35 100644
+--- a/lib/phoenix/router.ex
++++ b/lib/phoenix/router.ex
+@@ -364,7 +364,6 @@ defmodule Phoenix.Router do
+   defp prelude(opts) do
+     quote do
+       Module.register_attribute(__MODULE__, :phoenix_routes, accumulate: true)
+-      @phoenix_forwards %{}
+       # TODO: Require :helpers to be explicit given
+       @phoenix_helpers Keyword.get(unquote(opts), :helpers, true)
+ 
+@@ -541,8 +540,7 @@ defmodule Phoenix.Router do
+   @doc false
+   defmacro __before_compile__(env) do
+     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse()
+-    forwards = env.module |> Module.get_attribute(:phoenix_forwards)
+-    routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1, forwards)})
++    routes_with_exprs = Enum.map(routes, &{&1, Route.exprs(&1)})
+ 
+     helpers =
+       if Module.get_attribute(env.module, :phoenix_helpers) do
+@@ -578,13 +576,6 @@ defmodule Phoenix.Router do
+         end
+       end
+ 
+-    forwards =
+-      for {plug, script_name} <- forwards do
+-        quote do
+-          def __forward__(unquote(plug)), do: unquote(script_name)
+-        end
+-      end
+-
+     forward_catch_all =
+       quote generated: true do
+         @doc false
+@@ -623,26 +614,32 @@ defmodule Phoenix.Router do
+       unquote(verify_catch_all)
+       unquote(matches)
+       unquote(match_catch_all)
+-      unquote(forwards)
+       unquote(forward_catch_all)
+     end
+   end
+ 
+   defp build_verify(path, routes_per_path) do
+     routes = Map.get(routes_per_path, path)
++    warn_on_verify? = Enum.all?(routes, & &1.warn_on_verify?)
+ 
+-    forward_plug =
+-      Enum.find_value(routes, fn
+-        %{kind: :forward, plug: plug} -> plug
+-        _ -> nil
+-      end)
++    case Enum.find(routes, &(&1.kind == :forward)) do
++      %{metadata: %{forward: forward}, plug: plug} ->
++        quote generated: true do
++          def __forward__(unquote(plug)) do
++            unquote(forward)
++          end
+ 
+-    warn_on_verify? = Enum.all?(routes, & &1.warn_on_verify?)
++          def __verify_route__(unquote(path)) do
++            {{unquote(plug), unquote(forward)}, unquote(warn_on_verify?)}
++          end
++        end
+ 
+-    quote generated: true do
+-      def __verify_route__(unquote(path)) do
+-        {unquote(forward_plug), unquote(warn_on_verify?)}
+-      end
++      _ ->
++        quote generated: true do
++          def __verify_route__(unquote(path)) do
++            {nil, unquote(warn_on_verify?)}
++          end
++        end
+     end
+   end
+ 
+@@ -1199,16 +1196,25 @@ defmodule Phoenix.Router do
+   @doc """
+   Forwards a request at the given path to a plug.
+ 
+-  All paths that match the forwarded prefix will be sent to
+-  the forwarded plug. This is useful for sharing a router between
++  This is commonly used to forward all subroutes to another Plug.
++  For example:
++
++      forward "/admin", SomeLib.AdminDashboard
++
++  The above will allow `SomeLib.AdminDashboard` to handle `/admin`,
++  `/admin/foo`, `/admin/bar/baz`, and so on. Furthermore,
++  `SomeLib.AdminDashboard` does not to be aware of the prefix it
++  is mounted in. From its point of view, the routes above are simply
++  handled as `/`, `/foo`, and `/bar/baz`.
++
++  A common use case for `forward` is for sharing a router between
+   applications or even breaking a big router into smaller ones.
++  However, in other for route generation to route accordingly, you
++  can only forward to a given `Phoenix.Router` once.
++
+   The router pipelines will be invoked prior to forwarding the
+   connection.
+ 
+-  However, we don't advise forwarding to another endpoint.
+-  The reason is that plugs defined by your app and the forwarded
+-  endpoint would be invoked twice, which may lead to errors.
+-
+   ## Examples
+ 
+       scope "/", MyApp do
+diff --git a/lib/phoenix/router/route.ex b/lib/phoenix/router/route.ex
+index 584b33ff6..bc2f1b799 100644
+--- a/lib/phoenix/router/route.ex
++++ b/lib/phoenix/router/route.ex
+@@ -11,7 +11,7 @@ defmodule Phoenix.Router.Route do
+ 
+     * `:verb` - the HTTP verb as an atom
+     * `:line` - the line the route was defined
+-    * `:kind` - the kind of route, one of `:match`, `:forward`
++    * `:kind` - the kind of route, either `:match` or `:forward`
+     * `:path` - the normalized path as string
+     * `:hosts` - the list of request hosts or host prefixes
+     * `:plug` - the plug module
+@@ -25,9 +25,22 @@ defmodule Phoenix.Router.Route do
+     * `:warn_on_verify?` - whether or not to warn on route verification
+   """
+ 
+-  defstruct [:verb, :line, :kind, :path, :hosts, :plug, :plug_opts,
+-             :helper, :private, :pipe_through, :assigns, :metadata,
+-             :trailing_slash?, :warn_on_verify?]
++  defstruct [
++    :verb,
++    :line,
++    :kind,
++    :path,
++    :hosts,
++    :plug,
++    :plug_opts,
++    :helper,
++    :private,
++    :pipe_through,
++    :assigns,
++    :metadata,
++    :trailing_slash?,
++    :warn_on_verify?
++  ]
+ 
+   @type t :: %Route{}
+ 
+@@ -47,29 +60,71 @@ defmodule Phoenix.Router.Route do
+   Receives the verb, path, plug, options and helper
+   and returns a `Phoenix.Router.Route` struct.
+   """
+-  @spec build(non_neg_integer, :match | :forward, atom, String.t, String.t | nil, atom, atom, atom | nil, list(atom), map, map, map, boolean, boolean) :: t
+-  def build(line, kind, verb, path, hosts, plug, plug_opts, helper, pipe_through, private, assigns, metadata, trailing_slash?, warn_on_verify?)
++  @spec build(
++          non_neg_integer,
++          :match | :forward,
++          atom,
++          String.t(),
++          String.t() | nil,
++          atom,
++          atom,
++          atom | nil,
++          list(atom),
++          map,
++          map,
++          map,
++          boolean,
++          boolean
++        ) :: t
++  def build(
++        line,
++        kind,
++        verb,
++        path,
++        hosts,
++        plug,
++        plug_opts,
++        helper,
++        pipe_through,
++        private,
++        assigns,
++        metadata,
++        trailing_slash?,
++        warn_on_verify?
++      )
+       when is_atom(verb) and is_list(hosts) and
+-           is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
+-           is_list(pipe_through) and is_map(private) and is_map(assigns) and
+-           is_map(metadata) and kind in [:match, :forward] and
+-           is_boolean(trailing_slash?) do
+-    %Route{kind: kind, verb: verb, path: path, hosts: hosts, private: private,
+-           plug: plug, plug_opts: plug_opts, helper: helper,
+-           pipe_through: pipe_through, assigns: assigns, line: line, metadata: metadata,
+-           trailing_slash?: trailing_slash?, warn_on_verify?: warn_on_verify?}
++             is_atom(plug) and (is_binary(helper) or is_nil(helper)) and
++             is_list(pipe_through) and is_map(private) and is_map(assigns) and
++             is_map(metadata) and kind in [:match, :forward] and
++             is_boolean(trailing_slash?) do
++    %Route{
++      kind: kind,
++      verb: verb,
++      path: path,
++      hosts: hosts,
++      private: private,
++      plug: plug,
++      plug_opts: plug_opts,
++      helper: helper,
++      pipe_through: pipe_through,
++      assigns: assigns,
++      line: line,
++      metadata: metadata,
++      trailing_slash?: trailing_slash?,
++      warn_on_verify?: warn_on_verify?
++    }
+   end
+ 
+   @doc """
+   Builds the compiled expressions used by the route.
+   """
+-  def exprs(route, forwards) do
++  def exprs(route) do
+     {path, binding} = build_path_and_binding(route)
+ 
+     %{
+       path: path,
+       binding: binding,
+-      dispatch: build_dispatch(route, forwards),
++      dispatch: build_dispatch(route),
+       hosts: build_host_match(route.hosts),
+       path_params: build_path_params(binding),
+       prepare: build_prepare(route),
+@@ -78,6 +133,7 @@ defmodule Phoenix.Router.Route do
+   end
+ 
+   def build_host_match([]), do: [Plug.Router.Utils.build_host_match(nil)]
++
+   def build_host_match([_ | _] = hosts) do
+     for host <- hosts, do: Plug.Router.Utils.build_host_match(host)
+   end
+@@ -91,7 +147,7 @@ defmodule Phoenix.Router.Route do
+     {_params, segments} =
+       case route.kind do
+         :forward -> Plug.Router.Utils.build_path_match(path <> "/*_forward_path_info")
+-        :match   -> Plug.Router.Utils.build_path_match(path)
++        :match -> Plug.Router.Utils.build_path_match(path)
+       end
+ 
+     rewrite_segments(segments)
+@@ -101,7 +157,8 @@ defmodule Phoenix.Router.Route do
+   defp rewrite_segments(segments) do
+     {segments, {binding, _counter}} =
+       Macro.prewalk(segments, {[], 0}, fn
+-        {name, _meta, nil}, {binding, counter} when is_atom(name) and name != :_forward_path_info ->
++        {name, _meta, nil}, {binding, counter}
++        when is_atom(name) and name != :_forward_path_info ->
+           var = Macro.var(:"arg#{counter}", __MODULE__)
+           {var, {[{Atom.to_string(name), var} | binding], counter + 1}}
+ 
+@@ -120,15 +177,9 @@ defmodule Phoenix.Router.Route do
+     match_all = match_params ++ match_private ++ match_assigns
+     merge_all = merge_params ++ merge_private ++ merge_assigns
+ 
+-    if merge_all != [] do
+-      quote do
+-        %{unquote_splicing(match_all)} = var!(conn, :conn)
+-        %{var!(conn, :conn) | unquote_splicing(merge_all)}
+-      end
+-    else
+-      quote do
+-        var!(conn, :conn)
+-      end
++    quote do
++      %{unquote_splicing(match_all)} = var!(conn, :conn)
++      %{var!(conn, :conn) | unquote_splicing(merge_all)}
+     end
+   end
+ 
+@@ -140,19 +191,22 @@ defmodule Phoenix.Router.Route do
+     {[{key, var}], [{key, merge}]}
+   end
+ 
+-  defp build_dispatch(%Route{kind: :match, plug: plug, plug_opts: plug_opts}, _forwards) do
++  defp build_dispatch(%Route{kind: :match, plug: plug, plug_opts: plug_opts}) do
+     quote do
+       {unquote(plug), unquote(Macro.escape(plug_opts))}
+     end
+   end
+ 
+-  defp build_dispatch(%Route{kind: :forward, plug: plug, plug_opts: plug_opts}, forwards) do
+-    segments = Map.fetch!(forwards, plug)
+-
++  defp build_dispatch(%Route{
++         kind: :forward,
++         plug: plug,
++         plug_opts: plug_opts,
++         metadata: metadata
++       }) do
+     quote do
+       {
+         Phoenix.Router.Route,
+-        {unquote(segments), unquote(plug), unquote(Macro.escape(plug_opts))}
++        {unquote(metadata.forward), unquote(plug), unquote(Macro.escape(plug_opts))}
+       }
+     end
+   end
+@@ -160,7 +214,9 @@ defmodule Phoenix.Router.Route do
+   defp build_params() do
+     params = Macro.var(:params, :conn)
+     path_params = Macro.var(:path_params, :conn)
+-    merge_params = quote(do: Phoenix.Router.Route.merge_params(unquote(params), unquote(path_params)))
++
++    merge_params =
++      quote(do: Phoenix.Router.Route.merge_params(unquote(params), unquote(path_params)))
+ 
+     {
+       [{:params, params}],
+diff --git a/lib/phoenix/router/scope.ex b/lib/phoenix/router/scope.ex
+index 4aa87919b..711d74477 100644
+--- a/lib/phoenix/router/scope.ex
++++ b/lib/phoenix/router/scope.ex
+@@ -54,9 +54,12 @@ defmodule Phoenix.Router.Scope do
+       |> Keyword.get(:metadata, %{})
+       |> Map.put(:log, Keyword.get(opts, :log, top.log))
+ 
+-    if kind == :forward do
+-      register_forwards(module, path, plug)
+-    end
++    metadata =
++      if kind == :forward do
++        Map.put(metadata, :forward, validate_forward!(path, plug))
++      else
++        metadata
++      end
+ 
+     Phoenix.Router.Route.build(
+       line,
+@@ -76,31 +79,18 @@ defmodule Phoenix.Router.Scope do
+     )
+   end
+ 
+-  defp register_forwards(module, path, plug) when is_atom(plug) do
+-    plug = expand_alias(module, plug)
+-    phoenix_forwards = Module.get_attribute(module, :phoenix_forwards)
+-
+-    path_segments =
+-      case Plug.Router.Utils.build_path_match(path) do
+-        {[], path_segments} ->
+-          if phoenix_forwards[plug] do
+-            raise ArgumentError,
+-                  "#{inspect(plug)} has already been forwarded to. A module can only be forwarded a single time"
+-          end
++  defp validate_forward!(path, plug) when is_atom(plug) do
++    case Plug.Router.Utils.build_path_match(path) do
++      {[], path_segments} ->
++        path_segments
+ 
+-          path_segments
+-
+-        _ ->
+-          raise ArgumentError,
+-                "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead"
+-      end
+-
+-    phoenix_forwards = Map.put(phoenix_forwards, plug, path_segments)
+-    Module.put_attribute(module, :phoenix_forwards, phoenix_forwards)
+-    plug
++      _ ->
++        raise ArgumentError,
++              "dynamic segment \"#{path}\" not allowed when forwarding. Use a static path instead"
++    end
+   end
+ 
+-  defp register_forwards(_, _, plug) do
++  defp validate_forward!(_, plug) do
+     raise ArgumentError, "forward expects a module as the second argument, #{inspect(plug)} given"
+   end
+ 
+diff --git a/lib/phoenix/socket/transport.ex b/lib/phoenix/socket/transport.ex
+index c9ab5dd95..3c08e0ec9 100644
+--- a/lib/phoenix/socket/transport.ex
++++ b/lib/phoenix/socket/transport.ex
+@@ -3,15 +3,17 @@ defmodule Phoenix.Socket.Transport do
+   Outlines the Socket <-> Transport communication.
+ 
+   Each transport, such as websockets and longpolling, must interact
+-  with a socket. This module defines said behaviour.
++  with a socket. This module defines the functions a transport will
++  invoke on a given socket implementation.
+ 
+   `Phoenix.Socket` is just one possible implementation of a socket
+   that multiplexes events over multiple channels. If you implement
+-  this behaviour, then a transport can directly invoke your
++  this behaviour, then existing transports can use your new socket
+   implementation, without passing through channels.
+ 
+-  This module also provides convenience functions for implementing
+-  transports.
++  This module also provides guidelines and convenience functions for
++  implementing transports. Albeit its primary goal is to aid in the
++  definition of custom sockets.
+ 
+   ## Example
+ 
+@@ -60,7 +62,8 @@ defmodule Phoenix.Socket.Transport do
+ 
+   Sockets are operated by a transport. When a transport is defined,
+   it usually receives a socket module and the module will be invoked
+-  when certain events happen at the transport level.
++  when certain events happen at the transport level. The functions
++  a transport can invoke are the callbacks defined in this module.
+ 
+   Whenever the transport receives a new connection, it should invoke
+   the `c:connect/1` callback with a map of metadata. Different sockets
+@@ -81,15 +84,16 @@ defmodule Phoenix.Socket.Transport do
+   reason `:closed` can be used to specify that the client terminated
+   the connection.
+ 
+-  ## Booting
++  ### Booting
+ 
+-  Whenever your endpoint starts, it will automatically invoke the
+-  `child_spec/1` on each listed socket and start that specification
+-  under the endpoint supervisor.
++  When you list a socket under `Phoenix.Endpoint.socket/3`, Phoenix
++  will automatically start the socket module under its supervision tree,
++  however Phoenix does not manage any transport.
+ 
+-  Since the socket supervision tree is started by the endpoint,
+-  any custom transport must be started after the endpoint in a
+-  supervision tree.
++  Whenever your endpoint starts, Phoenix invokes the `child_spec/1` on
++  each listed socket and start that specification under the endpoint
++  supervisor. Since the socket supervision tree is started by the endpoint,
++  any custom transport must be started after the endpoint.
+   """
+ 
+   @type state :: term()
+diff --git a/lib/phoenix/verified_routes.ex b/lib/phoenix/verified_routes.ex
+index 222d52726..6c0fc585b 100644
+--- a/lib/phoenix/verified_routes.ex
++++ b/lib/phoenix/verified_routes.ex
+@@ -757,19 +757,21 @@ defmodule Phoenix.VerifiedRoutes do
+ 
+   defp match_route?(router, split_path) when is_list(split_path) do
+     case router.__verify_route__(split_path) do
+-      {_forward_plug, true = _warn_on_verify?} -> false
+-      {nil = _forward_plug, false = _warn_on_verify?} -> true
+-      {fwd_plug, false = _warn_on_verify?} -> match_forward_route?(router, fwd_plug, split_path)
+-      :error -> false
+-    end
+-  end
++      {_forward_plug, true = _warn_on_verify?} ->
++        false
+ 
+-  defp match_forward_route?(router, forward_router, split_path) do
+-    if function_exported?(forward_router, :__routes__, 0) do
+-      script_name = router.__forward__(forward_router)
+-      match_route?(forward_router, split_path -- script_name)
+-    else
+-      true
++      {nil = _forward_plug, false = _warn_on_verify?} ->
++        true
++
++      {{router, script_name}, false = _warn_on_verify?} ->
++        if function_exported?(router, :__routes__, 0) do
++          match_route?(router, split_path -- script_name)
++        else
++          true
++        end
++
++      :error ->
++        false
+     end
+   end
+ 
+diff --git a/priv/templates/phx.gen.auth/auth.ex b/priv/templates/phx.gen.auth/auth.ex
+index af36929d2..a65c01fe6 100644
+--- a/priv/templates/phx.gen.auth/auth.ex
++++ b/priv/templates/phx.gen.auth/auth.ex
+@@ -110,7 +110,7 @@ defmodule <%= inspect auth_module %> do
+     end
+   end
+ 
+-  @doc """
++  <%= if live? do %>@doc """
+   Handles mounting and authenticating the current_<%= schema.singular %> in LiveViews.
+ 
+   ## `on_mount` arguments
+@@ -182,7 +182,7 @@ defmodule <%= inspect auth_module %> do
+     end)
+   end
+ 
+-  @doc """
++  <% end %>@doc """
+   Used for routes that require the <%= schema.singular %> to not be authenticated.
+   """
+   def redirect_if_<%= schema.singular %>_is_authenticated(conn, _opts) do

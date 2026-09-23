@@ -1,0 +1,154 @@
+diff --git a/assets/js/phoenix.js b/assets/js/phoenix.js
+index 4145e8dea..109a8fd0c 100644
+--- a/assets/js/phoenix.js
++++ b/assets/js/phoenix.js
+@@ -185,7 +185,7 @@
+  * @module phoenix
+  */
+ 
+-const global = typeof(self) !== "undefined" ? self : window
++const global = typeof self !== "undefined" ? self : window
+ const VSN = "2.0.0"
+ const SOCKET_STATES = {connecting: 0, open: 1, closing: 2, closed: 3}
+ const DEFAULT_TIMEOUT = 10000
+@@ -218,7 +218,7 @@ const TRANSPORTS = {
+ 
+ // wraps value in closure or returns closure
+ let closure = (value) => {
+-  if(typeof(value) === "function"){
++  if(typeof value === "function"){
+     return value
+   } else {
+     let closure = function(){ return value }
+diff --git a/assets/package.json b/assets/package.json
+index a40f57790..8a310f8e3 100644
+--- a/assets/package.json
++++ b/assets/package.json
+@@ -23,6 +23,7 @@
+     "webpack": "4.0.0",
+     "webpack-cli": "^2.0.10"
+   },
++  "sideEffects": false,
+   "scripts": {
+     "test": "mocha ./test/**/*.js --compilers js:babel-register -r jsdom-global/register",
+     "docs": "documentation build js/phoenix.js -f html -o ../doc/js",
+diff --git a/lib/phoenix/controller.ex b/lib/phoenix/controller.ex
+index beba8dce3..db3cb9296 100644
+--- a/lib/phoenix/controller.ex
++++ b/lib/phoenix/controller.ex
+@@ -559,7 +559,7 @@ defmodule Phoenix.Controller do
+   @doc """
+   Retrieves the current layout.
+   """
+-  @spec layout(Plug.Conn.t) :: {atom, String.t} | false
++  @spec layout(Plug.Conn.t) :: {atom, String.t | atom} | false
+   def layout(conn), do: conn.private |> Map.get(:phoenix_layout, false)
+ 
+   @doc """
+diff --git a/lib/phoenix/endpoint.ex b/lib/phoenix/endpoint.ex
+index dc052dcab..9868c3493 100644
+--- a/lib/phoenix/endpoint.ex
++++ b/lib/phoenix/endpoint.ex
+@@ -871,7 +871,10 @@ defmodule Phoenix.Endpoint do
+ 
+       For example:
+ 
+-        connect_info: [:peer_data, :x_headers, :uri]
++          socket "/socket", AppWeb.UserSocket,
++            websocket: [
++              connect_info: [:peer_data, :x_headers, :uri]
++            ]
+ 
+   ## Websocket configuration
+ 
+diff --git a/lib/phoenix/router.ex b/lib/phoenix/router.ex
+index 8df6867a4..af260cd73 100644
+--- a/lib/phoenix/router.ex
++++ b/lib/phoenix/router.ex
+@@ -775,9 +775,7 @@ defmodule Phoenix.Router do
+     router_opts = Keyword.put(router_opts, :as, nil)
+ 
+     quote unquote: true, bind_quoted: [path: path, plug: plug] do
+-      plug = Scope.expand_alias(__MODULE__, plug)
+-      path_segments = Route.forward_path_segments(path, plug, @phoenix_forwards)
+-      @phoenix_forwards Map.put(@phoenix_forwards, plug, path_segments)
++      plug = Scope.register_forwards(__MODULE__, path, plug)
+       unquote(add_route(:forward, :*, path, plug, plug_opts, router_opts))
+     end
+   end
+diff --git a/lib/phoenix/router/scope.ex b/lib/phoenix/router/scope.ex
+index 47e4fef38..32ca4000f 100644
+--- a/lib/phoenix/router/scope.ex
++++ b/lib/phoenix/router/scope.ex
+@@ -1,5 +1,5 @@
+ defmodule Phoenix.Router.Scope do
+-  alias Phoenix.Router.Scope
++  alias Phoenix.Router.{Scope, Route}
+   @moduledoc false
+ 
+   @stack :phoenix_router_scopes
+@@ -117,9 +117,22 @@ defmodule Phoenix.Router.Scope do
+   def inside_scope?(module), do: length(get_stack(module)) > 1
+ 
+   @doc """
+-  Expands alias within scoped block.
++  Add a forward to the router.
+   """
+-  def expand_alias(module, alias) do
++  def register_forwards(module, path, plug) when is_atom(plug) do
++    plug = expand_alias(module, plug)
++    phoenix_forwards = Module.get_attribute(module, :phoenix_forwards)
++    path_segments = Route.forward_path_segments(path, plug, phoenix_forwards)
++    phoenix_forwards = Map.put(phoenix_forwards, plug, path_segments)
++    Module.put_attribute(module, :phoenix_forwards, phoenix_forwards)
++    plug
++  end
++
++  def register_forwards(_, _, plug) do
++    raise ArgumentError, "forward expects a module as the second argument, #{inspect plug} given"
++  end
++
++  defp expand_alias(module, alias) do
+     if inside_scope?(module) do
+       module
+       |> get_stack()
+diff --git a/mix.exs b/mix.exs
+index ab890b391..e46037ab6 100644
+--- a/mix.exs
++++ b/mix.exs
+@@ -144,6 +144,7 @@ defmodule Phoenix.MixProject do
+     # Phoenix
+     # Phoenix.Channel
+     # Phoenix.Controller
++    # Phoenix.Endpoint
+     # Phoenix.Naming
+     # Phoenix.Param
+     # Phoenix.Presence
+@@ -152,20 +153,19 @@ defmodule Phoenix.MixProject do
+     # Phoenix.View
+ 
+     [
+-      "Endpoint And Plugs": [
++      "Testing": [
++        Phoenix.ChannelTest,
++        Phoenix.ConnTest,
++      ],
++
++      "Adapters and Plugs": [
+         Phoenix.CodeReloader,
+-        Phoenix.Endpoint,
+         Phoenix.Endpoint.CowboyAdapter,
+         Phoenix.Endpoint.Cowboy2Adapter,
+         Phoenix.Logger,
+       ],
+ 
+-      "Testing": [
+-        Phoenix.ChannelTest,
+-        Phoenix.ConnTest,
+-      ],
+-
+-      "Socket And Transport": [
++      "Socket and Transport": [
+         Phoenix.Socket,
+         Phoenix.Socket.Broadcast,
+         Phoenix.Socket.Message,

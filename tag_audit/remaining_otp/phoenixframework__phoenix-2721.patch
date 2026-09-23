@@ -1,0 +1,157 @@
+diff --git a/installer/lib/phx_new/generator.ex b/installer/lib/phx_new/generator.ex
+index 8b096c479..d838c919b 100644
+--- a/installer/lib/phx_new/generator.ex
++++ b/installer/lib/phx_new/generator.ex
+@@ -102,6 +102,7 @@ defmodule Phx.New.Generator do
+       end
+ 
+     binding = [
++      elixir_version: elixir_version(),
+       app_name: project.app,
+       app_module: inspect(project.app_mod),
+       root_app_name: project.root_app,
+@@ -127,11 +128,31 @@ defmodule Phx.New.Generator do
+       adapter_module: adapter_module,
+       adapter_config: adapter_config,
+       generators: nil_if_empty(project.generators ++ adapter_generators(adapter_config)),
+-      namespaced?: namespaced?(project)]
++      namespaced?: namespaced?(project),
++    ]
+ 
+     %Project{project | binding: binding}
+   end
+ 
++  def stub_elixir_version(vsn, func) do
++    if configured_version() do
++      raise RuntimeError, "race condition detected when trying to stub elixir version"
++    end
++
++    try do
++      Application.put_env(:phoenix, :installer_elixir_vsn, vsn)
++      func.()
++    after
++      Application.delete_env(:phoenix, :installer_elixir_vsn)
++    end
++  end
++
++  defp elixir_version do
++    configured_version() || System.version()
++  end
++
++  defp configured_version, do: Application.get_env(:phoenix, :installer_elixir_vsn)
++
+   defp namespaced?(project) do
+     Macro.camelize(project.app) != inspect(project.app_mod)
+   end
+diff --git a/installer/templates/phx_single/lib/app_name/application.ex b/installer/templates/phx_single/lib/app_name/application.ex
+index ee858f9e9..b7f0087f1 100644
+--- a/installer/templates/phx_single/lib/app_name/application.ex
++++ b/installer/templates/phx_single/lib/app_name/application.ex
+@@ -1,8 +1,10 @@
+ defmodule <%= app_module %>.Application do
+-  use Application
+-
+   # See https://hexdocs.pm/elixir/Application.html
+   # for more information on OTP Applications
++  @moduledoc false
++
++  use Application
++  <%= if Version.match?(elixir_version, "< 1.5.0") do %>
+   def start(_type, _args) do
+     import Supervisor.Spec
+ 
+@@ -20,7 +22,23 @@ defmodule <%= app_module %>.Application do
+     # for other strategies and supported options
+     opts = [strategy: :one_for_one, name: <%= app_module %>.Supervisor]
+     Supervisor.start_link(children, opts)
+-  end
++  end<% else %>
++  def start(_type, _args) do
++    # List all child processes to be supervised
++    children = [<%= if ecto do %>
++      # Start the Ecto repository
++      <%= app_module %>.Repo,<% end %>
++      # Start the endpoint when the application starts
++      <%= endpoint_module %>,
++      # Starts a worker by calling: <%= app_module %>.Worker.start_link(arg)
++      # {<%= app_module %>.Worker, arg},
++    ]
++
++    # See https://hexdocs.pm/elixir/Supervisor.html
++    # for other strategies and supported options
++    opts = [strategy: :one_for_one, name: <%= app_module %>.Supervisor]
++    Supervisor.start_link(children, opts)
++  end<% end %>
+ 
+   # Tell Phoenix to update the endpoint configuration
+   # whenever the application is updated.
+diff --git a/installer/templates/phx_umbrella/apps/app_name/lib/app_name/application.ex b/installer/templates/phx_umbrella/apps/app_name/lib/app_name/application.ex
+index 350e892ff..290d338de 100644
+--- a/installer/templates/phx_umbrella/apps/app_name/lib/app_name/application.ex
++++ b/installer/templates/phx_umbrella/apps/app_name/lib/app_name/application.ex
+@@ -8,16 +8,21 @@ defmodule <%= app_module %>.Application do
+   for use in channels, controllers, and elsewhere.
+   """
+   use Application
++  <%= if Version.match?(elixir_version, "< 1.5.0") do %>
++  def start(_type, _args) do<%= if ecto do %>
++    import Supervisor.Spec
+ 
+-  def start(_type, _args) do
++    Supervisor.start_link([
++      supervisor(<%= app_module %>.Repo, []),
++    ], strategy: :one_for_one, name: <%= app_module %>.Supervisor)<% else %>
+     import Supervisor.Spec, warn: false
+ 
+-    <%= if ecto do %>
++    Supervisor.start_link([], strategy: :one_for_one, name: <%= app_module %>.Supervisor)<% end %>
++  end<% else %>
++  def start(_type, _args) do<%= if ecto do %>
+     Supervisor.start_link([
+-      supervisor(<%= app_module %>.Repo, []),
+-    ], strategy: :one_for_one, name: <%= app_module %>.Supervisor)
+-    <% else %>
+-    Supervisor.start_link([], strategy: :one_for_one, name: <%= app_module %>.Supervisor)
+-    <% end %>
+-  end
++      <%= app_module %>.Repo,
++    ], strategy: :one_for_one, name: <%= app_module %>.Supervisor)<% else %>
++    Supervisor.start_link([], strategy: :one_for_one, name: <%= app_module %>.Supervisor)<% end %>
++  end<% end %>
+ end
+diff --git a/installer/templates/phx_umbrella/apps/app_name_web/lib/app_name/application.ex b/installer/templates/phx_umbrella/apps/app_name_web/lib/app_name/application.ex
+index 986d9dcb7..cc96c84e7 100644
+--- a/installer/templates/phx_umbrella/apps/app_name_web/lib/app_name/application.ex
++++ b/installer/templates/phx_umbrella/apps/app_name_web/lib/app_name/application.ex
+@@ -1,6 +1,7 @@
+ defmodule <%= web_namespace %>.Application do
++  @moduledoc false
+   use Application
+-
++  <%= if Version.match?(elixir_version, "< 1.5.0") do %>
+   def start(_type, _args) do
+     import Supervisor.Spec
+ 
+@@ -16,7 +17,21 @@ defmodule <%= web_namespace %>.Application do
+     # for other strategies and supported options
+     opts = [strategy: :one_for_one, name: <%= web_namespace %>.Supervisor]
+     Supervisor.start_link(children, opts)
+-  end
++  end<% else %>
++  def start(_type, _args) do
++    # List all child processes to be supervised
++    children = [
++      # Start the endpoint when the application starts
++      <%= endpoint_module %>,
++      # Starts a worker by calling: <%= web_namespace %>.Worker.start_link(arg)
++      # {<%= web_namespace %>.Worker, arg},
++    ]
++
++    # See https://hexdocs.pm/elixir/Supervisor.html
++    # for other strategies and supported options
++    opts = [strategy: :one_for_one, name: <%= web_namespace %>.Supervisor]
++    Supervisor.start_link(children, opts)
++  end<% end %>
+ 
+   # Tell Phoenix to update the endpoint configuration
+   # whenever the application is updated.

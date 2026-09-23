@@ -1,0 +1,435 @@
+diff --git a/lib/nostrum/application.ex b/lib/nostrum/application.ex
+index a186a665..7d1dfec5 100644
+--- a/lib/nostrum/application.ex
++++ b/lib/nostrum/application.ex
+@@ -28,7 +28,6 @@ defmodule Nostrum.Application do
+   def setup_ets_tables do
+     :ets.new(:gateway_url, [:set, :public, :named_table])
+     :ets.new(:unavailable_guilds, [:set, :public, :named_table])
+-    :ets.new(:users, [:set, :public, :named_table])
+     :ets.new(:guild_shard_map, [:set, :public, :named_table])
+     :ets.new(:channel_guild_map, [:set, :public, :named_table])
+   end
+diff --git a/lib/nostrum/cache/cache_supervisor.ex b/lib/nostrum/cache/cache_supervisor.ex
+index ecb279f4..87ed896a 100644
+--- a/lib/nostrum/cache/cache_supervisor.ex
++++ b/lib/nostrum/cache/cache_supervisor.ex
+@@ -22,6 +22,7 @@ defmodule Nostrum.Cache.CacheSupervisor do
+       Nostrum.Cache.Me,
+       # Uses the configured cache implementations.
+       Nostrum.Cache.GuildCache,
++      Nostrum.Cache.UserCache,
+       Nostrum.Cache.ChannelCache,
+       Nostrum.Cache.PresenceCache
+     ]
+diff --git a/lib/nostrum/cache/guild_cache.ex b/lib/nostrum/cache/guild_cache.ex
+index b4ee4a76..8ca0abbd 100644
+--- a/lib/nostrum/cache/guild_cache.ex
++++ b/lib/nostrum/cache/guild_cache.ex
+@@ -53,8 +53,7 @@ defmodule Nostrum.Cache.GuildCache do
+   alias Nostrum.Util
+ 
+   @configured_cache :nostrum
+-                    |> Application.compile_env(:caches, %{})
+-                    |> Map.get(:guilds, @default_cache_implementation)
++                    |> Application.compile_env([:caches, :guilds], @default_cache_implementation)
+ 
+   @typedoc "Specifies the reason for why a lookup operation has failed."
+   @type reason ::
+diff --git a/lib/nostrum/cache/user_cache.ex b/lib/nostrum/cache/user_cache.ex
+index 630e66a7..059bcd79 100644
+--- a/lib/nostrum/cache/user_cache.ex
++++ b/lib/nostrum/cache/user_cache.ex
+@@ -2,22 +2,36 @@ defmodule Nostrum.Cache.UserCache do
+   @default_cache_implementation Nostrum.Cache.UserCache.ETS
+   @moduledoc """
+   Cache behaviour & dispatcher for users.
++
++  You can call the functions provided by this module independent of which cache
++  is configured, and it will dispatch to the configured cache implementation.
++
++  By default, #{@default_cache_implementation} will be used for caching users.
++  You can override this in the `:caches` option of the `:nostrum` application
++  by setting the `:users` field to a different module implementing the behaviour
++  defined by this module.
++
++  See the documentation for the `Nostrum.Cache.GuildCache` module for more details.
++
+   """
+ 
+   alias Nostrum.Struct.User
+   alias Nostrum.Util
+   import Nostrum.Snowflake, only: [is_snowflake: 1]
+ 
+-  if function_exported?(Application, :compile_env, 3) do
+-    @configured_cache :nostrum
+-                      |> Application.compile_env(:caches, %{})
+-                      |> Map.get(:users, @default_cache_implementation)
+-  else
+-    # credo:disable-for-next-line Credo.Check.Warning.ApplicationConfigInModuleAttribute
+-    @configured_cache :nostrum
+-                      |> Application.get_env(:caches, %{})
+-                      |> Map.get(:users, @default_cache_implementation)
+-  end
++  @configured_cache :nostrum
++                    |> Application.compile_env([:caches, :users], @default_cache_implementation)
++
++  ## Supervisor callbacks
++
++  @doc false
++  defdelegate init(init_arg), to: @configured_cache
++
++  @doc false
++  defdelegate start_link(init_arg), to: @configured_cache
++
++  @doc false
++  defdelegate child_spec(opts), to: @configured_cache
+ 
+   ## Behaviour specification
+ 
+@@ -69,40 +83,15 @@ defmodule Nostrum.Cache.UserCache do
+   @callback delete(snowflake :: User.id()) :: :noop | User.t()
+ 
+   ## Dispatching
+-
+-  @doc "Retrieve a user using the selected cache implementation."
+-  @spec get(User.id()) :: {:error, atom} | {:ok, User.t()}
+-  def get(id) when is_snowflake(id) do
+-    @configured_cache.get(id)
+-  end
++  defdelegate get(id), to: @configured_cache
++  defdelegate create(payload), to: @configured_cache
++  defdelegate bulk_create(users), to: @configured_cache
++  defdelegate update(payload), to: @configured_cache
++  defdelegate delete(snowflake), to: @configured_cache
+ 
+   @doc """
+-  Same as `get/1`, but raises `Nostrum.Error.CacheError` in case of a failure.
++  Same as `c:get/1`, but raises `Nostrum.Error.CacheError` in case of a failure.
+   """
+   @spec get!(User.id()) :: no_return | User.t()
+   def get!(id) when is_snowflake(id), do: id |> get |> Util.bangify_find(id, __MODULE__)
+-
+-  @doc "Create a user using the selected cache implementation."
+-  @spec create(map()) :: User.t()
+-  def create(payload) do
+-    @configured_cache.create(payload)
+-  end
+-
+-  @doc "Bulk create multiple users using the selected cache implementation."
+-  @spec bulk_create(Enum.t()) :: :ok
+-  def bulk_create(users) do
+-    @configured_cache.bulk_create(users)
+-  end
+-
+-  @doc "Update the given user using the selected cache implementation."
+-  @spec update(map()) :: :noop | {User.t(), User.t()}
+-  def update(payload) do
+-    @configured_cache.update(payload)
+-  end
+-
+-  @doc "Delete a user by ID using the selected cache implementation."
+-  @spec delete(User.id()) :: :noop | User.t()
+-  def delete(id) when is_snowflake(id) do
+-    @configured_cache.delete(id)
+-  end
+ end
+diff --git a/lib/nostrum/cache/user_cache/ets.ex b/lib/nostrum/cache/user_cache/ets.ex
+index 24d27e5c..5694ad2b 100644
+--- a/lib/nostrum/cache/user_cache/ets.ex
++++ b/lib/nostrum/cache/user_cache/ets.ex
+@@ -1,5 +1,5 @@
+ defmodule Nostrum.Cache.UserCache.ETS do
+-  @table_name :users
++  @table_name :nostrum_users
+   @moduledoc """
+   An ETS-based cache for users.
+ 
+@@ -12,10 +12,18 @@ defmodule Nostrum.Cache.UserCache.ETS do
+   @behaviour Nostrum.Cache.UserCache
+ 
+   alias Nostrum.Struct.User
++  use Supervisor
+ 
+-  @doc "Set up the cache for tests."
+-  def setup do
++  @doc "Start the supervisor."
++  def start_link(init_arg) do
++    Supervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
++  end
++
++  @doc "Set up the ETS table."
++  @impl Supervisor
++  def init(_init_arg) do
+     :ets.new(@table_name, [:set, :public, :named_table])
++    Supervisor.init([], strategy: :one_for_one)
+   end
+ 
+   @impl Nostrum.Cache.UserCache
+diff --git a/lib/nostrum/struct/message.ex b/lib/nostrum/struct/message.ex
+index 0aac02db..4e5f2084 100644
+--- a/lib/nostrum/struct/message.ex
++++ b/lib/nostrum/struct/message.ex
+@@ -8,17 +8,7 @@ defmodule Nostrum.Struct.Message do
+ 
+   alias Nostrum.Struct.{Channel, Embed, Guild, Interaction, User}
+   alias Nostrum.Struct.Guild.{Member, Role}
+-
+-  alias Nostrum.Struct.Message.{
+-    Activity,
+-    Application,
+-    Attachment,
+-    Component,
+-    Reaction,
+-    Reference,
+-    Sticker
+-  }
+-
++  alias Nostrum.Struct.Message.{Activity, Application, Attachment, Reaction, Reference, Sticker}
+   alias Nostrum.{Snowflake, Util}
+ 
+   defstruct [
+@@ -29,7 +19,7 @@ defmodule Nostrum.Struct.Message do
+     :author,
+     :channel_id,
+     :content,
+-    :components,
++    # :components,
+     :edited_timestamp,
+     :embeds,
+     :id,
+@@ -98,10 +88,10 @@ defmodule Nostrum.Struct.Message do
+   @typedoc "List of attached files in the message"
+   @type attachments :: [Attachment.t()]
+ 
+-  @typedoc """
+-  List of Message Components
+-  """
+-  @type components :: [Component.t()]
++  # @typedoc """
++  # List of Message Components
++  # """
++  # @type components :: [Component.t()]
+ 
+   @typedoc """
+   Array of Message Sticker Item Objects
+@@ -201,7 +191,7 @@ defmodule Nostrum.Struct.Message do
+           attachments: attachments,
+           author: author,
+           channel_id: channel_id,
+-          components: components,
++          # components: components,
+           content: content,
+           edited_timestamp: edited_timestamp,
+           embeds: embeds,
+@@ -236,7 +226,7 @@ defmodule Nostrum.Struct.Message do
+       |> Map.update(:attachments, nil, &Util.cast(&1, {:list, {:struct, Attachment}}))
+       |> Map.update(:author, nil, &Util.cast(&1, {:struct, User}))
+       |> Map.update(:channel_id, nil, &Util.cast(&1, Snowflake))
+-      |> Map.update(:components, nil, &Util.cast(&1, {:list, {:struct, Component}}))
++      # |> Map.update(:components, nil, &Util.cast(&1, {:list, {:struct, Component}}))
+       |> Map.update(:embeds, nil, &Util.cast(&1, {:list, {:struct, Embed}}))
+       |> Map.update(:guild_id, nil, &Util.cast(&1, Snowflake))
+       |> Map.update(:id, nil, &Util.cast(&1, Snowflake))
+diff --git a/lib/nostrum/struct/message/component.ex b/lib/nostrum/struct/message/component.ex
+deleted file mode 100644
+index a272eb74..00000000
+--- a/lib/nostrum/struct/message/component.ex
++++ /dev/null
+@@ -1,196 +0,0 @@
+-defmodule Nostrum.Struct.Message.Component do
+-  @moduledoc """
+-  A component attached to a message.
+-
+-  Note that the fields present depend on the `t:type/0` of the component object.
+-
+-  See the [Discord API Component Object
+-  Documentation](https://discord.com/developers/docs/interactions/message-components#component-object)
+-  for more information.
+-  """
+-  @moduledoc since: "0.5.0"
+-
+-  alias Nostrum.Struct.Emoji
+-  alias Nostrum.Util
+-
+-  defstruct [
+-    :type,
+-    :custom_id,
+-    :disabled,
+-    :style,
+-    :label,
+-    :emoji,
+-    :url,
+-    :options,
+-    :placeholder,
+-    :min_values,
+-    :max_values,
+-    :components
+-  ]
+-
+-  @typedoc """
+-  Component type.
+-
+-  This field is always set.
+-
+-  ## Values
+-
+-  - ``1``: Action Row - A container for other components.
+-  - ``2``: Button - A button object.
+-  - ``3``: Select Menu - A select menu for picking from choices.
+-
+-  ## References
+-
+-  See [Discord Developer Portal: Component
+-  Types](https://discord.com/developers/docs/interactions/message-components#component-object-component-types).
+-  """
+-  @type type :: 1 | 2 | 3
+-
+-  @typedoc """
+-  A developer-defined identifier for the component.
+-
+-  Maximum of 100 characters. Only present for buttons and select menus.
+-  """
+-  @type custom_id :: String.t() | nil
+-
+-  @typedoc """
+-  Whether the component is disabled.
+-
+-  Only present for buttons and select menus.
+-  """
+-  @type disabled :: boolean() | nil
+-
+-  @typedoc """
+-  An integer representing the style of the button.
+-
+-  Only present for buttons.
+-
+-  ## Values
+-
+-  - ``1``: Primary - blurple, ``custom_id`` required.
+-  - ``2``: Secondary - grey, ``custom_id`` required.
+-  - ``3``: Success - green, ``custom_id`` required.
+-  - ``4``: Danger - red, ``custom_id`` required.
+-  - ``5``: Link - grey, ``url`` required, navigates to the URL.
+-
+-  ## References
+-
+-  See [Discord Developer Portal: Button
+-  Styles](https://discord.com/developers/docs/interactions/message-components#button-object-button-styles).
+-  """
+-  @type style :: 1 | 2 | 3 | 4 | 5 | nil
+-
+-  @typedoc """
+-  Text that appears on the button.
+-
+-  Maximum of 80 characters. Only present for buttons.
+-  """
+-  @type label :: String.t() | nil
+-
+-  @typedoc """
+-  Partial emoji of the button.
+-
+-  Only present for buttons. The following fields are set:
+-
+-  - ``name``
+-  - ``id``
+-  - ``animated``
+-  """
+-  @type emoji :: Emoji.t() | nil
+-
+-  @typedoc """
+-  URL for link-style buttons.
+-
+-  Only present for buttons.
+-  """
+-  @type url :: String.t() | nil
+-
+-  @typedoc """
+-  Choices of the select menu.
+-
+-  Maximum of 25 options. Only present for select menus.
+-
+-  ## References
+-
+-  See [Discord Developer Portal: Select Option
+-  Structure](https://discord.com/developers/docs/interactions/message-components#select-menu-object-select-option-structure).
+-  """
+-  @type options ::
+-          [
+-            %{
+-              required(:label) => String.t(),
+-              required(:value) => String.t(),
+-              optional(:description) => String.t(),
+-              optional(:emoji) => %{
+-                id: Emoji.id(),
+-                name: Emoji.name(),
+-                animated: Emoji.animated()
+-              },
+-              optional(:default) => boolean()
+-            }
+-          ]
+-          | nil
+-
+-  @typedoc """
+-  Custom placeholder text if nothing is selected.
+-
+-  Maximum of 100 characters. Only present for select menus.
+-  """
+-  @type placeholder :: String.t() | nil
+-
+-  @typedoc """
+-  Minimum number of items that must be chosen.
+-
+-  Defaults to ``1``. Minimum of ``0``. Maximum of ``25``. Only present for select menus.
+-  """
+-  @type min_values :: 0..25 | nil
+-
+-  @typedoc """
+-  Maximum number of items that must be chosen.
+-
+-  Defaults to ``1``. Maximum of ``25``. Only present for select menus.
+-  """
+-  @type max_values :: 1..25 | nil
+-
+-  @typedoc """
+-  Child components for action rows.
+-
+-  Only present for action rows.
+-  """
+-  @type components :: [t()]
+-
+-  @typedoc "Represents a message component."
+-  @type t :: %__MODULE__{
+-          type: type(),
+-          custom_id: custom_id(),
+-          disabled: disabled(),
+-          style: style(),
+-          label: label(),
+-          emoji: emoji(),
+-          url: url(),
+-          options: options(),
+-          placeholder: placeholder(),
+-          min_values: min_values(),
+-          max_values: max_values(),
+-          components: components()
+-        }
+-
+-  @doc false
+-  @spec to_struct(map()) :: t()
+-  def to_struct(map) do
+-    %__MODULE__{
+-      type: map.type,
+-      custom_id: map[:custom_id],
+-      disabled: map[:disabled],
+-      style: map[:style],
+-      label: map[:label],
+-      emoji: Util.cast(map[:emoji], {:struct, Emoji}),
+-      url: map[:url],
+-      options: map[:options],
+-      placeholder: map[:placeholder],
+-      min_values: map[:min_values],
+-      max_values: map[:max_values],
+-      components: Util.cast(map[:components], {:list, {:struct, __MODULE__}})
+-    }
+-  end
+-end

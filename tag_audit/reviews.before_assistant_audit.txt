@@ -1,0 +1,322 @@
+[
+  {
+    "instance_id": "whitfin__cachex-306",
+    "repo": "whitfin/cachex",
+    "automatic_tag": "otp",
+    "patch_file": "whitfin__cachex-306.patch",
+    "manual_tag": "otp",
+    "reason": ""
+  },
+  {
+    "instance_id": "commanded__commanded-243",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-243.patch",
+    "manual_tag": otp,
+    "reason": ""
+  },
+  {
+    "instance_id": "ash-project__ash-1624",
+    "repo": "ash-project/ash",
+    "automatic_tag": "otp",
+    "patch_file": "ash-project__ash-1624.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "general-cbic__poolex-127",
+    "repo": "general-CbIC/poolex",
+    "automatic_tag": "otp",
+    "patch_file": "general-cbic__poolex-127.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "fika-lang__fika-18",
+    "repo": "fika-lang/fika",
+    "automatic_tag": "otp",
+    "patch_file": "fika-lang__fika-18.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "edgurgel__mimic-47",
+    "repo": "edgurgel/mimic",
+    "automatic_tag": "otp",
+    "patch_file": "edgurgel__mimic-47.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "commanded__commanded-290",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-290.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "commanded__commanded-203",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-203.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "phoenixframework__phoenix-5582",
+    "repo": "phoenixframework/phoenix",
+    "automatic_tag": "otp",
+    "patch_file": "phoenixframework__phoenix-5582.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "commanded__commanded-171",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-171.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "newrelic__elixir_agent-464",
+    "repo": "newrelic/elixir_agent",
+    "automatic_tag": "otp",
+    "patch_file": "newrelic__elixir_agent-464.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "commanded__commanded-105",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-105.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "whitfin__cachex-343",
+    "repo": "whitfin/cachex",
+    "automatic_tag": "otp",
+    "patch_file": "whitfin__cachex-343.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "plataformatec__broadway-40",
+    "repo": "plataformatec/broadway",
+    "automatic_tag": "otp",
+    "patch_file": "plataformatec__broadway-40.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "slashdotdash__commanded-83",
+    "repo": "slashdotdash/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "slashdotdash__commanded-83.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "whitfin__cachex-348",
+    "repo": "whitfin/cachex",
+    "automatic_tag": "otp",
+    "patch_file": "whitfin__cachex-348.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "fika-lang__fika-77",
+    "repo": "fika-lang/fika",
+    "automatic_tag": "otp",
+    "patch_file": "fika-lang__fika-77.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "general-cbic__poolex-15",
+    "repo": "general-CbIC/poolex",
+    "automatic_tag": "otp",
+    "patch_file": "general-cbic__poolex-15.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "absinthe-graphql__absinthe-1336",
+    "repo": "absinthe-graphql/absinthe",
+    "automatic_tag": "otp",
+    "patch_file": "absinthe-graphql__absinthe-1336.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "whitfin__cachex-341",
+    "repo": "whitfin/cachex",
+    "automatic_tag": "otp",
+    "patch_file": "whitfin__cachex-341.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "commanded__commanded-380",
+    "repo": "commanded/commanded",
+    "automatic_tag": "control",
+    "patch_file": "commanded__commanded-380.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "phoenixframework__phoenix_html-263",
+    "repo": "phoenixframework/phoenix_html",
+    "automatic_tag": "control",
+    "patch_file": "phoenixframework__phoenix_html-263.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "phoenixframework__phoenix-3024",
+    "repo": "phoenixframework/phoenix",
+    "automatic_tag": "control",
+    "patch_file": "phoenixframework__phoenix-3024.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "phoenixframework__phoenix-6113",
+    "repo": "phoenixframework/phoenix",
+    "automatic_tag": "control",
+    "patch_file": "phoenixframework__phoenix-6113.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "keathley__norm-85",
+    "repo": "keathley/norm",
+    "automatic_tag": "control",
+    "patch_file": "keathley__norm-85.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "fika-lang__fika-14",
+    "repo": "fika-lang/fika",
+    "automatic_tag": "control",
+    "patch_file": "fika-lang__fika-14.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "dashbitco__nimble_options-24",
+    "repo": "dashbitco/nimble_options",
+    "automatic_tag": "control",
+    "patch_file": "dashbitco__nimble_options-24.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "fika-lang__fika-74",
+    "repo": "fika-lang/fika",
+    "automatic_tag": "control",
+    "patch_file": "fika-lang__fika-74.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "mhanberg__temple-245",
+    "repo": "mhanberg/temple",
+    "automatic_tag": "control",
+    "patch_file": "mhanberg__temple-245.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "divvypayhq__absinthe_federation-96",
+    "repo": "DivvyPayHQ/absinthe_federation",
+    "automatic_tag": "control",
+    "patch_file": "divvypayhq__absinthe_federation-96.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "slashdotdash__commanded-96",
+    "repo": "slashdotdash/commanded",
+    "automatic_tag": "control",
+    "patch_file": "slashdotdash__commanded-96.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "whatyouhide__redix-125",
+    "repo": "whatyouhide/redix",
+    "automatic_tag": "control",
+    "patch_file": "whatyouhide__redix-125.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "100phlecs__tailwind_formatter-22",
+    "repo": "100phlecs/tailwind_formatter",
+    "automatic_tag": "control",
+    "patch_file": "100phlecs__tailwind_formatter-22.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "pragdave__earmark-503",
+    "repo": "pragdave/earmark",
+    "automatic_tag": "control",
+    "patch_file": "pragdave__earmark-503.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "slashdotdash__commanded-86",
+    "repo": "slashdotdash/commanded",
+    "automatic_tag": "control",
+    "patch_file": "slashdotdash__commanded-86.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "ash-project__ash-821",
+    "repo": "ash-project/ash",
+    "automatic_tag": "control",
+    "patch_file": "ash-project__ash-821.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "phoenixframework__phoenix-6049",
+    "repo": "phoenixframework/phoenix",
+    "automatic_tag": "control",
+    "patch_file": "phoenixframework__phoenix-6049.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "fika-lang__fika-20",
+    "repo": "fika-lang/fika",
+    "automatic_tag": "control",
+    "patch_file": "fika-lang__fika-20.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "elixir-ecto__ecto_sql-600",
+    "repo": "elixir-ecto/ecto_sql",
+    "automatic_tag": "control",
+    "patch_file": "elixir-ecto__ecto_sql-600.patch",
+    "manual_tag": null,
+    "reason": ""
+  },
+  {
+    "instance_id": "ash-project__ash-1853",
+    "repo": "ash-project/ash",
+    "automatic_tag": "control",
+    "patch_file": "ash-project__ash-1853.patch",
+    "manual_tag": null,
+    "reason": ""
+  }
+]

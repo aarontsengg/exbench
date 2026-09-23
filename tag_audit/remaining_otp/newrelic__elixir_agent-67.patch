@@ -1,0 +1,50 @@
+diff --git a/lib/new_relic/config.ex b/lib/new_relic/config.ex
+index 8bf7f69..e110d61 100644
+--- a/lib/new_relic/config.ex
++++ b/lib/new_relic/config.ex
+@@ -24,6 +24,7 @@ defmodule NewRelic.Config do
+ 
+   Options:
+   - `"stdout"`
++  - `"Logger"` Elixir's Logger
+   - `"memory"` (Useful for testing)
+   - `"file_name.log"`
+   """
+diff --git a/lib/new_relic/logger.ex b/lib/new_relic/logger.ex
+index abff7bf..e5d0687 100644
+--- a/lib/new_relic/logger.ex
++++ b/lib/new_relic/logger.ex
+@@ -1,5 +1,6 @@
+ defmodule NewRelic.Logger do
+   use GenServer
++  require Logger
+ 
+   # Log Agent events to the configured output device
+   #  - "tmp/new_relic.log" (Default)
+@@ -29,6 +30,11 @@ defmodule NewRelic.Logger do
+ 
+   # Server
+ 
++  def handle_cast({:log, level, message}, %{io_device: Logger} = state) do
++    Logger.log(level, "new_relic_agent - " <> message)
++    {:noreply, state}
++  end
++
+   def handle_cast({:log, level, message}, %{io_device: io_device} = state) do
+     IO.write(io_device, formatted(level, message))
+     {:noreply, state}
+@@ -54,12 +60,14 @@ defmodule NewRelic.Logger do
+       nil -> {:file, "tmp/new_relic.log"}
+       "stdout" -> :stdio
+       "memory" -> :memory
++      "Logger" -> :logger
+       log_file_path -> {:file, log_file_path}
+     end
+   end
+ 
+   def device(:stdio), do: {:ok, :stdio}
+   def device(:memory), do: StringIO.open("")
++  def device(:logger), do: {:ok, Logger}
+ 
+   def device({:file, logfile}) do
+     log(:info, "Log File: #{Path.absname(logfile)}")

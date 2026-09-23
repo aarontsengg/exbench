@@ -1,0 +1,375 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index d908d63..0ea47a3 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ 
+ ## [Unreleased]
+ 
++### Changed
++
++#### Breaking changes
++
++- Option `:timeout` renamed to `:checkout_timeout`.
++  - Reason: This option configures only the waiting time for `worker` from the pool, not the task's work time. This naming should be more understandable on the call site.
++
++    ```elixir
++    # Before
++    Poolex.run(:my_awesome_pool, fn worker -> some_work(worker) end, timeout: 10_000)
++
++    # After
++    Poolex.run(:my_awesome_pool, fn worker -> some_work(worker) end, checkout_timeout: 10_000)
++    ```
++
++- `Poolex.run/3` returns tuple `{:error, :checkout_timeout}` instead of `:all_workers_are_busy`. Also `{:runtime_error, reason}` moved to `{:error, {:runtime_error, reason}}`.
++  - Reason: It is easier to understand the uniform format of the response from the function: `{:ok, result}` or `{:error, reason}`.
++- `Poolex.caller()` type replaced with struct defined in `Poolex.Caller.t()`.
++  - Reason: We need to save uniq caller reference.
++
++### Fixed
++
++- Fixed a bug when workers get stuck in `busy` status after checkout timeout.
++
+ ## [0.7.6] - 2023-08-03
+ 
+ ### Fixed
+diff --git a/README.md b/README.md
+index b7cb399..26a6991 100644
+--- a/README.md
++++ b/README.md
+@@ -79,7 +79,7 @@ Supervisor.start_link(children, strategy: :one_for_one)
+ Then you can execute any code on the workers with `run/3`:
+ 
+ ```elixir
+-iex> Poolex.run(:worker_pool, &(is_pid?(&1)), timeout: 1_000)
++iex> Poolex.run(:worker_pool, &(is_pid?(&1)), checkout_timeout: 1_000)
+ {:ok, true}
+ ```
+ 
+diff --git a/docs/guides/example-of-use.cheatmd b/docs/guides/example-of-use.cheatmd
+index 01ff1fb..1974329 100644
+--- a/docs/guides/example-of-use.cheatmd
++++ b/docs/guides/example-of-use.cheatmd
+@@ -79,7 +79,7 @@ defmodule PoolexExample.Test do
+               :ok
+           end
+         end,
+-        timeout: @timeout
++        checkout_timeout: @timeout
+       )
+     end)
+   end
+diff --git a/docs/guides/getting-started.cheatmd b/docs/guides/getting-started.cheatmd
+index 0cf560a..182d494 100644
+--- a/docs/guides/getting-started.cheatmd
++++ b/docs/guides/getting-started.cheatmd
+@@ -46,7 +46,7 @@ The first argument is the name of the pool mentioned above.
+ 
+ The second argument is the function that takes the pid of the worker as the only parameter and performs the necessary actions.
+ 
+-The third argument contains run options. Currently, there is only one `timeout` option that tells Poolex how long we can wait for a worker on the call site.
++The third argument contains run options. Currently, there is only one `checkout_timeout` option that tells Poolex how long we can wait for a worker on the call site.
+ 
+ ```elixir
+ iex> Poolex.start_link(pool_id: :agent_pool, worker_module: Agent, worker_args: [fn -> 5 end], workers_count: 1)
+diff --git a/docs/guides/migration-from-poolboy.cheatmd b/docs/guides/migration-from-poolboy.cheatmd
+index f2870c0..f9b8e77 100644
+--- a/docs/guides/migration-from-poolboy.cheatmd
++++ b/docs/guides/migration-from-poolboy.cheatmd
+@@ -67,6 +67,6 @@ If you want a safe interface with error handling, then use `run/3`.
+ +  Poolex.run!(
+ +    :some_pool,
+ +    fn pid -> some_function(pid) end,
+-+    timeout: :timer.seconds(10)
+++    checkout_timeout: :timer.seconds(10)
+ +  )
+ ```
+diff --git a/lib/poolex.ex b/lib/poolex.ex
+index 937680f..ee751a8 100644
+--- a/lib/poolex.ex
++++ b/lib/poolex.ex
+@@ -18,7 +18,7 @@ defmodule Poolex do
+   Then you can execute any code on the workers with `run/3`:
+ 
+   ```elixir
+-  Poolex.run(:worker_pool, &(is_pid?(&1)), timeout: 1_000)
++  Poolex.run(:worker_pool, &(is_pid?(&1)), checkout_timeout: 1_000)
+   {:ok, true}
+   ```
+ 
+@@ -27,6 +27,7 @@ defmodule Poolex do
+ 
+   use GenServer, shutdown: :infinity
+ 
++  alias Poolex.CheckoutTimeoutError
+   alias Poolex.Private.BusyWorkers
+   alias Poolex.Private.DebugInfo
+   alias Poolex.Private.IdleWorkers
+@@ -34,7 +35,7 @@ defmodule Poolex do
+   alias Poolex.Private.State
+   alias Poolex.Private.WaitingCallers
+ 
+-  @default_wait_timeout :timer.seconds(5)
++  @default_checkout_timeout :timer.seconds(5)
+   @poolex_options_table """
+   | Option                 | Description                                          | Example               | Default value                     |
+   |------------------------|------------------------------------------------------|-----------------------|-----------------------------------|
+@@ -75,18 +76,11 @@ defmodule Poolex do
+   @type worker() :: pid()
+ 
+   @typedoc """
+-  Tuple describing the `caller`.
+-
+-  **Callers** are processes that have requested to get a worker.
+-  """
+-  @type caller() :: GenServer.from()
+-
+-  @typedoc """
+-  | Option  | Description                                        | Example  | Default value              |
+-  |---------|----------------------------------------------------|----------|----------------------------|
+-  | timeout | How long we can wait for a worker on the call site | `60_000` | `#{@default_wait_timeout}` |
++  | Option  | Description                                        | Example  | Default value                           |
++  |---------|----------------------------------------------------|----------|-----------------------------------------|
++  | checkout_timeout | How long we can wait for a worker on the call site | `60_000` | `#{@default_checkout_timeout}` |
+   """
+-  @type run_option() :: {:timeout, timeout()}
++  @type run_option() :: {:checkout_timeout, timeout()}
+ 
+   @doc """
+   Starts a Poolex process without links (outside of a supervision tree).
+@@ -157,8 +151,8 @@ defmodule Poolex do
+   Same as `run!/3` but handles runtime_errors.
+ 
+   Returns:
+-    * `{:runtime_error, reason}` on errors.
+-    * `:all_workers_are_busy` if no free worker was found before the timeout.
++    * `{:error, {:runtime_error, reason}}` on errors.
++    * `{:error, :checkout_timeout}` if no free worker was found before the timeout.
+ 
+   See `run!/3` for more information.
+ 
+@@ -166,19 +160,19 @@ defmodule Poolex do
+ 
+       iex> Poolex.start_link(pool_id: :some_pool, worker_module: Agent, worker_args: [fn -> 5 end], workers_count: 1)
+       iex> Poolex.run(:some_pool, fn _pid -> raise RuntimeError end)
+-      {:runtime_error, %RuntimeError{message: "runtime error"}}
++      {:error, {:runtime_error, %RuntimeError{message: "runtime error"}}}
+       iex> Poolex.run(:some_pool, fn pid -> Agent.get(pid, &(&1)) end)
+       {:ok, 5}
+   """
+   @spec run(pool_id(), (worker :: pid() -> any()), list(run_option())) ::
+-          {:ok, any()} | :all_workers_are_busy | {:runtime_error, any()}
++          {:ok, any()} | {:error, :checkout_timeout | {:runtime_error, any()}}
+   def run(pool_id, fun, options \\ []) do
+     {:ok, run!(pool_id, fun, options)}
+   rescue
+-    runtime_error -> {:runtime_error, runtime_error}
++    CheckoutTimeoutError -> {:error, :checkout_timeout}
++    runtime_error -> {:error, {:runtime_error, runtime_error}}
+   catch
+-    :exit, {:timeout, _meta} -> :all_workers_are_busy
+-    :exit, reason -> {:runtime_error, reason}
++    :exit, reason -> {:error, {:runtime_error, reason}}
+   end
+ 
+   @doc """
+@@ -195,20 +189,29 @@ defmodule Poolex do
+   """
+   @spec run!(pool_id(), (worker :: pid() -> any()), list(run_option())) :: any()
+   def run!(pool_id, fun, options \\ []) do
+-    timeout = Keyword.get(options, :timeout, @default_wait_timeout)
+-
+-    {:ok, pid} = GenServer.call(pool_id, :get_idle_worker, timeout)
+-
+-    monitor_process = monitor_caller(pool_id, self(), pid)
++    checkout_timeout = Keyword.get(options, :checkout_timeout, @default_checkout_timeout)
++    {:ok, worker_pid} = get_idle_worker(pool_id, checkout_timeout)
++    monitor_process = monitor_caller(pool_id, self(), worker_pid)
+ 
+     try do
+-      fun.(pid)
++      fun.(worker_pid)
+     after
+       Process.exit(monitor_process, :kill)
+-      GenServer.cast(pool_id, {:release_busy_worker, pid})
++      GenServer.cast(pool_id, {:release_busy_worker, worker_pid})
+     end
+   end
+ 
++  @spec get_idle_worker(pool_id(), timeout()) :: {:ok, worker()}
++  defp get_idle_worker(pool_id, checkout_timeout) do
++    caller_reference = make_ref()
++    GenServer.call(pool_id, {:get_idle_worker, caller_reference}, checkout_timeout)
++  catch
++    :exit,
++    {:timeout, {GenServer, :call, [_pool_id, {:get_idle_worker, caller_reference}, _timeout]}} ->
++      GenServer.cast(pool_id, {:cancel_waiting, caller_reference})
++      raise CheckoutTimeoutError
++  end
++
+   @doc """
+   Returns current state of started pool.
+ 
+@@ -337,7 +340,7 @@ defmodule Poolex do
+   end
+ 
+   @impl GenServer
+-  def handle_call(:get_idle_worker, {from_pid, _} = caller, %State{} = state) do
++  def handle_call({:get_idle_worker, caller_reference}, {from_pid, _} = caller, %State{} = state) do
+     if IdleWorkers.empty?(state) do
+       if state.overflow < state.max_overflow do
+         {:ok, new_worker} = start_worker(state)
+@@ -349,7 +352,9 @@ defmodule Poolex do
+         {:reply, {:ok, new_worker}, %State{state | overflow: state.overflow + 1}}
+       else
+         Monitoring.add(state.monitor_id, from_pid, :waiting_caller)
+-        state = WaitingCallers.add(state, caller)
++
++        state =
++          WaitingCallers.add(state, %Poolex.Caller{reference: caller_reference, from: caller})
+ 
+         {:noreply, state}
+       end
+@@ -396,6 +401,11 @@ defmodule Poolex do
+     end
+   end
+ 
++  @impl GenServer
++  def handle_cast({:cancel_waiting, caller_reference}, %State{} = state) do
++    {:noreply, WaitingCallers.remove_by_reference(state, caller_reference)}
++  end
++
+   @impl GenServer
+   def handle_info(
+         {:DOWN, monitoring_reference, _process, dead_process_pid, _reason},
+@@ -431,7 +441,7 @@ defmodule Poolex do
+   defp provide_worker_to_waiting_caller(%State{} = state, worker) do
+     {caller, state} = WaitingCallers.pop(state)
+ 
+-    GenServer.reply(caller, {:ok, worker})
++    GenServer.reply(caller.from, {:ok, worker})
+ 
+     state
+   end
+diff --git a/lib/poolex/caller.ex b/lib/poolex/caller.ex
+new file mode 100644
+index 0000000..93f1d9f
+--- /dev/null
++++ b/lib/poolex/caller.ex
+@@ -0,0 +1,15 @@
++defmodule Poolex.Caller do
++  @moduledoc """
++  Caller structure.
++
++  **Callers** are processes that have requested to get a worker.
++  """
++
++  defstruct from: nil,
++            reference: nil
++
++  @type t() :: %__MODULE__{
++          from: GenServer.from(),
++          reference: reference()
++        }
++end
+diff --git a/lib/poolex/callers/behaviour.ex b/lib/poolex/callers/behaviour.ex
+index f98197a..21a71f5 100644
+--- a/lib/poolex/callers/behaviour.ex
++++ b/lib/poolex/callers/behaviour.ex
+@@ -12,13 +12,15 @@ defmodule Poolex.Callers.Behaviour do
+   @doc "Returns `state` (any data structure) which will be passed as the first argument to all other functions."
+   @callback init() :: state()
+   @doc "Adds caller to `state` and returns new state."
+-  @callback add(state(), Poolex.caller()) :: state()
++  @callback add(state(), Poolex.Caller.t()) :: state()
+   @doc "Returns `true` if the `state` is empty, `false` otherwise."
+   @callback empty?(state()) :: boolean()
+   @doc "Removes one of callers from `state` and returns it as `{caller, state}`. Returns `:empty` if state is empty."
+-  @callback pop(state()) :: {Poolex.caller(), state()} | :empty
+-  @doc "Removes given caller by caller's pid from `state` and returns new state."
++  @callback pop(state()) :: {Poolex.Caller.t(), state()} | :empty
++  @doc "Removes caller by pid from `state` and returns new state."
+   @callback remove_by_pid(state(), caller_pid :: pid()) :: state()
++  @doc "Removes caller by reference from `state` and returns new state."
++  @callback remove_by_reference(state(), reference :: reference()) :: state()
+   @doc "Returns list of callers."
+-  @callback to_list(state()) :: list(Poolex.caller())
++  @callback to_list(state()) :: list(Poolex.Caller.t())
+ end
+diff --git a/lib/poolex/callers/impl/erlang_queue.ex b/lib/poolex/callers/impl/erlang_queue.ex
+index 68554e3..f873663 100644
+--- a/lib/poolex/callers/impl/erlang_queue.ex
++++ b/lib/poolex/callers/impl/erlang_queue.ex
+@@ -29,7 +29,15 @@ defmodule Poolex.Callers.Impl.ErlangQueue do
+ 
+   @impl true
+   def remove_by_pid(state, caller_pid) do
+-    :queue.filter(fn {pid, _} -> pid != caller_pid end, state)
++    :queue.filter(fn %Poolex.Caller{from: {pid, _tag}} -> pid != caller_pid end, state)
++  end
++
++  @impl true
++  def remove_by_reference(state, caller_reference) do
++    :queue.filter(
++      fn %Poolex.Caller{reference: reference} -> reference != caller_reference end,
++      state
++    )
+   end
+ 
+   @impl true
+diff --git a/lib/poolex/checkout_timeout_error.ex b/lib/poolex/checkout_timeout_error.ex
+new file mode 100644
+index 0000000..e55e48e
+--- /dev/null
++++ b/lib/poolex/checkout_timeout_error.ex
+@@ -0,0 +1,7 @@
++defmodule Poolex.CheckoutTimeoutError do
++  @moduledoc """
++  Raised on using `Poolex.run!/3` when a checkout times out.
++  """
++
++  defexception message: "checkout timeout"
++end
+diff --git a/lib/poolex/private/waiting_callers.ex b/lib/poolex/private/waiting_callers.ex
+index 1feb43b..073194c 100644
+--- a/lib/poolex/private/waiting_callers.ex
++++ b/lib/poolex/private/waiting_callers.ex
+@@ -10,7 +10,7 @@ defmodule Poolex.Private.WaitingCallers do
+   end
+ 
+   @doc false
+-  @spec add(State.t(), Poolex.caller()) :: State.t()
++  @spec add(State.t(), Poolex.Caller.t()) :: State.t()
+   def add(
+         %State{waiting_callers_impl: impl, waiting_callers_state: waiting_callers_state} = state,
+         caller
+@@ -25,7 +25,7 @@ defmodule Poolex.Private.WaitingCallers do
+   end
+ 
+   @doc false
+-  @spec pop(State.t()) :: {Poolex.caller(), State.t()} | :empty
++  @spec pop(State.t()) :: {Poolex.Caller.t(), State.t()} | :empty
+   def pop(
+         %State{waiting_callers_impl: impl, waiting_callers_state: waiting_callers_state} = state
+       ) do
+@@ -48,7 +48,19 @@ defmodule Poolex.Private.WaitingCallers do
+   end
+ 
+   @doc false
+-  @spec to_list(State.t()) :: list(Poolex.caller())
++  @spec remove_by_reference(State.t(), reference :: reference()) :: State.t()
++  def remove_by_reference(
++        %State{waiting_callers_impl: impl, waiting_callers_state: waiting_callers_state} = state,
++        reference
++      ) do
++    %State{
++      state
++      | waiting_callers_state: impl.remove_by_reference(waiting_callers_state, reference)
++    }
++  end
++
++  @doc false
++  @spec to_list(State.t()) :: list(Poolex.Caller.t())
+   def to_list(%State{waiting_callers_impl: impl, waiting_callers_state: state}) do
+     impl.to_list(state)
+   end

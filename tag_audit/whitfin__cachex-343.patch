@@ -1,0 +1,144 @@
+diff --git a/docs/features/cache-warming/proactive-warming.md b/docs/features/cache-warming/proactive-warming.md
+index 3e10aa7..826c48a 100644
+--- a/docs/features/cache-warming/proactive-warming.md
++++ b/docs/features/cache-warming/proactive-warming.md
+@@ -17,12 +17,19 @@ import Cachex.Spec
+ # define the cache with our warmer
+ Cachex.start_link(:my_cache, [
+   warmers: [
+-    warmer(module: MyProject.DatabaseWarmer, state: connection)
++    warmer(
++      module: MyProject.DatabaseWarmer,
++      state: connection
++    )
+   ]
+ ])
+ ```
+ 
+-These are the only two fields in a `warmer()` record; a `:module` tag to define the module, and a `:state` field to define the state to be provided to the warmer (used later). The state in this case is a connection handle to our database, since we'll need that for queries we're trying to warm. All that remains is to implement our `DatabaseWarmer` module which implements the warmer behaviour:
++These are generally the only two fields you'll have to set in a `warmer()~ record; a `:module` tag to define the module, and a `:state` field to define the state to be provided to the warmer (used later). The state in this case is a connection handle to our database, since we'll need that for queries we're trying to warm.
++
++In terms of other useful options, you may pass a `:name` to use as the warmer's process name, which will default to the PID used by the process. You can also use the `:required` flag to signal whether it is necessary for a warmer to fully execute before your cache is deemed available. This defaults to `true`, but can easily be set to `false` if you're happy for your data to load asynchronously.
++
++With our cache created, all that remains is to implement our `DatabaseWarmer` module which implements the warmer behaviour:
+ 
+ ```elixir
+ defmodule MyProject.DatabaseWarmer do
+diff --git a/lib/cachex.ex b/lib/cachex.ex
+index f14cf98..975f0fb 100644
+--- a/lib/cachex.ex
++++ b/lib/cachex.ex
+@@ -305,7 +305,7 @@ defmodule Cachex do
+     with {:ok, name} <- Keyword.fetch(options, :name),
+          {:ok, true} <- ensure_started(),
+          {:ok, true} <- ensure_unused(name),
+-         {:ok, cache} <- setup_env(name, options),
++         {:ok, cache} <- Options.parse(name, options),
+          {:ok, pid} = Supervisor.start_link(__MODULE__, cache, name: name),
+          {:ok, link} = Services.link(cache),
+          ^link <- Overseer.update(name, link),
+@@ -1427,43 +1427,18 @@ defmodule Cachex do
+     end
+   end
+ 
+-  # Configures the environment for a new cache.
+-  #
+-  # This will first parse all provided options into a cache record, if
+-  # the options provided are valid (errors if not). Then we create a
+-  # new base ETS table to validate the ETS options, before deleting
+-  # the table and reporting that everything is ready.
+-  #
+-  # At a glance this seems very strange, but we use Eternal to manage
+-  # our table and so the Supervisor would simply crash on invalid
+-  # table options, which does not allow us to explain to the user.
+-  defp setup_env(name, options) when is_list(options) do
+-    with {:ok, cache} <- Options.parse(name, options) do
+-      try do
+-        :ets.new(name, [:named_table | const(:table_options)])
+-        :ets.delete(name)
+-        {:ok, cache}
+-      rescue
+-        # coveralls-ignore-start
+-        _ ->
+-          error(:invalid_option)
+-          # coveralls-ignore-stop
+-      end
+-    end
+-  end
+-
+   # Initializes cache warmers on startup.
+   #
+   # This will trigger the initial cache warming via `Cachex.warm/2` while
+   # also respecting whether certain warmers should block startup or not.
+   defp setup_warmers(cache(warmers: warmers) = cache) do
+-    groups = Enum.group_by(warmers, &warmer(&1, :async), &warmer(&1, :name))
++    {req, opt} = Enum.split_with(warmers, &warmer(&1, :required))
+ 
+-    startup = [wait: true, only: Map.get(groups, false, [])]
+-    spawned = [wait: false, only: Map.get(groups, true, [])]
++    required = [only: Enum.map(req, &warmer(&1, :name)), wait: true]
++    optional = [only: Enum.map(opt, &warmer(&1, :name)), wait: false]
+ 
+-    with {:ok, _} <- Cachex.warm(cache, const(:notify_false) ++ spawned),
+-         {:ok, _} <- Cachex.warm(cache, const(:notify_false) ++ startup) do
++    with {:ok, _} <- Cachex.warm(cache, const(:notify_false) ++ required),
++         {:ok, _} <- Cachex.warm(cache, const(:notify_false) ++ optional) do
+       :ok
+     end
+   end
+diff --git a/lib/cachex/spec.ex b/lib/cachex/spec.ex
+index a7ea78c..1540ac0 100644
+--- a/lib/cachex/spec.ex
++++ b/lib/cachex/spec.ex
+@@ -100,9 +100,9 @@ defmodule Cachex.Spec do
+   # Record specification for a cache warmer
+   @type warmer ::
+           record(:warmer,
++            required: boolean,
+             module: atom,
+             state: any,
+-            async: boolean,
+             name: GenServer.server()
+           )
+ 
+@@ -254,13 +254,13 @@ defmodule Cachex.Spec do
+ 
+   A warmer should have a valid module provided, which correctly implements the behaviour
+   associated with `Cachex.Warmer`. A state can also be provided, which will be passed
+-  to the execution callback of the provided module (which defaults to `nil`). An async
+-  flag determines if initial warmup will run asynchronously cache startup.
++  to the execution callback of the provided module (which defaults to `nil`). The flag
++  `:required` determines if the warmer much execute on cache startup.
+   """
+   defrecord :warmer,
++    required: true,
+     module: nil,
+     state: nil,
+-    async: false,
+     name: nil
+ 
+   ###############
+diff --git a/lib/cachex/spec/validator.ex b/lib/cachex/spec/validator.ex
+index f0e65b9..60464dd 100644
+--- a/lib/cachex/spec/validator.ex
++++ b/lib/cachex/spec/validator.ex
+@@ -133,14 +133,15 @@ defmodule Cachex.Spec.Validator do
+ 
+   # Validates a warmer specification record.
+   #
+-  # This will validate that the provided module correctly implements
+-  # the behaviour of `Cachex.Warmer` via function checking.
+-  def valid?(:warmer, warmer(module: module, name: name)) do
++  # This will validate that the provided module correctly implements the
++  # behaviour of `Cachex.Warmer` via function checking.
++  def valid?(:warmer, warmer(module: module, name: name, required: required)) do
+     check1 = behaviour?(module, Cachex.Warmer)
+     check2 = check1 and {:interval, 0} in module.__info__(:functions)
+     check3 = check2 and {:execute, 1} in module.__info__(:functions)
+     check4 = check3 and nillable?(name, &(is_atom(&1) or is_pid(&1)))
+-    check4
++    check5 = check4 and is_boolean(required)
++    check5
+   end
+ 
+   # Catch-all for invalid records.

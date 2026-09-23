@@ -1,0 +1,143 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 31981c1..9723762 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -2,10 +2,12 @@
+ 
+ ## 0.100.0
+ 
+-- Switch some flag positions in the generated cURL command
+-- Some bugfixes regarding the constructed Req.Request struct when multiple request steps have to be set
++- [BREAKING]: Switch some flag positions in the generated cURL command
++- Some bugfixes regarding the constructed `Req.Request` struct when multiple request steps have to be set
+ - [BREAKING]: From cURL to Req the body gets encoded in the specified encoding and set in the correct Req option
+-- New `CurlReq.Request` module for an internal representation
++- [BREAKING]: User Agent is encoded in the user agent flag (`--user-agent`/`-A`) instead of a generic header ([#32](https://github.com/derekkraan/curl_req/pull/32))
++- New `CurlReq.Request` module for an internal representation of the HTTP request ([#29](https://github.com/derekkraan/curl_req/pull/29))
++- Add new supported flag: `--insecure`/`-k` ([#31](https://github.com/derekkraan/curl_req/pull/31))
+ 
+ ## 0.99.0
+ 
+diff --git a/lib/curl_req.ex b/lib/curl_req.ex
+index c937cd7..7321c0f 100644
+--- a/lib/curl_req.ex
++++ b/lib/curl_req.ex
+@@ -106,7 +106,7 @@ defmodule CurlReq do
+ 
+       iex> Req.new(url: URI.parse("https://www.example.com"))
+       ...> |> CurlReq.to_curl(flags: :long, flavor: :req)
+-      ~S(curl --header "accept-encoding: gzip" --header "user-agent: req/#{@req_version}" --request GET https://www.example.com)
++      ~S(curl --header "accept-encoding: gzip" --user-agent "req/#{@req_version}" --request GET https://www.example.com)
+ 
+       iex> Req.new(url: "https://www.example.com")
+       ...> |> CurlReq.to_curl(run_steps: [except: [:compressed]])
+diff --git a/lib/curl_req/curl.ex b/lib/curl_req/curl.ex
+index c1eb218..601b423 100644
+--- a/lib/curl_req/curl.ex
++++ b/lib/curl_req/curl.ex
+@@ -34,7 +34,8 @@ defmodule CurlReq.Curl do
+           proxy_user: :string,
+           netrc: :boolean,
+           netrc_file: :string,
+-          insecure: :boolean
++          insecure: :boolean,
++          user_agent: :string
+         ],
+         aliases: [
+           H: :header,
+@@ -48,7 +49,8 @@ defmodule CurlReq.Curl do
+           x: :proxy,
+           U: :proxy_user,
+           n: :netrc,
+-          k: :insecure
++          k: :insecure,
++          A: :user_agent
+         ]
+       )
+ 
+@@ -88,6 +90,7 @@ defmodule CurlReq.Curl do
+     |> add_compression(options)
+     |> add_proxy(options)
+     |> add_insecure(options)
++    |> add_user_agent(options)
+     |> configure_redirects(options)
+   end
+ 
+@@ -208,6 +211,10 @@ defmodule CurlReq.Curl do
+     CurlReq.Request.put_insecure(request, options[:insecure])
+   end
+ 
++  defp add_user_agent(request, options) do
++    CurlReq.Request.put_user_agent(request, options[:user_agent])
++  end
++
+   defp configure_redirects(request, options) do
+     CurlReq.Request.put_redirect(request, options[:location])
+   end
+@@ -250,10 +257,12 @@ defmodule CurlReq.Curl do
+           headers ++ [header_flag(flag_style, "content-type: application/x-www-form-urlencoded")]
+       end
+ 
+-    headers =
+-      case flavor do
+-        :curl -> headers
+-        :req -> headers ++ header_flag(flag_style, ["user-agent: req/", CurlReq.req_version()])
++    user_agent =
++      case {flavor, request.user_agent} do
++        {:curl, agent} when is_atom(agent) -> []
++        {:req, :curl} -> []
++        {:req, :req} -> [user_agent_flag(flag_style, ["req/", CurlReq.req_version()])]
++        {_, user_agent} -> [user_agent_flag(flag_style, user_agent)]
+       end
+ 
+     body =
+@@ -327,6 +336,7 @@ defmodule CurlReq.Curl do
+       insecure,
+       auth,
+       headers,
++      user_agent,
+       cookies,
+       body,
+       proxy,
+@@ -389,4 +399,7 @@ defmodule CurlReq.Curl do
+ 
+   defp insecure_flag(:short), do: " -k"
+   defp insecure_flag(:long), do: " --insecure"
++
++  defp user_agent_flag(:short, value), do: [" -A ", escape(value)]
++  defp user_agent_flag(:long, value), do: [" --user-agent ", escape(value)]
+ end
+diff --git a/lib/curl_req/req.ex b/lib/curl_req/req.ex
+index 415d1e0..92f6b49 100644
+--- a/lib/curl_req/req.ex
++++ b/lib/curl_req/req.ex
+@@ -10,11 +10,11 @@ defmodule CurlReq.Req do
+   def decode(%Req.Request{} = req, _opts \\ []) do
+     request =
+       %CurlReq.Request{}
++      |> CurlReq.Request.put_user_agent(:req)
+       |> put_header(req)
+       |> CurlReq.Request.put_auth(req.options[:auth])
+       |> CurlReq.Request.put_redirect(req.options[:redirect])
+       |> CurlReq.Request.put_compression(req.options[:compressed])
+-      |> CurlReq.Request.put_user_agent(:req)
+       |> CurlReq.Request.put_body(req.body)
+       |> CurlReq.Request.put_url(req.url)
+       |> CurlReq.Request.put_method(req.method)
+diff --git a/lib/curl_req/request.ex b/lib/curl_req/request.ex
+index 57e3e96..9b6334d 100644
+--- a/lib/curl_req/request.ex
++++ b/lib/curl_req/request.ex
+@@ -417,6 +417,12 @@ defmodule CurlReq.Request do
+       "some user agent"
+   """
+   @spec put_redirect(__MODULE__.t(), :req | :curl | String.t()) :: __MODULE__.t()
++  def put_user_agent(%__MODULE{} = request, nil), do: request
++
++  def put_user_agent(%__MODULE{} = request, "req/" <> _) do
++    %{request | user_agent: :req}
++  end
++
+   def put_user_agent(%__MODULE{} = request, user_agent)
+       when user_agent in [:curl, :req] or is_binary(user_agent) do
+     %{request | user_agent: user_agent}

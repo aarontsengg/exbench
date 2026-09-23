@@ -1,0 +1,176 @@
+diff --git a/README.md b/README.md
+index 17840f9..fd106ee 100644
+--- a/README.md
++++ b/README.md
+@@ -95,6 +95,9 @@ x = true
+ # Type: List(Int)
+ list_of_ints = [1, 2, 3]
+ 
++# Type: {String,Bool}
++tuple = {"tuple", true}
++
+ # Type: {foo: Int}
+ record = {foo: 123}
+ ```
+diff --git a/example.fi b/example.fi
+index f41b84e..eea252a 100644
+--- a/example.fi
++++ b/example.fi
+@@ -33,3 +33,7 @@ fn simple_if : String do
+     "you can't see me \m/"
+   end
+ end
++
++fn tuple : {Int,Bool} do
++  {1, true}
++end
+diff --git a/lib/fika/erl_translate.ex b/lib/fika/erl_translate.ex
+index 0a8a773..cda3ad5 100644
+--- a/lib/fika/erl_translate.ex
++++ b/lib/fika/erl_translate.ex
+@@ -62,7 +62,7 @@ defmodule Fika.ErlTranslate do
+   defp translate_exp({:atom, {line, _, _}, value}) do
+     {:atom, line, value}
+   end
+-  
++
+   defp translate_exp({{:=, {line, _, _}}, pattern, exp}) do
+     {:match, line, translate_exp(pattern), translate_exp(exp)}
+   end
+@@ -83,6 +83,10 @@ defmodule Fika.ErlTranslate do
+     do_translate_list(value, line)
+   end
+ 
++  defp translate_exp({:tuple, {line, _, _}, value}) do
++    {:tuple, line, translate_exps(value)}
++  end
++
+   defp translate_exp({:record, {line, _, _}, name, k_vs}) do
+     k_vs = Enum.map(k_vs, fn {{:identifier, {l, _, _}, k}, v} ->
+       {:map_field_assoc, l, {:atom, l, k}, translate_exp(v)}
+diff --git a/lib/fika/parser.ex b/lib/fika/parser.ex
+index 04e71d1..d3264d8 100644
+--- a/lib/fika/parser.ex
++++ b/lib/fika/parser.ex
+@@ -127,6 +127,14 @@ defmodule Fika.Parser do
+     |> ignore(string("]"))
+     |> Helper.to_ast(:exp_list)
+ 
++  tuple =
++    ignore(string("{"))
++    |> concat(allow_space)
++    |> concat(list_content)
++    |> concat(allow_space)
++    |> ignore(string("}"))
++    |> Helper.to_ast(:tuple)
++
+   exp_paren =
+     ignore(string("("))
+     |> parsec(:exp)
+@@ -230,6 +238,7 @@ defmodule Fika.Parser do
+       boolean,
+       string_exp,
+       exp_list,
++      tuple,
+       record,
+       function_ref,
+       atom,
+@@ -306,6 +315,29 @@ defmodule Fika.Parser do
+     |> concat(allow_space)
+     |> string(")")
+ 
++  # To parse functions with tuple return type
++  type_tuple_element =
++    allow_space
++    |> parsec(:type)
++    |> label("tuple element")
++
++  type_tuple_elements =
++    type_tuple_element
++    |> repeat(
++      allow_space
++      |> ignore(string(","))
++      |> concat(allow_space)
++      |> concat(type_tuple_element)
++    )
++    |> reduce({Enum, :join, [","]})
++
++  tuple_type =
++    string("{")
++    |> concat(type_tuple_elements)
++    |> string("}")
++    |> reduce({Enum, :join, []})
++    |> label("tuple type")
++
+   type_key_value =
+     allow_space
+     |> concat(identifier_str)
+@@ -349,7 +381,9 @@ defmodule Fika.Parser do
+       simple_type
+       |> optional(type_parens),
+       record_type,
+-      atom
++      atom,
++      record_type,
++      tuple_type
+     ])
+ 
+   parse_type =
+diff --git a/lib/fika/parser_helper.ex b/lib/fika/parser_helper.ex
+index 51b6765..d328083 100644
+--- a/lib/fika/parser_helper.ex
++++ b/lib/fika/parser_helper.ex
+@@ -105,6 +105,10 @@ defmodule Fika.ParserHelper do
+     {:list, line, result}
+   end
+ 
++  def do_to_ast({result, line}, :tuple) do
++    {:tuple, line, result}
++  end
++
+   def do_to_ast({[k, v], _line}, :key_value) do
+     {k, v}
+   end
+diff --git a/lib/fika/type_checker.ex b/lib/fika/type_checker.ex
+index dea1889..412812f 100644
+--- a/lib/fika/type_checker.ex
++++ b/lib/fika/type_checker.ex
+@@ -149,6 +149,21 @@ defmodule Fika.TypeChecker do
+     infer_list_exps(env, exps)
+   end
+ 
++  # Tuple
++  def infer_exp(env, {:tuple, _, exps}) do
++    case do_infer_tuple_exps(exps, env) do
++      {:ok, exp_types, env} ->
++        exp_types =
++          exp_types
++          |> Enum.reverse()
++          |> Enum.join(",")
++
++        {:ok, "{#{exp_types}}", env}
++      error ->
++        error
++    end
++  end
++
+   # Record
+   def infer_exp(env, {:record, _, name, key_values}) do
+     if name do
+@@ -252,6 +267,16 @@ defmodule Fika.TypeChecker do
+     end)
+   end
+ 
++  defp do_infer_tuple_exps(exps, env) do
++    Enum.reduce_while(exps, {:ok, [], env}, fn exp, {:ok, acc, env} ->
++      case infer_exp(env, exp) do
++        {:ok, exp_type, env} ->
++          {:cont, {:ok, [exp_type | acc], env}}
++        error -> {:halt, error}
++      end
++    end)
++  end
++
+   def infer_args(env, exp, module) do
+     case do_infer_args(env, exp) do
+       {:ok, type_acc, env} ->

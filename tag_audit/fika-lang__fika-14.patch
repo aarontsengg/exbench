@@ -1,0 +1,174 @@
+diff --git a/README.md b/README.md
+index 1b2d82a..c8bed4f 100644
+--- a/README.md
++++ b/README.md
+@@ -53,6 +53,17 @@ sum(40, 2)
+ example.sum(40, 2)
+ ```
+ 
++#### If-Else expressions
++An if-else expression in Fika looks like this:
++```
++if true do
++  a = "we have if-else now!"
++  200
++else
++  404
++end
++```
++
+ #### Basic types and operators
+ 
+ Fika is currently a proof of concept so its data types and operators are quite
+diff --git a/example.fi b/example.fi
+index 0d87fc4..f41b84e 100644
+--- a/example.fi
++++ b/example.fi
+@@ -25,3 +25,11 @@ end
+ fn bool : Bool do
+   true
+ end
++
++fn simple_if : String do
++  if true do
++    "this is a passing if!"
++  else
++    "you can't see me \m/"
++  end
++end
+diff --git a/lib/fika/erl_translate.ex b/lib/fika/erl_translate.ex
+index 7154590..eaf7e2e 100644
+--- a/lib/fika/erl_translate.ex
++++ b/lib/fika/erl_translate.ex
+@@ -99,6 +99,18 @@ defmodule Fika.ErlTranslate do
+     {:fun, line, f}
+   end
+ 
++  defp translate_exp({{:if, {line, _, _}}, condition, if_block, else_block}) do
++    {
++      :case,
++      line,
++      translate_exp(condition),
++      [
++        {:clause, line, [{:atom, line, true}], [], translate_exps(if_block)},
++        {:clause, line, [{:atom, line, false}], [], translate_exps(else_block)}
++      ]
++    }
++  end
++
+   defp add_record_meta(k_vs, name, line) do
+     name =
+       if name do
+diff --git a/lib/fika/parser.ex b/lib/fika/parser.ex
+index e6c4c98..9dc8e39 100644
+--- a/lib/fika/parser.ex
++++ b/lib/fika/parser.ex
+@@ -38,7 +38,9 @@ defmodule Fika.Parser do
+     choice([
+       string("fn"),
+       string("do"),
+-      string("end")
++      string("end"),
++      string("if"),
++      string("else")
+     ])
+ 
+   identifier_str =
+@@ -199,6 +201,23 @@ defmodule Fika.Parser do
+     |> wrap(call_args)
+     |> ignore(string(")"))
+ 
++  exp_if_else =
++    ignore(string("if"))
++    |> concat(require_space)
++    |> parsec(:exp)
++    |> concat(require_space)
++    |> ignore(string("do"))
++    |> concat(require_space)
++    |> wrap(parsec(:exps))
++    |> concat(require_space)
++    |> ignore(string("else"))
++    |> concat(require_space)
++    |> wrap(parsec(:exps))
++    |> concat(require_space)
++    |> ignore(string("end"))
++    |> label("if-else expression")
++    |> Helper.to_ast(:exp_if_else)
++
+   literal_exps =
+     choice([
+       integer,
+@@ -206,7 +225,8 @@ defmodule Fika.Parser do
+       string_exp,
+       exp_list,
+       record,
+-      function_ref
++      function_ref,
++      exp_if_else
+     ])
+ 
+   non_literal_exps =
+diff --git a/lib/fika/parser_helper.ex b/lib/fika/parser_helper.ex
+index 431451a..5144d40 100644
+--- a/lib/fika/parser_helper.ex
++++ b/lib/fika/parser_helper.ex
+@@ -22,6 +22,10 @@ defmodule Fika.ParserHelper do
+     {:boolean, line, value == "true"}
+   end
+ 
++  def do_to_ast({[condition, true_block, false_block], line}, :exp_if_else) do
++    {{:if, line}, condition, true_block, false_block}
++  end
++
+   def do_to_ast({[left, bin_op, right | rest], line}, :exp_bin_op) when bin_op in ["+", "-", "*", "/"] do
+     new_left = {:call, {String.to_atom(bin_op), line}, [left, right], :kernel}
+     do_to_ast({[new_left | rest], line}, :exp_bin_op)
+diff --git a/lib/fika/type_checker.ex b/lib/fika/type_checker.ex
+index 9af9c94..4518385 100644
+--- a/lib/fika/type_checker.ex
++++ b/lib/fika/type_checker.ex
+@@ -197,6 +197,44 @@ defmodule Fika.TypeChecker do
+     end
+   end
+ 
++  # if-else expression
++  def infer_exp(env, {{:if, _line}, condition, if_block, else_block}) do
++    Logger.debug "Inferring an if-else expression"
++
++    case infer_if_else_condition(env, condition) do
++      {:ok, "Bool", env} -> infer_if_else_blocks(env, if_block, else_block)
++      error -> error
++    end
++  end
++
++  defp infer_if_else_condition(env, condition) do
++    case infer_exp(env, condition) do
++      {:ok, "Bool", env} ->
++        Logger.debug("if-else condition has return type: Bool")
++        {:ok, "Bool", env}
++
++      {_, inferred_type, _env} ->
++        Logger.debug("if-else condition has wrong return type: #{inferred_type}")
++        {:error, "Wrong type for if condition. Expected: Bool, Got: #{inferred_type}"}
++    end
++  end
++
++  defp infer_if_else_blocks(env, if_block, else_block) do
++    {_, if_type_val, env} = infer_block(env, if_block)
++    {_, else_type_val, _} = type = infer_block(env, else_block)
++
++    unless if_type_val == else_type_val do
++      Logger.debug("if and else block have different types")
++
++      error = "Expected if and else blocks to have same return type. " <>
++        "Got #{if_type_val} and #{else_type_val}"
++
++      {:error, error}
++    else
++      type
++    end
++  end
++
+   defp do_infer_key_values(key_values, env) do
+     Enum.reduce_while(key_values, {:ok, [], env}, fn {k, v}, {:ok, acc, env} ->
+       case infer_exp(env, v) do

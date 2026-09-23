@@ -1,0 +1,536 @@
+diff --git a/example.fi b/example.fi
+index 8534238..f946eea 100644
+--- a/example.fi
++++ b/example.fi
+@@ -1,5 +1,8 @@
+-# A function definition
+-# that takes two args - an integer "a", another integer "b"
++# Here's a walkthrough of Fika's syntax. Please be warned that Fika is still
++# an early prototype and the syntax you see here will likely change
++# based on feedback from the users.
++
++# A function definition that takes two integers as arguments
+ # and returns an integer.
+ fn sum(a: Int, b: Int) : Int do
+   a + b
+@@ -10,20 +13,19 @@ fn hello : String do
+   "World"
+ end
+ 
+-# Anonymous function
+-fn anonymous_call : Int do
+-  f = (x: Int, y: Int) do
+-    x + y
+-  end
+-
+-  f.(10, 20)
++# true and false are keywords that of the type Bool
++fn bool : Bool do
++  true
+ end
+ 
+-# Strings support interpolations
++# Strings
+ fn hello_interpolation : String do
++  # Here's a string
+   hello = "Hello!"
+   world = "World"
+-  "#{hello}, Greetings to the #{world}"
++
++  # String can be interpolated using #{}
++  "#{hello} Greetings to the #{world}"
+ end
+ 
+ # This function returns a list of integers.
+@@ -31,63 +33,92 @@ fn foo : List(Int) do
+   [1, 2, 3]
+ end
+ 
+-# This function returns a function reference.
+-fn sum_ref : Fn(Int, Int -> Int) do
+-  &sum(Int, Int)
++# A tuple is a small group of values of different types.
++# A tuple does not grow dynamically and it's shape is fixed.
++fn tuple : {Int, Bool} do
++  {1, true}
+ end
+ 
+-# Function references can be used to invoke the functions
+-# they refer.
+-fn call_sum_ref : Int do
+-  sum_ref().(1, 2)
++# Records are useful for holding data with known keys,
++# for example, records from a table in a relational DB.
++# Think of them as "named tuples" where each element gets a unique name.
++fn rec : {foo: List(Int)} do
++  {foo: [1, 2, 3]}
+ end
+ 
+-# true and false are keywords that are of type Bool
+-fn bool : Bool do
+-  true
++# Union types
++fn interval(start: Int, finish: Int) : {:error, String} | {:ok, Int} do
++  if start <= finish do
++    {:ok, finish - start}
++  else
++    {:error, "Interval cannot end before it's started"}
++  end
+ end
+ 
+-# Here's an example of the if-else expression.
+-# Notice that an if should always be followed by an else.
+-fn simple_if : String do
+-  if true do
+-    "this is a passing if!"
+-  else
+-    "you can't see me \m/"
++# The Map type holds key-value data that grows dynamically.
++# Maps are useful when the types of keys and values are known
++# already, but their contents change dynamically during runtime.
++fn map : Map(String, List(Int)) do
++  {"james-bond" => [0, 0, 7]}
++end
++
++# Anonymous functions
++fn anonymous_call : Int do
++  # f is a reference to an anonymous function
++  f = (x: Int, y: Int) do
++    x + y
+   end
++
++  # The anonymous function can be called using .()
++  f.(10, 20)
+ end
+ 
+-# A tuple is a small group of values of different types.
+-# A tuple does not grow dynamically and is useful to hold
+-# values of different types together.
+-fn tuple : {Int,Bool} do
+-  {1, true}
++# This function returns a function reference.
++# The signature of this function can be read as:
++# "sum_ref takes no arguments and returns a function.
++# The function that it returns takes two integers
++# and returns another integer."
++fn sum_ref : Fn(Int, Int -> Int) do
++  # Create reference to a named function using &
++  &sum(Int, Int)
+ end
+ 
+-# Records are useful for holding data with known keys,
+-# for example, records from a table in a relational DB.
+-fn rec : {foo: List(Int)} do
+-  {foo: [1, 2, 3]}
++# Calling functions using references
++fn call_sum_ref : Int do
++  # As we saw in the case of anonymous functions, references can be used
++  # to call functions using .()
++  sum_ref().(1, 2)
+ end
+ 
+-# Maps are useful for holding data when keys are only know at runtime
+-# A map can hold key-value data that grows dynamically but have the same type
+-fn map : Map(String, List(Int)) do
+-  {"james-bond" => [0, 0, 7]}
++# Use type variables when your function is generic and needs to work with
++# a variety of types
++fn make_pair(x: a, y: b) : {a, b} do
++  {x, y}
+ end
+ 
+-# Logical operator - or
++# Effect type
++# Fika separates functions with side effects so they can be safely executed.
++# Such functions are marked by the "Effect" type.
++fn greet : Effect(String) do
++  name = io.gets("What's your name? ")
++  io.puts("Hello #{name}")
++end
++
++# Or operator
+ fn or(a: Bool, b: Bool) : Bool do
++  # Returns true if either a or b is true
+   a | b
+ end
+ 
+-# Logical operator - and
++# And operator
+ fn and(a: Bool, b: Bool) : Bool do
++  # Returns true if both a and b are true
+   a & b
+ end
+ 
+-# Logical unary "not" operator
++# Not operator
+ fn not(a: Bool) : Bool do
++  # Returns true if a is false
+   !a
+ end
+ 
+@@ -97,6 +128,7 @@ fn unary_minus(a: Int) : Int do
+ end
+ 
+ # Comparison operators
++# >, <, ==, <=, >=, !=
+ fn max(a: Int, b: Int) : Int do
+   if a > b do
+     a
+@@ -105,12 +137,13 @@ fn max(a: Int, b: Int) : Int do
+   end
+ end
+ 
+-# Union types
+-fn interval(start: Int, finish: Int) : {:error, String} | {:ok, Int} do
+-  if start <= finish do
+-    {:ok, finish - start}
++# Here's an example of the if-else expression.
++# Notice that an if should always be followed by an else.
++fn simple_if : String do
++  if true do
++    "I am the return value because the condition is true"
+   else
+-    {:error, "Interval cannot end before it's started"}
++    "If the condition was false, It would have been me"
+   end
+ end
+ 
+@@ -134,9 +167,3 @@ end
+ fn list_length : Int do
+   list_size([1, 2, 3])
+ end
+-
+-# Side effect
+-fn greet : Effect(String) do
+-  name = io.gets("What's your name? ")
+-  io.puts("Hello #{name}")
+-end
+diff --git a/lib/fika/compiler/code_server.ex b/lib/fika/compiler/code_server.ex
+index 57fed47..c7d4e58 100644
+--- a/lib/fika/compiler/code_server.ex
++++ b/lib/fika/compiler/code_server.ex
+@@ -7,7 +7,7 @@ defmodule Fika.Compiler.CodeServer do
+     DefaultTypes,
+     ModuleCompiler,
+     ErlTranslate,
+-    TypeChecker
++    TypeChecker.FunctionMatch
+   }
+ 
+   def start_link(_) do
+@@ -113,15 +113,22 @@ defmodule Fika.Compiler.CodeServer do
+     signature_map = get_in(state, [:public_functions, module, function])
+ 
+     state =
+-      case TypeChecker.find_by_call(signature_map, signature) do
+-        {_, result} ->
++      case FunctionMatch.find_by_call(signature_map, signature) do
++        {_, result, vars} ->
++          result = FunctionMatch.replace_vars(result, vars)
+           GenServer.reply(from, result)
+           state
+ 
+         _ ->
+-          state
+-          |> async_compile(module)
+-          |> wait_for(module, signature, from)
++          if get_in(state, [:public_functions, module]) do
++            msg = "Function #{signature} does not exist"
++            GenServer.reply(from, {:error, msg})
++            state
++          else
++            state
++            |> async_compile(module)
++            |> wait_for(module, signature, from)
++          end
+       end
+ 
+     {:noreply, state}
+@@ -189,8 +196,12 @@ defmodule Fika.Compiler.CodeServer do
+ 
+     update_in(state, keys, fn waitlist ->
+       Enum.reject(waitlist, fn {s, from} ->
+-        TypeChecker.signature_matches_call?(signature, s) &&
++        if vars = FunctionMatch.match_signatures(signature, s) do
++          result = FunctionMatch.replace_vars(result, vars)
+           GenServer.reply(from, result)
++        end
++
++        # TypeChecker.signature_matches_call?(signature, s) &&
+       end)
+     end)
+   end
+diff --git a/lib/fika/compiler/parser/types.ex b/lib/fika/compiler/parser/types.ex
+index 3e45d10..14a45ec 100644
+--- a/lib/fika/compiler/parser/types.ex
++++ b/lib/fika/compiler/parser/types.ex
+@@ -115,6 +115,10 @@ defmodule Fika.Compiler.Parser.Types do
+     |> label("boolean")
+     |> reduce({Helper, :to_atom, []})
+ 
++  type_variable =
++    identifier_str
++    |> label("type variable")
++
+   base_type =
+     choice([
+       string_type,
+@@ -128,7 +132,8 @@ defmodule Fika.Compiler.Parser.Types do
+       effect_type,
+       record_type,
+       map_type,
+-      tuple_type
++      tuple_type,
++      type_variable
+     ])
+ 
+   union_type =
+diff --git a/lib/fika/compiler/type_checker.ex b/lib/fika/compiler/type_checker.ex
+index 8d0afdd..595a399 100644
+--- a/lib/fika/compiler/type_checker.ex
++++ b/lib/fika/compiler/type_checker.ex
+@@ -318,56 +318,6 @@ defmodule Fika.Compiler.TypeChecker do
+     %{ast: ast, scope: %{}}
+   end
+ 
+-  # Given a map of signatures to values and a signature,
+-  # finds the value for the signature which is a supertype of the second arg.
+-  def find_by_call(map, signature) when is_map(map) do
+-    Enum.find(map, fn {s, _} ->
+-      signature_matches_call?(s, signature)
+-    end)
+-  end
+-
+-  def find_by_call(_, _), do: nil
+-
+-  def signature_matches_call?(s1, s2) do
+-    if s1.module == s2.module && s1.function == s2.function &&
+-         length(s1.types) == length(s2.types) do
+-      all_subtype?(s2.types, s1.types)
+-    end
+-  end
+-
+-  defp all_subtype?([], []) do
+-    true
+-  end
+-
+-  defp all_subtype?([t1 | t1s], [t2 | t2s]) do
+-    if subtype?(t1, t2) do
+-      all_subtype?(t1s, t2s)
+-    else
+-      false
+-    end
+-  end
+-
+-  # Returns true if t1 is a subtype of t2 (t1 <: t2)
+-  # Cheese <: Food
+-  # Food -> Int <: Cheese -> Int
+-  # Int -> Cheese <: Int -> Food
+-  def subtype?(t1, t2) do
+-    do_subtype?(t1, t2)
+-  end
+-
+-  defp do_subtype?(t1, t2) when t1 == t2 do
+-    true
+-  end
+-
+-  defp do_subtype?(t1, %T.Union{types: ts}) do
+-    Enum.any?(ts, &do_subtype?(t1, &1))
+-  end
+-
+-  # TODO: also check subtypes of remaining types
+-  defp do_subtype?(_, _) do
+-    false
+-  end
+-
+   # TODO: made it work, now make it pretty.
+   defp infer_case_clauses(env, rhs, clauses) do
+     all_rhs_types = Match.expand_unions(rhs)
+diff --git a/lib/fika/compiler/type_checker/function_match.ex b/lib/fika/compiler/type_checker/function_match.ex
+new file mode 100644
+index 0000000..d700d25
+--- /dev/null
++++ b/lib/fika/compiler/type_checker/function_match.ex
+@@ -0,0 +1,118 @@
++defmodule Fika.Compiler.TypeChecker.FunctionMatch do
++  alias Fika.Compiler.TypeChecker.Types, as: T
++
++  # Given a map of signatures to values and a signature,
++  # finds the value for the signature which is a supertype of the second arg.
++  def find_by_call(map, signature) when is_map(map) do
++    Enum.find_value(map, fn {s, v} ->
++      # signature_matches_call?(s, signature)
++
++      if vars = match_signatures(s, signature) do
++        {s, v, vars}
++      end
++    end)
++  end
++
++  def find_by_call(_, _), do: nil
++
++  def match_signatures(s1, s2) do
++    if s1.module == s2.module && s1.function == s2.function &&
++         length(s1.types) == length(s2.types) do
++      match_types(s1.types, s2.types, %{})
++    end
++  end
++
++  def replace_vars({:ok, type}, vars) do
++    {:ok, do_replace_vars(type, vars)}
++  end
++
++  def replace_vars(error, _) do
++    error
++  end
++
++  defp do_replace_vars(var, vars) when is_binary(var) do
++    vars[var]
++  end
++
++  defp do_replace_vars(%T.Union{types: ts}, vars) do
++    ts
++    |> Enum.map(&do_replace_vars(&1, vars))
++    |> T.Union.new()
++  end
++
++  defp do_replace_vars(%T.Tuple{elements: ts}, vars) do
++    ts = Enum.map(ts, &do_replace_vars(&1, vars))
++    %T.Tuple{elements: ts}
++  end
++
++  defp do_replace_vars(%T.List{type: t}, vars) do
++    %T.List{type: do_replace_vars(t, vars)}
++  end
++
++  defp do_replace_vars(%T.Map{key_type: kt, value_type: vt}, vars) do
++    %T.Map{
++      key_type: do_replace_vars(kt, vars),
++      value_type: do_replace_vars(vt, vars)
++    }
++  end
++
++  defp do_replace_vars(%T.Effect{type: t}, vars) do
++    %T.Effect{type: do_replace_vars(t, vars)}
++  end
++
++  defp do_replace_vars(type, _) do
++    type
++  end
++
++  defp match_types([], [], vars) do
++    vars
++  end
++
++  defp match_types([t1 | t1s], [t2 | t2s], vars) do
++    if vars = match_type(t1, t2, vars) do
++      match_types(t1s, t2s, vars)
++    end
++  end
++
++  defp match_type(t1, t2, vars) do
++    do_match_subtype(t1, t2, vars)
++  end
++
++  defp do_match_subtype(x, y, vars) when is_binary(x) do
++    case vars[x] do
++      ^y -> vars
++      nil -> Map.put(vars, x, y)
++      _ -> nil
++    end
++  end
++
++  defp do_match_subtype(x, y, vars) when x == y do
++    vars
++  end
++
++  defp do_match_subtype(%T.Union{types: t1s}, t2, vars) do
++    Enum.find_value(t1s, fn t1 ->
++      do_match_subtype(t1, t2, vars)
++    end)
++  end
++
++  defp do_match_subtype(%T.Tuple{elements: t1s}, %T.Tuple{elements: t2s}, vars)
++       when length(t1s) == length(t2s) do
++    do_match_all_subtype(t1s, t2s, vars)
++  end
++
++  defp do_match_subtype(_, _, _) do
++    nil
++  end
++
++  defp do_match_all_subtype([], [], vars) do
++    vars
++  end
++
++  defp do_match_all_subtype([t1 | t1s], [t2 | t2s], vars) do
++    case do_match_subtype(t1, t2, vars) do
++      nil -> nil
++      vars -> do_match_all_subtype(t1s, t2s, vars)
++    end
++  end
++end
+diff --git a/lib/fika/compiler/type_checker/parallel_type_checker.ex b/lib/fika/compiler/type_checker/parallel_type_checker.ex
+index 2de07dd..f40dbd1 100644
+--- a/lib/fika/compiler/type_checker/parallel_type_checker.ex
++++ b/lib/fika/compiler/type_checker/parallel_type_checker.ex
+@@ -5,6 +5,7 @@ defmodule Fika.Compiler.TypeChecker.ParallelTypeChecker do
+ 
+   alias Fika.Compiler.{
+     TypeChecker,
++    TypeChecker.FunctionMatch,
+     CodeServer
+   }
+ 
+@@ -68,8 +69,9 @@ defmodule Fika.Compiler.TypeChecker.ParallelTypeChecker do
+   end
+ 
+   def handle_call({:get_result, signature}, from, state) do
+-    if {s, _} = TypeChecker.find_by_call(state.local_functions, signature) do
+-      if {_, result} = TypeChecker.find_by_call(state.checked_functions, signature) do
++    if {s, _, vars} = FunctionMatch.find_by_call(state.local_functions, signature) do
++      if result = Map.get(state.checked_functions, s) do
++        result = FunctionMatch.replace_vars(result, vars)
+         {:reply, result, state}
+       else
+         state =
+diff --git a/lib/fika/compiler/type_checker/sequential_type_checker.ex b/lib/fika/compiler/type_checker/sequential_type_checker.ex
+index 9b55d04..2df91fe 100644
+--- a/lib/fika/compiler/type_checker/sequential_type_checker.ex
++++ b/lib/fika/compiler/type_checker/sequential_type_checker.ex
+@@ -1,19 +1,29 @@
+ defmodule Fika.Compiler.TypeChecker.SequentialTypeChecker do
+   alias Fika.Compiler.TypeChecker
++  alias Fika.Compiler.TypeChecker.FunctionMatch
+ 
+   def get_result(signature, env) do
+-    if function = find_by_signature(env.ast[:function_defs], signature) do
+-      TypeChecker.infer(function, env)
++    if result = find_by_signature(env.ast[:function_defs], signature) do
++      {function, vars} = result
++
++      function
++      |> TypeChecker.infer(env)
++      |> FunctionMatch.replace_vars(vars)
+     else
+       {:error, "Function #{signature} not found"}
+     end
+   end
+ 
+   defp find_by_signature(function_defs, signature) do
+-    Enum.find(function_defs, fn function ->
+-      signature.module
+-      |> TypeChecker.function_ast_signature(function)
+-      |> TypeChecker.signature_matches_call?(signature)
++    Enum.find_value(function_defs, fn function ->
++      vars =
++        signature.module
++        |> TypeChecker.function_ast_signature(function)
++        |> FunctionMatch.match_signatures(signature)
++
++      if vars do
++        {function, vars}
++      end
+     end)
+   end
+ end

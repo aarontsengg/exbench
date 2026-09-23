@@ -1,0 +1,296 @@
+diff --git a/.travis.yml b/.travis.yml
+index d12ed3d..c78e5e2 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -1,7 +1,7 @@
+ language: elixir
+ 
+ elixir:
+-  - 1.8.0
++  - 1.8.2
+ 
+ otp_release:
+   - 21.2
+diff --git a/lib/commanded/event/handler.ex b/lib/commanded/event/handler.ex
+index 91bded2..b7ab35b 100644
+--- a/lib/commanded/event/handler.ex
++++ b/lib/commanded/event/handler.ex
+@@ -290,11 +290,11 @@ defmodule Commanded.Event.Handler do
+   def parse_name(_module, name), do: inspect(name)
+ 
+   @doc false
+-  def start_opts(module, module_opts, local_opts) do
++  def start_opts(module, module_opts, local_opts, additional_allowed_opts \\ []) do
+     {valid, invalid} =
+       module_opts
+       |> Keyword.merge(local_opts)
+-      |> Keyword.split([:consistency, :start_from])
++      |> Keyword.split([:consistency, :start_from] ++ additional_allowed_opts)
+ 
+     if Enum.any?(invalid) do
+       raise "#{inspect module} specifies invalid options: #{inspect Keyword.keys(invalid)}"
+diff --git a/lib/commanded/process_managers/process_manager.ex b/lib/commanded/process_managers/process_manager.ex
+index 3aab40b..39ecdb4 100644
+--- a/lib/commanded/process_managers/process_manager.ex
++++ b/lib/commanded/process_managers/process_manager.ex
+@@ -80,6 +80,24 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+         end
+       end
+ 
++    # Idle process timeouts
++
++    Each instance of a process manager will run indefinitely once started. To
++    reduce memory usage you can configure an idle timeout, in milliseconds,
++    after which the process will be shutdown.
++
++    The process will be restarted whenever another event is routed to it and its
++    state will be rehydrated from the instance snapshot.
++
++    ## Example
++
++        defmodule ExampleProcessManager do
++          use Commanded.ProcessManagers.ProcessManager,
++            name: "ExampleProcessManager",
++            router: ExampleRouter,
++            idle_timeout: :timer.minutes(10)
++        end
++
+   # Consistency
+ 
+   For each process manager you can define its consistency, as one of either
+@@ -207,22 +225,27 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+     | {:continue, commands :: list(command), context :: map()}
+     | {:stop, reason :: term()}
+ 
++  alias Commanded.Event.Handler
++  alias Commanded.ProcessManagers.ProcessManager
++  alias Commanded.ProcessManagers.ProcessRouter
++
+   @doc false
+   defmacro __using__(opts) do
+     quote location: :keep do
+       @before_compile unquote(__MODULE__)
+       @on_definition {unquote(__MODULE__), :emit_deprecated_warnings}
+ 
+-      @behaviour Commanded.ProcessManagers.ProcessManager
++      @behaviour ProcessManager
+ 
+       @opts unquote(opts) || []
+-      @name Commanded.Event.Handler.parse_name(__MODULE__, @opts[:name])
++      @name Handler.parse_name(__MODULE__, @opts[:name])
+       @router @opts[:router] || raise "#{inspect __MODULE__} expects `:router` to be given"
+ 
+       def start_link(opts \\ []) do
+-        opts = Commanded.Event.Handler.start_opts(__MODULE__, Keyword.drop(@opts, [:name, :router]), opts)
++        module_opts = Keyword.drop(@opts, [:name, :router])
++        opts = Handler.start_opts(__MODULE__, module_opts, opts, [:idle_timeout])
+ 
+-        Commanded.ProcessManagers.ProcessRouter.start_link(@name, __MODULE__, @router, opts)
++        ProcessRouter.start_link(@name, __MODULE__, @router, opts)
+       end
+ 
+       @doc """
+diff --git a/lib/commanded/process_managers/process_manager_instance.ex b/lib/commanded/process_managers/process_manager_instance.ex
+index c40c359..d865619 100644
+--- a/lib/commanded/process_managers/process_manager_instance.ex
++++ b/lib/commanded/process_managers/process_manager_instance.ex
+@@ -16,7 +16,8 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+   }
+ 
+   defstruct [
+-    command_dispatcher: nil,
++    :command_dispatcher,
++    :idle_timeout,
+     process_manager_name: nil,
+     process_manager_module: nil,
+     process_uuid: nil,
+@@ -24,18 +25,24 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+     last_seen_event: nil,
+   ]
+ 
+-  def start_link(command_dispatcher, process_manager_name, process_manager_module, process_uuid) do
+-    GenServer.start_link(__MODULE__, %ProcessManagerInstance{
+-      command_dispatcher: command_dispatcher,
+-      process_manager_name: process_manager_name,
++  def start_link(opts) do
++    process_manager_module = Keyword.fetch!(opts, :process_manager_module)
++
++    state = %ProcessManagerInstance{
++      command_dispatcher: Keyword.fetch!(opts, :command_dispatcher),
++      idle_timeout: Keyword.fetch!(opts, :idle_timeout),
++      process_manager_name: Keyword.fetch!(opts, :process_manager_name),
+       process_manager_module: process_manager_module,
+-      process_uuid: process_uuid,
++      process_uuid: Keyword.fetch!(opts, :process_uuid),
+       process_state: struct(process_manager_module),
+-    })
++    }
++
++    GenServer.start_link(__MODULE__, state)
+   end
+ 
+   def init(%ProcessManagerInstance{} = state) do
+     GenServer.cast(self(), :fetch_state)
++
+     {:ok, state}
+   end
+ 
+@@ -66,13 +73,15 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+   def handle_call(:stop, _from, %ProcessManagerInstance{} = state) do
+     :ok = delete_state(state)
+ 
+-    # stop the process with a normal reason
++    # Stop the process with a normal reason
+     {:stop, :normal, :ok, state}
+   end
+ 
+   @doc false
+-  def handle_call(:process_state, _from, %ProcessManagerInstance{process_state: process_state} = state) do
+-    {:reply, process_state, state}
++  def handle_call(:process_state, _from, %ProcessManagerInstance{} = state) do
++    %ProcessManagerInstance{idle_timeout: idle_timeout, process_state: process_state} = state
++
++    {:reply, process_state, state, idle_timeout}
+   end
+ 
+   @doc """
+@@ -102,6 +111,13 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+     end
+   end
+ 
++  @doc false
++  def handle_info(:timeout, %ProcessManagerInstance{} = state) do
++    Logger.debug(fn -> describe(state) <> " stopping due to inactivity timeout" end)
++
++    {:stop, :normal, state}
++  end
++
+   defp event_already_seen?(
+     %RecordedEvent{event_number: event_number},
+     %ProcessManagerInstance{last_seen_event: last_seen_event})
+@@ -110,13 +126,18 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+   end
+ 
+   defp process_seen_event(event = %RecordedEvent{}, process_router, state) do
++    %ProcessManagerInstance{idle_timeout: idle_timeout} = state
++
+     # already seen event, so just ack
+     :ok = ack_event(event, process_router)
+ 
+-    {:noreply, state}
++    {:noreply, state, idle_timeout}
+   end
+ 
+-  defp process_unseen_event(%RecordedEvent{correlation_id: correlation_id, event_id: event_id, event_number: event_number} = event, process_router, %ProcessManagerInstance{} = state) do
++  defp process_unseen_event(%RecordedEvent{} = event, process_router, %ProcessManagerInstance{} = state) do
++    %RecordedEvent{correlation_id: correlation_id, event_id: event_id, event_number: event_number} = event
++    %ProcessManagerInstance{idle_timeout: idle_timeout} = state
++
+     case handle_event(event, state) do
+       {:error, reason} ->
+         Logger.error(fn -> describe(state) <> " failed to handle event #{inspect event_number} due to: #{inspect reason}" end)
+@@ -138,7 +159,7 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+           :ok = persist_state(state, event_number)
+           :ok = ack_event(event, process_router)
+ 
+-          {:noreply, state}
++          {:noreply, state, idle_timeout}
+         else
+           {:stop, reason} ->
+             {:stop, reason, state}
+diff --git a/lib/commanded/process_managers/process_router.ex b/lib/commanded/process_managers/process_router.ex
+index c7dffc2..a381868 100644
+--- a/lib/commanded/process_managers/process_router.ex
++++ b/lib/commanded/process_managers/process_router.ex
+@@ -21,6 +21,7 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+     defstruct [
+       command_dispatcher: nil,
+       consistency: nil,
++      idle_timeout: nil,
+       process_manager_name: nil,
+       process_manager_module: nil,
+       subscribe_from: nil,
+@@ -41,6 +42,7 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+       command_dispatcher: command_dispatcher,
+       consistency: opts[:consistency] || :eventual,
+       subscribe_from: opts[:start_from] || :origin,
++      idle_timeout: opts[:idle_timeout] || :infinity
+     }
+ 
+     Registration.start_link(name, __MODULE__, state)
+@@ -143,9 +145,9 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+   def handle_info({:subscribed, subscription}, %State{subscription: subscription} = state) do
+     Logger.debug(fn -> describe(state) <> " has successfully subscribed to event store" end)
+ 
+-    %State{command_dispatcher: command_dispatcher} = state
++    %State{command_dispatcher: command_dispatcher, idle_timeout: idle_timeout} = state
+ 
+-    {:ok, supervisor} = Supervisor.start_link(command_dispatcher)
++    {:ok, supervisor} = Supervisor.start_link()
+ 
+     {:noreply, %State{state | supervisor: supervisor}}
+   end
+@@ -274,19 +276,23 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+ 
+   defp start_process_manager(process_uuid, %State{} = state) do
+     %State{
++      command_dispatcher: command_dispatcher,
++      idle_timeout: idle_timeout,
+       process_managers: process_managers,
+       process_manager_name: process_manager_name,
+       process_manager_module: process_manager_module,
+       supervisor: supervisor
+     } = state
+ 
+-    {:ok, process_manager} =
+-      Supervisor.start_process_manager(
+-        supervisor,
+-        process_manager_name,
+-        process_manager_module,
+-        process_uuid
+-      )
++    opts = [
++      command_dispatcher: command_dispatcher,
++      idle_timeout: idle_timeout,
++      process_manager_name: process_manager_name,
++      process_manager_module: process_manager_module,
++      process_uuid: process_uuid
++    ]
++
++    {:ok, process_manager} = Supervisor.start_process_manager(supervisor, opts)
+ 
+     Process.monitor(process_manager)
+ 
+diff --git a/lib/commanded/process_managers/supervisor.ex b/lib/commanded/process_managers/supervisor.ex
+index 02c78bb..265fef7 100644
+--- a/lib/commanded/process_managers/supervisor.ex
++++ b/lib/commanded/process_managers/supervisor.ex
+@@ -1,21 +1,19 @@
+ defmodule Commanded.ProcessManagers.Supervisor do
+   @moduledoc false
++
+   use Supervisor
+-  require Logger
+ 
+-  def start_link(command_dispatcher) do
+-    Supervisor.start_link(__MODULE__, command_dispatcher)
++  def start_link do
++    Supervisor.start_link(__MODULE__, :ok)
+   end
+ 
+-  def start_process_manager(supervisor, process_manager_name, process_manager_module, process_uuid) do
+-    Logger.debug(fn -> "Starting process manager process for `#{process_manager_module}` with uuid #{process_uuid}" end)
+-
+-    Supervisor.start_child(supervisor, [process_manager_name, process_manager_module, process_uuid])
++  def start_process_manager(supervisor, opts) do
++    Supervisor.start_child(supervisor, [opts])
+   end
+ 
+-  def init(command_dispatcher) do
++  def init(:ok) do
+     children = [
+-      worker(Commanded.ProcessManagers.ProcessManagerInstance, [command_dispatcher], restart: :temporary),
++      worker(Commanded.ProcessManagers.ProcessManagerInstance, [], restart: :temporary),
+     ]
+ 
+     supervise(children, strategy: :simple_one_for_one)

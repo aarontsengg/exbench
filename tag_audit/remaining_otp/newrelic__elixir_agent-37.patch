@@ -1,0 +1,76 @@
+diff --git a/lib/new_relic/config.ex b/lib/new_relic/config.ex
+index 2545bba..8bf7f69 100644
+--- a/lib/new_relic/config.ex
++++ b/lib/new_relic/config.ex
+@@ -59,6 +59,19 @@ defmodule NewRelic.Config do
+     end)
+   end
+ 
++  @doc """
++  Some Agent features can be controlled via configuration
++
++  * `:error_collector_enabled` (default `true`)
++  """
++  def feature?(:error_collector) do
++    case System.get_env("NEW_RELIC_ERROR_COLLECTOR_ENABLED") do
++      "true" -> true
++      "false" -> false
++      _ -> Application.get_env(:new_relic_agent, :error_collector_enabled, true)
++    end
++  end
++
+   @doc false
+   def enabled?, do: (harvest_enabled?() && app_name() && license_key() && true) || false
+ 
+diff --git a/lib/new_relic/error/supervisor.ex b/lib/new_relic/error/supervisor.ex
+index 4e86080..429fe2e 100644
+--- a/lib/new_relic/error/supervisor.ex
++++ b/lib/new_relic/error/supervisor.ex
+@@ -14,8 +14,11 @@ defmodule NewRelic.Error.Supervisor do
+       supervisor(Task.Supervisor, [[name: NewRelic.Error.TaskSupervisor]])
+     ]
+ 
+-    :error_logger.delete_report_handler(NewRelic.Error.ErrorHandler)
+-    :error_logger.add_report_handler(NewRelic.Error.ErrorHandler)
++    if NewRelic.Config.feature?(:error_collector) do
++      :error_logger.delete_report_handler(NewRelic.Error.ErrorHandler)
++      :error_logger.add_report_handler(NewRelic.Error.ErrorHandler)
++    end
++
+     supervise(children, strategy: :one_for_one)
+   end
+ end
+diff --git a/lib/new_relic/transaction/reporter.ex b/lib/new_relic/transaction/reporter.ex
+index 321fd81..87c862a 100644
+--- a/lib/new_relic/transaction/reporter.ex
++++ b/lib/new_relic/transaction/reporter.ex
+@@ -58,14 +58,21 @@ defmodule NewRelic.Transaction.Reporter do
+   end
+ 
+   def stop(%{kind: _kind} = error) do
+-    add_attributes(
+-      end_time_mono: System.monotonic_time(),
+-      error: true,
+-      transaction_error: error,
+-      error_kind: error.kind,
+-      error_reason: inspect(error.reason),
+-      error_stack: inspect(error.stack)
+-    )
++    if NewRelic.Config.feature?(:error_collector) do
++      add_attributes(
++        end_time_mono: System.monotonic_time(),
++        error: true,
++        transaction_error: error,
++        error_kind: error.kind,
++        error_reason: inspect(error.reason),
++        error_stack: inspect(error.stack)
++      )
++    else
++      add_attributes(
++        end_time_mono: System.monotonic_time(),
++        error: true
++      )
++    end
+ 
+     complete()
+   end

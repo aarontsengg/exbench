@@ -1,0 +1,687 @@
+diff --git a/.travis.yml b/.travis.yml
+index c01b57b..723b7d5 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -1,7 +1,7 @@
+ language: elixir
+ 
+ elixir:
+-  - 1.7.2
++  - 1.7.3
+ 
+ otp_release:
+   - 21.0
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index d63bd5d..26ce82d 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -10,6 +10,7 @@
+ - Allow aggregate identity to be of any type that implements the `String.Chars` protocol ([#166](https://github.com/commanded/commanded/pull/166)).
+ - Process manager and event handler error & exception handling ([#192](https://github.com/commanded/commanded/pull/192)).
+ - Process manager event handling timeout ([#193](https://github.com/commanded/commanded/pull/193)).
++- Allow event handlers to subscribe to individual streams ([#203](https://github.com/commanded/commanded/pull/203)).
+ 
+ ### Bug fixes
+ 
+diff --git a/guides/Events.md b/guides/Events.md
+index 7c4be64..ba1cab9 100644
+--- a/guides/Events.md
++++ b/guides/Events.md
+@@ -62,6 +62,20 @@ Use the `:current` position when you don't want newly created event handlers to
+ 
+ You should start your event handlers using a [supervisor](#supervision) to ensure they are restarted on error.
+ 
++### Subscribing to an individual stream
++
++By default event handlers will subscribe to all events appended to any stream. Provide a `subscribe_to` option to subscribe to a single stream.
++
++```elixir
++defmodule ExampleHandler do
++  use Commanded.Event.Handler,
++    name: __MODULE__,
++    subscribe_to: "stream1234"
++end
++```
++
++This will ensure the handler only receives events appended to that stream.
++
+ ### `init/0` callback
+ 
+ You can define an `init/0` function in your handler to be called once it has started and successfully subscribed to the event store.
+diff --git a/lib/commanded/aggregates/aggregate.ex b/lib/commanded/aggregates/aggregate.ex
+index c72e01e..8a2ba81 100644
+--- a/lib/commanded/aggregates/aggregate.ex
++++ b/lib/commanded/aggregates/aggregate.ex
+@@ -449,22 +449,23 @@ defmodule Commanded.Aggregates.Aggregate do
+   defp persist_events(pending_events, aggregate_state, context, %Aggregate{} = state) do
+     %Aggregate{aggregate_uuid: aggregate_uuid, aggregate_version: expected_version} = state
+ 
+-    with {:ok, stream_version} <-
+-           append_to_stream(pending_events, aggregate_uuid, expected_version, context) do
++    with :ok <- append_to_stream(pending_events, aggregate_uuid, expected_version, context) do
++      aggregate_version = expected_version + length(pending_events)
++
+       state = %Aggregate{
+         state
+         | aggregate_state: aggregate_state,
+-          aggregate_version: stream_version
++          aggregate_version: aggregate_version
+       }
+ 
+-      {{:ok, stream_version, pending_events}, state}
++      {{:ok, aggregate_version, pending_events}, state}
+     else
+       {:error, _error} = reply ->
+         {reply, state}
+     end
+   end
+ 
+-  defp append_to_stream([], _stream_uuid, expected_version, _context), do: {:ok, expected_version}
++  defp append_to_stream([], _stream_uuid, _expected_version, _context), do: :ok
+ 
+   defp append_to_stream(pending_events, stream_uuid, expected_version, context) do
+     %ExecutionContext{
+@@ -473,7 +474,12 @@ defmodule Commanded.Aggregates.Aggregate do
+       metadata: metadata
+     } = context
+ 
+-    event_data = Mapper.map_to_event_data(pending_events, causation_id, correlation_id, metadata)
++    event_data =
++      Mapper.map_to_event_data(pending_events,
++        causation_id: causation_id,
++        correlation_id: correlation_id,
++        metadata: metadata
++      )
+ 
+     EventStore.append_to_stream(stream_uuid, expected_version, event_data)
+   end
+diff --git a/lib/commanded/assertions/event_assertions.ex b/lib/commanded/assertions/event_assertions.ex
+index 5e92f95..cd81d30 100644
+--- a/lib/commanded/assertions/event_assertions.ex
++++ b/lib/commanded/assertions/event_assertions.ex
+@@ -174,10 +174,11 @@ defmodule Commanded.Assertions.EventAssertions do
+   end
+ 
+   defp create_subscription(subscription_name),
+-    do: EventStore.subscribe_to_all_streams(subscription_name, self(), :origin)
++    do: EventStore.subscribe_to(:all, subscription_name, self(), :origin)
+ 
+   defp remove_subscription(subscription_name),
+-    do: EventStore.unsubscribe_from_all_streams(subscription_name)
++    do: EventStore.unsubscribe(subscription_name)
+ 
+-  defp ack_events(subscription, events), do: EventStore.ack_event(subscription, List.last(events))
++  defp ack_events(subscription, events),
++    do: EventStore.ack_event(subscription, List.last(events))
+ end
+diff --git a/lib/commanded/event/handler.ex b/lib/commanded/event/handler.ex
+index da3439f..db10686 100644
+--- a/lib/commanded/event/handler.ex
++++ b/lib/commanded/event/handler.ex
+@@ -65,6 +65,20 @@ defmodule Commanded.Event.Handler do
+ 
+       {:ok, _handler} = ExampleHandler.start_link(start_from: :current)
+ 
++
++  ### Subscribing to an individual stream
++
++  By default event handlers will subscribe to all events appended to any stream.
++  Provide a `subscribe_to` option to subscribe to a single stream.
++
++      defmodule ExampleHandler do
++        use Commanded.Event.Handler,
++          name: __MODULE__,
++          subscribe_to: "stream1234"
++      end
++
++  This will ensure the handler only receives events appended to that stream.
++
+   ## `c:init/0` callback
+ 
+   You can define an `c:init/0` function in your handler to be called once it has
+@@ -302,7 +316,7 @@ defmodule Commanded.Event.Handler do
+     {valid, invalid} =
+       module_opts
+       |> Keyword.merge(local_opts)
+-      |> Keyword.split([:consistency, :start_from] ++ additional_allowed_opts)
++      |> Keyword.split([:consistency, :start_from, :subscribe_to] ++ additional_allowed_opts)
+ 
+     if Enum.any?(invalid) do
+       raise "#{inspect(module)} specifies invalid options: #{inspect(Keyword.keys(invalid))}"
+@@ -331,6 +345,7 @@ defmodule Commanded.Event.Handler do
+     :handler_module,
+     :last_seen_event,
+     :subscribe_from,
++    :subscribe_to,
+     :subscription
+   ]
+ 
+@@ -342,7 +357,8 @@ defmodule Commanded.Event.Handler do
+       handler_name: handler_name,
+       handler_module: handler_module,
+       consistency: consistency(opts),
+-      subscribe_from: start_from(opts)
++      subscribe_from: start_from(opts),
++      subscribe_to: subscribe_to(opts)
+     }
+ 
+     Registration.start_link(name, __MODULE__, handler)
+@@ -367,14 +383,17 @@ defmodule Commanded.Event.Handler do
+ 
+   @doc false
+   def handle_call(:config, _from, %Handler{} = state) do
+-    %Handler{consistency: consistency, subscribe_from: subscribe_from} = state
++    %Handler{consistency: consistency, subscribe_from: subscribe_from, subscribe_to: subscribe_to} =
++      state
+ 
+-    {:reply, [consistency: consistency, start_from: subscribe_from], state}
++    config = [consistency: consistency, start_from: subscribe_from, subscribe_to: subscribe_to]
++
++    {:reply, config, state}
+   end
+ 
+   @doc false
+   def handle_cast(:subscribe_to_events, %Handler{} = state) do
+-    {:noreply, subscribe_to_all_streams(state)}
++    {:noreply, subscribe_to_events(state)}
+   end
+ 
+   @doc false
+@@ -417,11 +436,15 @@ defmodule Commanded.Event.Handler do
+     end
+   end
+ 
+-  defp subscribe_to_all_streams(%Handler{} = state) do
+-    %Handler{handler_name: handler_name, subscribe_from: subscribe_from} = state
++  defp subscribe_to_events(%Handler{} = state) do
++    %Handler{
++      handler_name: handler_name,
++      subscribe_from: subscribe_from,
++      subscribe_to: subscribe_to
++    } = state
+ 
+     {:ok, subscription} =
+-      EventStore.subscribe_to_all_streams(handler_name, self(), subscribe_from)
++      EventStore.subscribe_to(subscribe_to, handler_name, self(), subscribe_from)
+ 
+     %Handler{state | subscription: subscription}
+   end
+@@ -579,6 +602,14 @@ defmodule Commanded.Event.Handler do
+     end
+   end
+ 
++  defp subscribe_to(opts) do
++    case opts[:subscribe_to] || :all do
++      :all -> :all
++      stream when is_binary(stream) -> stream
++      invalid -> "Invalid `subscribe_to` option: #{inspect(invalid)}"
++    end
++  end
++
+   defp describe(%Handler{handler_module: handler_module}),
+     do: inspect(handler_module)
+ end
+diff --git a/lib/commanded/event/mapper.ex b/lib/commanded/event/mapper.ex
+index 8954f5c..777b025 100644
+--- a/lib/commanded/event/mapper.ex
++++ b/lib/commanded/event/mapper.ex
+@@ -2,30 +2,25 @@ defmodule Commanded.Event.Mapper do
+   @moduledoc false
+ 
+   alias Commanded.EventStore.TypeProvider
+-  alias Commanded.EventStore.{EventData,RecordedEvent}
++  alias Commanded.EventStore.{EventData, RecordedEvent}
+ 
+-  def map_to_event_data(events, causation_id, correlation_id, metadata)
+-    when is_list(events)
+-  do
+-    Enum.map(events, &map_to_event_data(&1, causation_id, correlation_id, metadata))
++  def map_to_event_data(events, fields) when is_list(events) do
++    Enum.map(events, &map_to_event_data(&1, fields))
+   end
+ 
+-  def map_to_event_data(event, causation_id, correlation_id, metadata) do
++  def map_to_event_data(event, fields) do
+     %EventData{
+-      causation_id: causation_id,
+-      correlation_id: correlation_id,
++      causation_id: Keyword.get(fields, :causation_id),
++      correlation_id: Keyword.get(fields, :correlation_id),
+       event_type: TypeProvider.to_string(event),
+       data: event,
+-      metadata: metadata,
++      metadata: Keyword.get(fields, :metadata, %{})
+     }
+   end
+ 
+-  def map_from_recorded_events(recorded_events)
+-    when is_list(recorded_events)
+-  do
++  def map_from_recorded_events(recorded_events) when is_list(recorded_events) do
+     Enum.map(recorded_events, &map_from_recorded_event/1)
+   end
+ 
+-  def map_from_recorded_event(%RecordedEvent{data: data}),
+-    do: data
++  def map_from_recorded_event(%RecordedEvent{data: data}), do: data
+ end
+diff --git a/lib/commanded/event_store/adapters/in_memory.ex b/lib/commanded/event_store/adapters/in_memory.ex
+index 46c5093..1e2a2be 100644
+--- a/lib/commanded/event_store/adapters/in_memory.ex
++++ b/lib/commanded/event_store/adapters/in_memory.ex
+@@ -10,34 +10,25 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   defmodule State do
+     @moduledoc false
+ 
+-    defstruct serializer: nil,
+-              persisted_events: [],
+-              streams: %{},
+-              transient_subscribers: %{},
+-              persistent_subscriptions: %{},
+-              snapshots: %{},
+-              next_event_number: 1
++    defstruct [
++      :serializer,
++      persisted_events: [],
++      streams: %{},
++      transient_subscribers: %{},
++      persistent_subscriptions: %{},
++      snapshots: %{},
++      next_event_number: 1
++    ]
+   end
+ 
+   defmodule Subscription do
+     @moduledoc false
+ 
+-    defstruct name: nil,
+-              subscriber: nil,
+-              start_from: nil,
+-              last_seen_event_number: 0
++    defstruct [:stream_uuid, :name, :subscriber, :start_from, last_seen_event_number: 0]
+   end
+ 
+-  alias Commanded.EventStore.Adapters.InMemory.{
+-    State,
+-    Subscription
+-  }
+-
+-  alias Commanded.EventStore.{
+-    EventData,
+-    RecordedEvent,
+-    SnapshotData
+-  }
++  alias Commanded.EventStore.Adapters.InMemory.{State, Subscription}
++  alias Commanded.EventStore.{EventData, RecordedEvent, SnapshotData}
+ 
+   def start_link(opts \\ []) do
+     state = %State{
+@@ -53,33 +44,30 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   end
+ 
+   @impl Commanded.EventStore
+-  def append_to_stream(stream_uuid, expected_version, events)
+-      when is_binary(stream_uuid) and is_integer(expected_version) and is_list(events) do
++  def append_to_stream(stream_uuid, expected_version, events) do
+     GenServer.call(__MODULE__, {:append_to_stream, stream_uuid, expected_version, events})
+   end
+ 
+   @impl Commanded.EventStore
+-  def stream_forward(stream_uuid, start_version \\ 0, read_batch_size \\ 1_000)
+-
+-  def stream_forward(stream_uuid, start_version, read_batch_size)
+-      when is_binary(stream_uuid) and is_integer(start_version) and is_integer(read_batch_size) do
++  def stream_forward(stream_uuid, start_version \\ 0, _read_batch_size \\ 1_000) do
+     GenServer.call(__MODULE__, {:stream_forward, stream_uuid, start_version})
+   end
+ 
+   @impl Commanded.EventStore
+-  def subscribe(stream_uuid) when is_binary(stream_uuid) do
++  def subscribe(stream_uuid) do
+     GenServer.call(__MODULE__, {:subscribe, stream_uuid, self()})
+   end
+ 
+   @impl Commanded.EventStore
+-  def subscribe_to_all_streams(subscription_name, subscriber, start_from) do
++  def subscribe_to(stream_uuid, subscription_name, subscriber, start_from) do
+     subscription = %Subscription{
++      stream_uuid: stream_uuid,
+       name: subscription_name,
+       subscriber: subscriber,
+       start_from: start_from
+     }
+ 
+-    GenServer.call(__MODULE__, {:subscribe_to_all_streams, subscription})
++    GenServer.call(__MODULE__, {:subscribe_to, subscription})
+   end
+ 
+   @impl Commanded.EventStore
+@@ -88,8 +76,8 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   end
+ 
+   @impl Commanded.EventStore
+-  def unsubscribe_from_all_streams(subscription_name) do
+-    GenServer.call(__MODULE__, {:unsubscribe_from_all_streams, subscription_name})
++  def unsubscribe(subscription_name) do
++    GenServer.call(__MODULE__, {:unsubscribe, subscription_name})
+   end
+ 
+   @impl Commanded.EventStore
+@@ -115,36 +103,42 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   def handle_call(
+         {:append_to_stream, stream_uuid, expected_version, events},
+         _from,
+-        %State{streams: streams} = state
++        %State{} = state
+       ) do
++    %State{streams: streams} = state
++
+     case Map.get(streams, stream_uuid) do
+       nil ->
+         case expected_version do
+           0 ->
+-            {reply, state} = persist_events(stream_uuid, [], events, state)
++            {:ok, state} = persist_events(stream_uuid, [], events, state)
++
++            {:reply, :ok, state}
+ 
+-            {:reply, reply, state}
++          :any_version ->
++            {:ok, state} = persist_events(stream_uuid, [], events, state)
++
++            {:reply, :ok, state}
+ 
+           _ ->
+             {:reply, {:error, :wrong_expected_version}, state}
+         end
+ 
+-      existing_events when length(existing_events) != expected_version ->
++      existing_events
++      when length(existing_events) != expected_version and expected_version != :any_version ->
+         {:reply, {:error, :wrong_expected_version}, state}
+ 
+       existing_events ->
+-        {reply, state} = persist_events(stream_uuid, existing_events, events, state)
++        {:ok, state} = persist_events(stream_uuid, existing_events, events, state)
+ 
+-        {:reply, reply, state}
++        {:reply, :ok, state}
+     end
+   end
+ 
+   @impl GenServer
+-  def handle_call(
+-        {:stream_forward, stream_uuid, start_version},
+-        _from,
+-        %State{streams: streams} = state
+-      ) do
++  def handle_call({:stream_forward, stream_uuid, start_version}, _from, %State{} = state) do
++    %State{streams: streams} = state
++
+     reply =
+       case Map.get(streams, stream_uuid) do
+         nil ->
+@@ -174,12 +168,10 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   end
+ 
+   @impl GenServer
+-  def handle_call(
+-        {:subscribe_to_all_streams,
+-         %Subscription{name: subscription_name, subscriber: subscriber} = subscription},
+-        _from,
+-        %State{persistent_subscriptions: subscriptions} = state
+-      ) do
++  def handle_call({:subscribe_to, %Subscription{} = subscription}, _from, %State{} = state) do
++    %Subscription{name: subscription_name, subscriber: subscriber} = subscription
++    %State{persistent_subscriptions: subscriptions} = state
++
+     {reply, state} =
+       case Map.get(subscriptions, subscription_name) do
+         nil ->
+@@ -201,11 +193,9 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   end
+ 
+   @impl GenServer
+-  def handle_call(
+-        {:unsubscribe_from_all_streams, subscription_name},
+-        _from,
+-        %State{persistent_subscriptions: subscriptions} = state
+-      ) do
++  def handle_call({:unsubscribe, subscription_name}, _from, %State{} = state) do
++    %State{persistent_subscriptions: subscriptions} = state
++
+     state = %State{state | persistent_subscriptions: Map.delete(subscriptions, subscription_name)}
+ 
+     {:reply, :ok, state}
+@@ -245,10 +235,9 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   end
+ 
+   @impl GenServer
+-  def handle_cast(
+-        {:ack_event, event, subscriber},
+-        %State{persistent_subscriptions: subscriptions} = state
+-      ) do
++  def handle_cast({:ack_event, event, subscriber}, %State{} = state) do
++    %State{persistent_subscriptions: subscriptions} = state
++
+     state = %State{
+       state
+       | persistent_subscriptions: ack_subscription_by_pid(subscriptions, event, subscriber)
+@@ -270,16 +259,13 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     {:noreply, state}
+   end
+ 
+-  defp persist_events(
+-         stream_uuid,
+-         existing_events,
+-         new_events,
+-         %State{
+-           persisted_events: persisted_events,
+-           streams: streams,
+-           next_event_number: next_event_number
+-         } = state
+-       ) do
++  defp persist_events(stream_uuid, existing_events, new_events, %State{} = state) do
++    %State{
++      persisted_events: persisted_events,
++      streams: streams,
++      next_event_number: next_event_number
++    } = state
++
+     initial_stream_version = length(existing_events) + 1
+     now = NaiveDateTime.utc_now()
+ 
+@@ -307,9 +293,9 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     publish_events = Enum.map(new_events, &deserialize(&1, state))
+ 
+     publish_to_transient_subscribers(stream_uuid, publish_events, state)
+-    publish_to_persistent_subscriptions(publish_events, state)
++    publish_to_persistent_subscriptions(stream_uuid, publish_events, state)
+ 
+-    {{:ok, length(stream_events)}, state}
++    {:ok, state}
+   end
+ 
+   defp map_to_recorded_event(event_number, stream_uuid, stream_version, now, %EventData{} = event) do
+@@ -410,15 +396,23 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   end
+ 
+   # publish events to subscribers
+-  defp publish_to_persistent_subscriptions(events, %State{persistent_subscriptions: subscriptions}) do
++  defp publish_to_persistent_subscriptions(stream_uuid, events, %State{} = state) do
++    %State{persistent_subscriptions: subscriptions} = state
++
+     subscribers =
+       subscriptions
+       |> Map.values()
++      |> Enum.filter(fn
++        %Subscription{stream_uuid: ^stream_uuid} -> true
++        %Subscription{stream_uuid: :all} -> true
++        %Subscription{} -> false
++      end)
+       |> Enum.map(& &1.subscriber)
+       |> Enum.filter(&is_pid/1)
+ 
+-    for subscriber <- subscribers,
+-        do: send(subscriber, {:events, events})
++    for subscriber <- subscribers do
++      send(subscriber, {:events, events})
++    end
+   end
+ 
+   defp serialize(data, %State{serializer: nil}), do: data
+diff --git a/lib/commanded/event_store/event_store.ex b/lib/commanded/event_store/event_store.ex
+index f94eb4b..459e05e 100644
+--- a/lib/commanded/event_store/event_store.ex
++++ b/lib/commanded/event_store/event_store.ex
+@@ -7,7 +7,7 @@ defmodule Commanded.EventStore do
+ 
+   @type stream_uuid :: String.t()
+   @type start_from :: :origin | :current | integer
+-  @type stream_version :: integer
++  @type expected_version :: :any_version | :no_stream | :stream_exists | non_neg_integer()
+   @type subscription_name :: String.t()
+   @type source_uuid :: String.t()
+   @type snapshot :: SnapshotData.t()
+@@ -18,10 +18,10 @@ defmodule Commanded.EventStore do
+   """
+   @callback append_to_stream(
+               stream_uuid,
+-              expected_version :: non_neg_integer,
++              expected_version,
+               events :: list(EventData.t())
+             ) ::
+-              {:ok, stream_version}
++              :ok
+               | {:error, :wrong_expected_version}
+               | {:error, error}
+ 
+@@ -46,10 +46,13 @@ defmodule Commanded.EventStore do
+ 
+   The subscriber does not need to acknowledge receipt of the events.
+   """
+-  @callback subscribe(stream_uuid) :: :ok | {:error, error}
++  @callback subscribe(stream_uuid | :all) :: :ok | {:error, error}
+ 
+   @doc """
+-  Create a persistent subscription to all event streams.
++  Create a persistent subscription to an event stream.
++
++  To subscribe to all events appended to any stream use `:all` as the stream
++  when subscribing.
+ 
+   The event store will remember the subscribers last acknowledged event.
+   Restarting the named subscription will resume from the next event following
+@@ -65,8 +68,19 @@ defmodule Commanded.EventStore do
+ 
+   The subscriber must ack each received, and successfully processed event, using
+   `Commanded.EventStore.ack_event/2`.
++
++  ## Examples
++
++  Subscribe to all streams:
++
++      {:ok, subscription} = Commanded.EventStore.subscribe_to(:all, "Example", self())
++
++  Subscribe to a single stream:
++
++      {:ok, subscription} = Commanded.EventStore.subscribe_to("stream1234", "Example", self())
++
+   """
+-  @callback subscribe_to_all_streams(subscription_name, subscriber :: pid, start_from) ::
++  @callback subscribe_to(stream_uuid | :all, subscription_name, subscriber :: pid, start_from) ::
+               {:ok, subscription :: pid}
+               | {:error, :subscription_already_exists}
+               | {:error, error}
+@@ -78,9 +92,9 @@ defmodule Commanded.EventStore do
+   @callback ack_event(pid, RecordedEvent.t()) :: :ok
+ 
+   @doc """
+-  Unsubscribe an existing subscriber from all event notifications.
++  Unsubscribe an existing subscriber from event notifications.
+   """
+-  @callback unsubscribe_from_all_streams(subscription_name) :: :ok
++  @callback unsubscribe(subscription_name) :: :ok
+ 
+   @doc """
+   Read a snapshot, if available, for a given source.
+@@ -102,11 +116,14 @@ defmodule Commanded.EventStore do
+   """
+   @spec append_to_stream(
+           stream_uuid,
+-          expected_version :: non_neg_integer,
++          expected_version,
+           events :: list(EventData.t())
+-        ) :: {:ok, stream_version} | {:error, :wrong_expected_version} | {:error, error}
++        ) :: :ok | {:error, :wrong_expected_version} | {:error, error}
+   def append_to_stream(stream_uuid, expected_version, events)
+-      when is_binary(stream_uuid) and is_integer(expected_version) and is_list(events) do
++      when is_binary(stream_uuid) and
++             (is_integer(expected_version) or
++                expected_version in [:any_version, :no_stream, :stream_exists]) and
++             is_list(events) do
+     event_store_adapter().append_to_stream(stream_uuid, expected_version, events)
+   end
+ 
+@@ -129,21 +146,21 @@ defmodule Commanded.EventStore do
+   @doc """
+   Create a transient subscription to a single event stream.
+   """
+-  @spec subscribe(stream_uuid) :: :ok | {:error, error}
++  @spec subscribe(stream_uuid | :all) :: :ok | {:error, error}
+   def subscribe(stream_uuid) when is_binary(stream_uuid) do
+     event_store_adapter().subscribe(stream_uuid)
+   end
+ 
+   @doc """
+-  Create a persistent subscription to all event streams.
++  Create a persistent subscription to an event stream.
+   """
+-  @spec subscribe_to_all_streams(subscription_name, subscriber :: pid, start_from) ::
++  @spec subscribe_to(stream_uuid | :all, subscription_name, subscriber :: pid, start_from) ::
+           {:ok, subscription :: pid}
+           | {:error, :subscription_already_exists}
+           | {:error, error}
+-  def subscribe_to_all_streams(subscription_name, subscriber, start_from)
++  def subscribe_to(stream_uuid, subscription_name, subscriber, start_from)
+       when is_binary(subscription_name) and is_pid(subscriber) do
+-    event_store_adapter().subscribe_to_all_streams(subscription_name, subscriber, start_from)
++    event_store_adapter().subscribe_to(stream_uuid, subscription_name, subscriber, start_from)
+   end
+ 
+   @doc """
+@@ -158,9 +175,9 @@ defmodule Commanded.EventStore do
+   @doc """
+   Unsubscribe an existing subscriber from all event notifications.
+   """
+-  @spec unsubscribe_from_all_streams(subscription_name) :: :ok
+-  def unsubscribe_from_all_streams(subscription_name) when is_binary(subscription_name) do
+-    event_store_adapter().unsubscribe_from_all_streams(subscription_name)
++  @spec unsubscribe(subscription_name) :: :ok
++  def unsubscribe(subscription_name) when is_binary(subscription_name) do
++    event_store_adapter().unsubscribe(subscription_name)
+   end
+ 
+   @doc """
+diff --git a/lib/commanded/process_managers/process_router.ex b/lib/commanded/process_managers/process_router.ex
+index 9adbb22..71969ed 100644
+--- a/lib/commanded/process_managers/process_router.ex
++++ b/lib/commanded/process_managers/process_router.ex
+@@ -198,7 +198,7 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+       [] ->
+         {:noreply, state}
+ 
+-      pending ->
++      _pending ->
+         Logger.error(fn ->
+           describe(state) <>
+             " has taken longer than " <>
+@@ -228,7 +228,7 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+     %State{process_manager_name: process_manager_name, subscribe_from: subscribe_from} = state
+ 
+     {:ok, subscription} =
+-      EventStore.subscribe_to_all_streams(process_manager_name, self(), subscribe_from)
++      EventStore.subscribe_to(:all, process_manager_name, self(), subscribe_from)
+ 
+     %State{state | subscription: subscription}
+   end

@@ -1,0 +1,1392 @@
+diff --git a/lib/new_relic.ex b/lib/new_relic.ex
+index 39b51b0..6a17583 100644
+--- a/lib/new_relic.ex
++++ b/lib/new_relic.ex
+@@ -13,7 +13,7 @@ defmodule NewRelic do
+   in the Transaction list.
+ 
+   ```elixir
+-  NewRelic.set_transaction_name("Plug/custom/transaction/name")
++  NewRelic.set_transaction_name("/Plug/custom/transaction/name")
+   ```
+   """
+   defdelegate set_transaction_name(name), to: NewRelic.Transaction.Reporter
+@@ -30,6 +30,33 @@ defmodule NewRelic do
+   @doc false
+   defdelegate incr_attributes(attrs), to: NewRelic.Transaction.Reporter
+ 
++  @doc """
++  Start a new "Other" Transaction.
++
++  This will begin monitoring the current process as an "Other" Transaction
++  (ie: Not a "Web" Transaction). The first argument will be considered
++  the "category", the second is the "name".
++
++  Examples:
++
++  ```elixir
++  NewRelic.start_transaction("GenStage", "MyConsumer/EventType")
++  NewRelic.start_transaction("Task", "TaskName")
++  ```
++
++  **Notes:**
++
++  * Don't use this to track Web Transactions - for that,
++  `use NewRelic.Transaction` in your Plug pipeline so that we can properly
++  categorize as Web Transactions in the UI.
++  * Do _not_ use this for processes that live a very long time, doing so
++  will risk a memory leak tracking attributes in the transaction!
++  * You can't start a new transaction within an existing one. Any process
++  spawned inside a transaction belongs to that transaction.
++  """
++  @spec start_transaction(String.t(), String.t()) :: none()
++  defdelegate start_transaction(category, name), to: NewRelic.Transaction
++
+   @doc """
+   Store information about the type of work the current span is doing.
+ 
+diff --git a/lib/new_relic/distributed_trace.ex b/lib/new_relic/distributed_trace.ex
+index 61c3a69..295596d 100644
+--- a/lib/new_relic/distributed_trace.ex
++++ b/lib/new_relic/distributed_trace.ex
+@@ -4,6 +4,7 @@ defmodule NewRelic.DistributedTrace do
+   @moduledoc false
+ 
+   alias NewRelic.DistributedTrace.{Context, Tracker}
++  alias NewRelic.Harvest.Collector.AgentRun
+   alias NewRelic.Transaction
+ 
+   def accept_distributed_trace_payload(:http, conn) do
+@@ -24,6 +25,86 @@ defmodule NewRelic.DistributedTrace do
+     end
+   end
+ 
++  def generate_new_context() do
++    {priority, sampled} = generate_sampling()
++
++    %Context{
++      account_id: AgentRun.account_id(),
++      app_id: AgentRun.primary_application_id(),
++      trust_key: AgentRun.trusted_account_key(),
++      priority: priority,
++      sampled: sampled
++    }
++  end
++
++  def track_transaction(context, transport_type: type) do
++    context
++    |> assign_transaction_guid()
++    |> report_attributes(transport_type: type)
++    |> convert_to_outbound()
++    |> set_tracing_context()
++  end
++
++  def report_attributes(
++        %Context{parent_id: nil} = context,
++        transport_type: _type
++      ) do
++    [
++      guid: context.guid,
++      traceId: context.guid,
++      priority: context.priority,
++      sampled: context.sampled
++    ]
++    |> NewRelic.add_attributes()
++
++    context
++  end
++
++  def report_attributes(context, transport_type: type) do
++    [
++      "parent.type": context.type,
++      "parent.app": context.app_id,
++      "parent.account": context.account_id,
++      "parent.transportType": type,
++      "parent.transportDuration": transport_duration(context.timestamp),
++      parentId: context.parent_id,
++      parentSpanId: context.span_guid,
++      guid: context.guid,
++      traceId: context.trace_id,
++      priority: context.priority,
++      sampled: context.sampled
++    ]
++    |> NewRelic.add_attributes()
++
++    context
++  end
++
++  def convert_to_outbound(%Context{parent_id: nil} = context) do
++    %Context{
++      account_id: AgentRun.account_id(),
++      app_id: AgentRun.primary_application_id(),
++      parent_id: nil,
++      trust_key: context.trust_key,
++      guid: context.guid,
++      trace_id: context.guid,
++      priority: context.priority,
++      sampled: context.sampled
++    }
++  end
++
++  def convert_to_outbound(%Context{} = context) do
++    %Context{
++      account_id: AgentRun.account_id(),
++      app_id: AgentRun.primary_application_id(),
++      parent_id: context.guid,
++      trust_key: context.trust_key,
++      guid: context.guid,
++      trace_id: context.trace_id,
++      priority: context.priority,
++      sampled: context.sampled
++    }
++  end
++
+   def set_tracing_context(context) do
+     Tracker.store(self(), context: context)
+   end
+@@ -87,6 +168,23 @@ defmodule NewRelic.DistributedTrace do
+     Process.put(:nr_current_span, previous)
+   end
+ 
++  defp generate_sampling() do
++    case {generate_sample?(), generate_priority()} do
++      {true, priority} -> {priority + 1, true}
++      {false, priority} -> {priority, false}
++    end
++  end
++
++  defp generate_sample?() do
++    NewRelic.DistributedTrace.BackoffSampler.sample?()
++  end
++
++  defp generate_priority, do: :rand.uniform() |> Float.round(6)
++
++  def assign_transaction_guid(context) do
++    Map.put(context, :guid, generate_guid())
++  end
++
+   def generate_guid(), do: :crypto.strong_rand_bytes(8) |> Base.encode16() |> String.downcase()
+   def generate_guid(pid: pid), do: encode_guid([pid, node()])
+   def generate_guid(pid: pid, label: label, ref: ref), do: encode_guid([label, ref, pid, node()])
+@@ -106,4 +204,8 @@ defmodule NewRelic.DistributedTrace do
+     |> String.slice(0..4)
+     |> String.downcase()
+   end
++
++  defp transport_duration(context_start_time) do
++    (System.system_time(:millisecond) - context_start_time) / 1_000
++  end
+ end
+diff --git a/lib/new_relic/distributed_trace/plug.ex b/lib/new_relic/distributed_trace/plug.ex
+index bf79694..00c4ab8 100644
+--- a/lib/new_relic/distributed_trace/plug.ex
++++ b/lib/new_relic/distributed_trace/plug.ex
+@@ -29,10 +29,7 @@ defmodule NewRelic.DistributedTrace.Plug do
+ 
+   def trace(conn, true) do
+     determine_context(conn)
+-    |> assign_transaction_guid
+-    |> report_attributes
+-    |> convert_to_outbound
+-    |> DistributedTrace.set_tracing_context()
++    |> DistributedTrace.track_transaction(transport_type: "HTTP")
+ 
+     conn
+     |> put_private(:newrelic_dt_instrumented, true)
+@@ -49,84 +46,10 @@ defmodule NewRelic.DistributedTrace.Plug do
+          %Context{} = context <- restrict_access(context) do
+       context
+     else
+-      _ -> generate_new_context()
++      _ -> DistributedTrace.generate_new_context()
+     end
+   end
+ 
+-  defp assign_transaction_guid(context) do
+-    Map.put(context, :guid, DistributedTrace.generate_guid())
+-  end
+-
+-  defp report_attributes(%Context{parent_id: nil} = context) do
+-    [
+-      guid: context.guid,
+-      traceId: context.guid,
+-      priority: context.priority,
+-      sampled: context.sampled
+-    ]
+-    |> NewRelic.add_attributes()
+-
+-    context
+-  end
+-
+-  defp report_attributes(context) do
+-    [
+-      "parent.type": context.type,
+-      "parent.app": context.app_id,
+-      "parent.account": context.account_id,
+-      "parent.transportType": "HTTP",
+-      "parent.transportDuration": transport_duration(context.timestamp),
+-      parentId: context.parent_id,
+-      parentSpanId: context.span_guid,
+-      guid: context.guid,
+-      traceId: context.trace_id,
+-      priority: context.priority,
+-      sampled: context.sampled
+-    ]
+-    |> NewRelic.add_attributes()
+-
+-    context
+-  end
+-
+-  defp convert_to_outbound(%Context{parent_id: nil} = context) do
+-    %Context{
+-      account_id: AgentRun.account_id(),
+-      app_id: AgentRun.primary_application_id(),
+-      parent_id: nil,
+-      trust_key: context.trust_key,
+-      guid: context.guid,
+-      trace_id: context.guid,
+-      priority: context.priority,
+-      sampled: context.sampled
+-    }
+-  end
+-
+-  defp convert_to_outbound(%Context{} = context) do
+-    %Context{
+-      account_id: AgentRun.account_id(),
+-      app_id: AgentRun.primary_application_id(),
+-      parent_id: context.guid,
+-      trust_key: context.trust_key,
+-      guid: context.guid,
+-      trace_id: context.trace_id,
+-      priority: context.priority,
+-      sampled: context.sampled
+-    }
+-  end
+-
+-  defp generate_new_context() do
+-    {priority, sampled} = generate_sampling()
+-
+-    %Context{
+-      account_id: AgentRun.account_id(),
+-      app_id: AgentRun.primary_application_id(),
+-      trust_key: AgentRun.trusted_account_key(),
+-      priority: priority,
+-      sampled: sampled
+-    }
+-  end
+-
+-  @doc false
+   def restrict_access(context) do
+     if (context.trust_key || context.account_id) == AgentRun.trusted_account_key() do
+       context
+@@ -134,21 +57,4 @@ defmodule NewRelic.DistributedTrace.Plug do
+       :restricted
+     end
+   end
+-
+-  defp generate_sampling() do
+-    case {generate_sample?(), generate_priority()} do
+-      {true, priority} -> {priority + 1, true}
+-      {false, priority} -> {priority, false}
+-    end
+-  end
+-
+-  defp generate_sample?() do
+-    NewRelic.DistributedTrace.BackoffSampler.sample?()
+-  end
+-
+-  defp generate_priority, do: :rand.uniform() |> Float.round(6)
+-
+-  defp transport_duration(context_start_time) do
+-    (System.system_time(:millisecond) - context_start_time) / 1_000
+-  end
+ end
+diff --git a/lib/new_relic/error/event.ex b/lib/new_relic/error/event.ex
+index 1f94f64..70eaa51 100644
+--- a/lib/new_relic/error/event.ex
++++ b/lib/new_relic/error/event.ex
+@@ -8,9 +8,8 @@ defmodule NewRelic.Error.Event do
+             duration: nil,
+             queue_duration: nil,
+             database_duration: nil,
+-            http_response_code: nil,
+-            request_method: nil,
+-            user_attributes: %{}
++            user_attributes: %{},
++            agent_attributes: %{}
+ 
+   @moduledoc false
+ 
+@@ -32,10 +31,21 @@ defmodule NewRelic.Error.Event do
+         databaseDuration: error.database_duration
+       },
+       NewRelic.Util.Event.process_event(error.user_attributes),
+-      _agent_attributes = %{
+-        httpResponseCode: error.http_response_code,
+-        "request.headers.method": error.request_method
+-      }
++      format_agent_attributes(error.agent_attributes)
+     ]
+   end
++
++  def format_agent_attributes(%{
++        http_response_code: http_response_code,
++        request_method: request_method
++      }) do
++    %{
++      httpResponseCode: http_response_code,
++      "request.headers.method": request_method
++    }
++  end
++
++  def format_agent_attributes(_agent_attributes) do
++    %{}
++  end
+ end
+diff --git a/lib/new_relic/error/reporter.ex b/lib/new_relic/error/reporter.ex
+index aa65f64..5aefeed 100644
+--- a/lib/new_relic/error/reporter.ex
++++ b/lib/new_relic/error/reporter.ex
+@@ -30,7 +30,7 @@ defmodule NewRelic.Error.Reporter do
+       message: exception_reason,
+       expected: expected,
+       stack_trace: exception_stacktrace,
+-      transaction_name: "WebTransaction/Elixir/ElixirProcess//#{process_name}",
++      transaction_name: "OtherTransaction/Elixir/ElixirProcess//#{process_name}",
+       user_attributes:
+         Map.merge(automatic_attributes, %{
+           process: process_name
+@@ -42,7 +42,7 @@ defmodule NewRelic.Error.Reporter do
+       error_class: inspect(exception_type),
+       error_message: exception_reason,
+       expected: expected,
+-      transaction_name: "WebTransaction/Elixir/ElixirProcess//#{process_name}",
++      transaction_name: "OtherTransaction/Elixir/ElixirProcess//#{process_name}",
+       user_attributes:
+         Map.merge(automatic_attributes, %{
+           process: process_name,
+diff --git a/lib/new_relic/error/trace.ex b/lib/new_relic/error/trace.ex
+index ac99325..c705756 100644
+--- a/lib/new_relic/error/trace.ex
++++ b/lib/new_relic/error/trace.ex
+@@ -6,7 +6,7 @@ defmodule NewRelic.Error.Trace do
+             error_type: nil,
+             cat_guid: "",
+             stack_trace: nil,
+-            request_uri: nil,
++            agent_attributes: %{},
+             user_attributes: %{}
+ 
+   @moduledoc false
+@@ -23,8 +23,7 @@ defmodule NewRelic.Error.Trace do
+       error.error_type,
+       %{
+         stack_trace: error.stack_trace,
+-        request_uri: error.request_uri,
+-        agentAttributes: %{},
++        agentAttributes: format_agent_attributes(error.agent_attributes),
+         userAttributes: format_user_attributes(error.user_attributes),
+         intrinsics: %{"error.expected": error.expected}
+       },
+@@ -32,6 +31,14 @@ defmodule NewRelic.Error.Trace do
+     ]
+   end
+ 
++  defp format_agent_attributes(%{request_uri: request_uri}) do
++    %{request_uri: request_uri}
++  end
++
++  defp format_agent_attributes(_agent_attributes) do
++    %{}
++  end
++
+   defp format_user_attributes(attrs) do
+     Enum.into(attrs, %{}, fn {k, v} ->
+       (String.Chars.impl_for(v) && {k, v}) || {k, inspect(v)}
+diff --git a/lib/new_relic/harvest/collector/metric_data.ex b/lib/new_relic/harvest/collector/metric_data.ex
+index 46e209d..ab07043 100644
+--- a/lib/new_relic/harvest/collector/metric_data.ex
++++ b/lib/new_relic/harvest/collector/metric_data.ex
+@@ -33,6 +33,26 @@ defmodule NewRelic.Harvest.Collector.MetricData do
+       }
+     ]
+ 
++  def transform({:other_transaction, name}, duration_s: duration_s),
++    do: [
++      %Metric{
++        name: :"OtherTransaction/all",
++        call_count: 1,
++        total_call_time: duration_s,
++        total_exclusive_time: duration_s,
++        min_call_time: duration_s,
++        max_call_time: duration_s
++      },
++      %Metric{
++        name: join(["OtherTransaction", name]),
++        call_count: 1,
++        total_call_time: duration_s,
++        total_exclusive_time: duration_s,
++        min_call_time: duration_s,
++        max_call_time: duration_s
++      }
++    ]
++
+   def transform(
+         {:caller, parent_type, parent_account_id, parent_app_id, transport_type},
+         duration_s: duration_s
+@@ -168,12 +188,5 @@ defmodule NewRelic.Harvest.Collector.MetricData do
+       }
+     ]
+ 
+-  defp join(segments) when is_list(segments) do
+-    segments
+-    |> Enum.filter(& &1)
+-    |> Enum.map(&to_string/1)
+-    |> Enum.map(&String.replace_leading(&1, "/", ""))
+-    |> Enum.map(&String.replace_trailing(&1, "/", ""))
+-    |> Enum.join("/")
+-  end
++  defp join(segments), do: NewRelic.Util.metric_join(segments)
+ end
+diff --git a/lib/new_relic/transaction.ex b/lib/new_relic/transaction.ex
+index e72529f..7ce3f4f 100644
+--- a/lib/new_relic/transaction.ex
++++ b/lib/new_relic/transaction.ex
+@@ -45,6 +45,14 @@ defmodule NewRelic.Transaction do
+     NewRelic.DistributedTrace.Tracker.cleanup(self())
+     NewRelic.Transaction.Plug.add_stop_attrs(conn)
+     NewRelic.Transaction.Reporter.fail(error)
+-    NewRelic.Transaction.Reporter.stop(conn)
++    NewRelic.Transaction.Reporter.complete()
++  end
++
++  @doc false
++  def start_transaction(category, name) do
++    NewRelic.Transaction.Reporter.start_other_transaction(category, name)
++
++    NewRelic.DistributedTrace.generate_new_context()
++    |> NewRelic.DistributedTrace.track_transaction(transport_type: "Other")
+   end
+ end
+diff --git a/lib/new_relic/transaction/complete.ex b/lib/new_relic/transaction/complete.ex
+new file mode 100644
+index 0000000..4b61fdd
+--- /dev/null
++++ b/lib/new_relic/transaction/complete.ex
+@@ -0,0 +1,456 @@
++defmodule NewRelic.Transaction.Complete do
++  @moduledoc false
++
++  alias NewRelic.Util
++  alias NewRelic.Harvest.Collector
++  alias NewRelic.DistributedTrace
++  alias NewRelic.Transaction
++
++  def run(tx_attrs, pid) do
++    {tx_segments, tx_attrs, tx_error, span_events} = gather_transaction_info(tx_attrs, pid)
++    tx_attrs = Map.merge(tx_attrs, NewRelic.Config.automatic_attributes())
++
++    report_transaction_event(tx_attrs)
++    report_transaction_trace(tx_attrs, tx_segments)
++    report_transaction_error_event(tx_attrs, tx_error)
++    report_transaction_metric(tx_attrs)
++    report_aggregate(tx_attrs)
++    report_caller_metric(tx_attrs)
++    report_span_events(span_events)
++  end
++
++  defp gather_transaction_info(tx_attrs, pid) do
++    tx_attrs
++    |> transform_name_attrs
++    |> transform_time_attrs
++    |> extract_transaction_info(pid)
++  end
++
++  defp transform_name_attrs(%{custom_name: name} = tx), do: Map.put(tx, :name, name)
++  defp transform_name_attrs(%{framework_name: name} = tx), do: Map.put(tx, :name, name)
++  defp transform_name_attrs(%{plug_name: name} = tx), do: Map.put(tx, :name, name)
++  defp transform_name_attrs(%{other_transaction_name: name} = tx), do: Map.put(tx, :name, name)
++
++  defp transform_time_attrs(
++         %{start_time: start_time, end_time_mono: end_time_mono, start_time_mono: start_time_mono} =
++           tx
++       ) do
++    start_time = System.convert_time_unit(start_time, :native, :millisecond)
++    duration_us = System.convert_time_unit(end_time_mono - start_time_mono, :native, :microsecond)
++    duration_ms = System.convert_time_unit(end_time_mono - start_time_mono, :native, :millisecond)
++
++    tx
++    |> Map.drop([:start_time_mono, :end_time_mono])
++    |> Map.merge(%{
++      start_time: start_time,
++      end_time: start_time + duration_ms,
++      duration_us: duration_us,
++      duration_ms: duration_ms
++    })
++  end
++
++  defp extract_transaction_info(tx_attrs, pid) do
++    {function_segments, tx_attrs} = Map.pop(tx_attrs, :trace_function_segments, [])
++    {process_spawns, tx_attrs} = Map.pop(tx_attrs, :trace_process_spawns, [])
++    {process_names, tx_attrs} = Map.pop(tx_attrs, :trace_process_names, [])
++    {process_exits, tx_attrs} = Map.pop(tx_attrs, :trace_process_exits, [])
++    {tx_error, tx_attrs} = Map.pop(tx_attrs, :transaction_error, nil)
++
++    function_segments =
++      function_segments
++      |> Enum.map(&transform_time_attrs/1)
++      |> Enum.map(&transform_trace_time_attrs(&1, tx_attrs.start_time))
++      |> Enum.map(&transform_trace_name_attrs/1)
++      |> Enum.map(&struct(Transaction.Trace.Segment, &1))
++      |> Enum.group_by(& &1.pid)
++      |> Enum.into(%{}, &generate_process_segment_tree(&1))
++
++    top_segment =
++      tx_attrs
++      |> Map.take([:name, :pid, :start_time, :end_time])
++      |> List.wrap()
++      |> Enum.map(&transform_trace_time_attrs(&1, tx_attrs.start_time))
++      |> Enum.map(&transform_trace_name_attrs/1)
++      |> Enum.map(&struct(Transaction.Trace.Segment, &1))
++      |> List.first()
++      |> Map.put(:id, pid)
++
++    top_segment =
++      process_spawns
++      |> collect_process_segments(process_names, process_exits)
++      |> Enum.map(&transform_trace_time_attrs(&1, tx_attrs.start_time))
++      |> Enum.map(&transform_trace_name_attrs/1)
++      |> Enum.map(&struct(Transaction.Trace.Segment, &1))
++      |> Enum.sort_by(& &1.relative_start_time)
++      |> Enum.map(&Map.put(&1, :children, function_segments[&1.pid] || []))
++      |> generate_process_tree(root: top_segment)
++
++    top_children = List.wrap(function_segments[inspect(pid)])
++    top_segment = Map.update!(top_segment, :children, &(&1 ++ top_children))
++
++    span_events = extract_span_events(tx_attrs, pid, process_spawns, process_names, process_exits)
++
++    {[top_segment], tx_attrs, tx_error, span_events}
++  end
++
++  defp extract_span_events(tx_attrs, pid, spawns, names, exits) do
++    spawned_process_span_events(tx_attrs, spawns, names, exits)
++    |> add_root_process_span_event(tx_attrs, pid)
++  end
++
++  defp add_root_process_span_event(spans, %{sampled: true} = tx_attrs, pid) do
++    [
++      %NewRelic.Span.Event{
++        trace_id: tx_attrs[:traceId],
++        transaction_id: tx_attrs[:guid],
++        sampled: true,
++        priority: tx_attrs[:priority],
++        category: "generic",
++        name: "Transaction Root Process #{inspect(pid)}",
++        guid: DistributedTrace.generate_guid(pid: pid),
++        parent_id: tx_attrs[:parentSpanId],
++        timestamp: tx_attrs[:start_time],
++        duration: tx_attrs[:duration_ms] / 1000,
++        entry_point: true
++      }
++      | spans
++    ]
++  end
++
++  defp add_root_process_span_event(spans, _tx_attrs, _pid), do: spans
++
++  defp spawned_process_span_events(tx_attrs, process_spawns, process_names, process_exits) do
++    process_spawns
++    |> collect_process_segments(process_names, process_exits)
++    |> Enum.map(&transform_trace_name_attrs/1)
++    |> Enum.map(fn proc ->
++      %NewRelic.Span.Event{
++        trace_id: tx_attrs[:traceId],
++        transaction_id: tx_attrs[:guid],
++        sampled: tx_attrs[:sampled],
++        priority: tx_attrs[:priority],
++        category: "generic",
++        name: "Process #{proc.name || proc.pid}",
++        guid: DistributedTrace.generate_guid(pid: proc.id),
++        parent_id: DistributedTrace.generate_guid(pid: proc.parent_id),
++        timestamp: proc[:start_time],
++        duration: (proc[:end_time] - proc[:start_time]) / 1000
++      }
++    end)
++  end
++
++  defp collect_process_segments(spawns, names, exits) do
++    for {pid, start_time, original} <- spawns,
++        {^pid, name} <- names,
++        {^pid, end_time} <- exits do
++      %{
++        pid: inspect(pid),
++        id: pid,
++        parent_id: original,
++        name: name,
++        start_time: start_time,
++        end_time: end_time
++      }
++    end
++  end
++
++  defp transform_trace_time_attrs(
++         %{start_time: start_time, end_time: end_time} = attrs,
++         trace_start_time
++       ) do
++    attrs
++    |> Map.merge(%{
++      relative_start_time: start_time - trace_start_time,
++      relative_end_time: end_time - trace_start_time
++    })
++  end
++
++  defp transform_trace_name_attrs(
++         %{
++           primary_name: metric_name,
++           secondary_name: class_name,
++           attributes: attributes
++         } = attrs
++       ) do
++    attrs
++    |> Map.merge(%{
++      class_name: class_name,
++      method_name: nil,
++      metric_name: metric_name |> String.replace("/", ""),
++      attributes: attributes
++    })
++  end
++
++  defp transform_trace_name_attrs(
++         %{
++           module: module,
++           function: function,
++           arity: arity,
++           args: args
++         } = attrs
++       ) do
++    attrs
++    |> Map.merge(%{
++      class_name: "#{function}/#{arity}",
++      method_name: nil,
++      metric_name: "#{inspect(module)}.#{function}",
++      attributes: %{query: inspect(args, charlists: false)}
++    })
++  end
++
++  defp transform_trace_name_attrs(%{pid: pid, name: name} = attrs) do
++    attrs
++    |> Map.merge(%{class_name: name || "Process", method_name: nil, metric_name: pid})
++  end
++
++  defp generate_process_tree(processes, root: root) do
++    parent_map = Enum.group_by(processes, & &1.parent_id)
++    generate_tree(root, parent_map)
++  end
++
++  defp generate_process_segment_tree({pid, segments}) do
++    parent_map = Enum.group_by(segments, & &1.parent_id)
++    %{children: children} = generate_tree(%{id: :root}, parent_map)
++    {pid, children}
++  end
++
++  defp generate_tree(leaf, parent_map) when map_size(parent_map) == 0 do
++    leaf
++  end
++
++  defp generate_tree(parent, parent_map) do
++    {children, parent_map} = Map.pop(parent_map, parent.id, [])
++
++    children =
++      children
++      |> Enum.sort_by(& &1.relative_start_time)
++      |> Enum.map(&generate_tree(&1, parent_map))
++
++    Map.update(parent, :children, children, &(&1 ++ children))
++  end
++
++  defp report_caller_metric(
++         %{
++           "parent.type": parent_type,
++           "parent.account": parent_account_id,
++           "parent.app": parent_app_id,
++           "parent.transportType": transport_type
++         } = tx_attrs
++       ) do
++    NewRelic.report_metric(
++      {:caller, parent_type, parent_account_id, parent_app_id, transport_type},
++      duration_s: tx_attrs[:duration_ms] / 1000
++    )
++  end
++
++  defp report_caller_metric(tx_attrs) do
++    NewRelic.report_metric(
++      {:caller, "Unknown", "Unknown", "Unknown", "Unknown"},
++      duration_s: tx_attrs[:duration_ms] / 1000
++    )
++  end
++
++  defp report_span_events(span_events) do
++    Enum.each(span_events, &Collector.SpanEvent.Harvester.report_span_event/1)
++  end
++
++  defp report_transaction_event(%{transaction_type: :web} = tx_attrs) do
++    Collector.TransactionEvent.Harvester.report_event(%Transaction.Event{
++      timestamp: tx_attrs.start_time,
++      duration: tx_attrs.duration_ms / 1_000,
++      name: Util.metric_join(["WebTransaction", tx_attrs.name]),
++      user_attributes:
++        Map.merge(tx_attrs, %{
++          request_url: "#{tx_attrs.host}#{tx_attrs.path}"
++        })
++    })
++  end
++
++  defp report_transaction_event(tx_attrs) do
++    Collector.TransactionEvent.Harvester.report_event(%Transaction.Event{
++      timestamp: tx_attrs.start_time,
++      duration: tx_attrs.duration_ms / 1_000,
++      name: Util.metric_join(["OtherTransaction", tx_attrs.name]),
++      user_attributes: tx_attrs
++    })
++  end
++
++  defp report_transaction_trace(%{other_transaction_name: _} = tx_attrs, tx_segments) do
++    Collector.TransactionTrace.Harvester.report_trace(%Transaction.Trace{
++      start_time: tx_attrs.start_time,
++      metric_name: Util.metric_join(["OtherTransaction", tx_attrs.name]),
++      request_url: "/Unknown",
++      attributes: %{agentAttributes: tx_attrs},
++      segments: tx_segments,
++      duration: tx_attrs.duration_ms
++    })
++  end
++
++  defp report_transaction_trace(tx_attrs, tx_segments) do
++    Collector.TransactionTrace.Harvester.report_trace(%Transaction.Trace{
++      start_time: tx_attrs.start_time,
++      metric_name: Util.metric_join(["WebTransaction", tx_attrs.name]),
++      request_url: "#{tx_attrs.host}#{tx_attrs.path}",
++      attributes: %{agentAttributes: tx_attrs},
++      segments: tx_segments,
++      duration: tx_attrs.duration_ms
++    })
++  end
++
++  defp report_transaction_error_event(_tx_attrs, nil), do: :ignore
++
++  defp report_transaction_error_event(tx_attrs, {:error, error}) do
++    attributes = Map.drop(tx_attrs, [:error, :error_kind, :error_reason, :error_stack])
++    expected = parse_error_expected(error.reason)
++
++    {exception_type, exception_reason, exception_stacktrace} =
++      Util.Error.normalize(error.reason, error.stack)
++
++    report_error_trace(
++      tx_attrs,
++      exception_type,
++      exception_reason,
++      expected,
++      exception_stacktrace,
++      attributes,
++      error
++    )
++
++    report_error_event(
++      tx_attrs,
++      exception_type,
++      exception_reason,
++      expected,
++      exception_stacktrace,
++      attributes,
++      error
++    )
++
++    unless expected do
++      NewRelic.report_metric({:supportability, :error_event}, error_count: 1)
++      NewRelic.report_metric(:error, error_count: 1)
++    end
++  end
++
++  defp report_error_trace(
++         %{other_transaction_name: _} = tx_attrs,
++         exception_type,
++         exception_reason,
++         expected,
++         exception_stacktrace,
++         attributes,
++         error
++       ) do
++    Collector.ErrorTrace.Harvester.report_error(%NewRelic.Error.Trace{
++      timestamp: tx_attrs.start_time / 1_000,
++      error_type: inspect(exception_type),
++      message: exception_reason,
++      expected: expected,
++      stack_trace: exception_stacktrace,
++      transaction_name: Util.metric_join(["OtherTransaction", tx_attrs.name]),
++      agent_attributes: %{},
++      user_attributes: Map.merge(attributes, %{process: error[:process]})
++    })
++  end
++
++  defp report_error_trace(
++         tx_attrs,
++         exception_type,
++         exception_reason,
++         expected,
++         exception_stacktrace,
++         attributes,
++         error
++       ) do
++    Collector.ErrorTrace.Harvester.report_error(%NewRelic.Error.Trace{
++      timestamp: tx_attrs.start_time / 1_000,
++      error_type: inspect(exception_type),
++      message: exception_reason,
++      expected: expected,
++      stack_trace: exception_stacktrace,
++      transaction_name: Util.metric_join(["WebTransaction", tx_attrs.name]),
++      agent_attributes: %{
++        request_uri: "#{tx_attrs.host}#{tx_attrs.path}"
++      },
++      user_attributes: Map.merge(attributes, %{process: error[:process]})
++    })
++  end
++
++  defp report_error_event(
++         %{other_transaction_name: _} = tx_attrs,
++         exception_type,
++         exception_reason,
++         expected,
++         exception_stacktrace,
++         attributes,
++         error
++       ) do
++    Collector.TransactionErrorEvent.Harvester.report_error(%NewRelic.Error.Event{
++      timestamp: tx_attrs.start_time / 1_000,
++      error_class: inspect(exception_type),
++      error_message: exception_reason,
++      expected: expected,
++      transaction_name: Util.metric_join(["OtherTransaction", tx_attrs.name]),
++      agent_attributes: %{},
++      user_attributes:
++        Map.merge(attributes, %{
++          process: error[:process],
++          stacktrace: Enum.join(exception_stacktrace, "\n")
++        })
++    })
++  end
++
++  defp report_error_event(
++         tx_attrs,
++         exception_type,
++         exception_reason,
++         expected,
++         exception_stacktrace,
++         attributes,
++         error
++       ) do
++    Collector.TransactionErrorEvent.Harvester.report_error(%NewRelic.Error.Event{
++      timestamp: tx_attrs.start_time / 1_000,
++      error_class: inspect(exception_type),
++      error_message: exception_reason,
++      expected: expected,
++      transaction_name: Util.metric_join(["WebTransaction", tx_attrs.name]),
++      agent_attributes: %{
++        http_response_code: tx_attrs.status,
++        request_method: tx_attrs.request_method
++      },
++      user_attributes:
++        Map.merge(attributes, %{
++          process: error[:process],
++          stacktrace: Enum.join(exception_stacktrace, "\n")
++        })
++    })
++  end
++
++  defp report_aggregate(%{other_transaction_name: _} = tx) do
++    NewRelic.report_aggregate(%{type: :OtherTransaction, name: tx[:name]}, %{
++      duration_us: tx.duration_us,
++      duration_ms: tx.duration_ms,
++      call_count: 1
++    })
++  end
++
++  defp report_aggregate(tx) do
++    NewRelic.report_aggregate(%{type: :Transaction, name: tx[:name]}, %{
++      duration_us: tx.duration_us,
++      duration_ms: tx.duration_ms,
++      call_count: 1
++    })
++  end
++
++  def report_transaction_metric(%{other_transaction_name: _} = tx) do
++    NewRelic.report_metric({:other_transaction, tx.name}, duration_s: tx.duration_ms / 1_000)
++  end
++
++  def report_transaction_metric(tx) do
++    NewRelic.report_metric({:transaction, tx.name}, duration_s: tx.duration_ms / 1_000)
++  end
++
++  defp parse_error_expected(%{expected: true}), do: true
++  defp parse_error_expected(_), do: false
++end
+diff --git a/lib/new_relic/transaction/monitor.ex b/lib/new_relic/transaction/monitor.ex
+index cd7daca..d474cec 100644
+--- a/lib/new_relic/transaction/monitor.ex
++++ b/lib/new_relic/transaction/monitor.ex
+@@ -1,6 +1,7 @@
+ defmodule NewRelic.Transaction.Monitor do
+   use GenServer
+   alias NewRelic.Transaction
++  alias NewRelic.DistributedTrace
+ 
+   # This GenServer watches transaction processes for
+   #  - :trace messages
+@@ -72,6 +73,8 @@ defmodule NewRelic.Transaction.Monitor do
+ 
+   def handle_info({:DOWN, _ref, :process, pid, _reason}, state) do
+     Transaction.Reporter.ensure_purge(pid)
++    Transaction.Reporter.complete(pid)
++    DistributedTrace.Tracker.cleanup(pid)
+     {:noreply, %{state | pids: Map.delete(state.pids, pid)}}
+   end
+ 
+diff --git a/lib/new_relic/transaction/plug.ex b/lib/new_relic/transaction/plug.ex
+index 57f77eb..bd47ca6 100644
+--- a/lib/new_relic/transaction/plug.ex
++++ b/lib/new_relic/transaction/plug.ex
+@@ -38,7 +38,7 @@ defmodule NewRelic.Transaction.Plug do
+ 
+   defp before_send(conn) do
+     add_stop_attrs(conn)
+-    Transaction.Reporter.stop(conn)
++    Transaction.Reporter.complete()
+     conn
+   end
+ 
+@@ -60,6 +60,7 @@ defmodule NewRelic.Transaction.Plug do
+     info = Process.info(self(), [:memory, :reductions])
+ 
+     [
++      plug_name: plug_name(conn),
+       status: conn.status,
+       memory_kb: info[:memory] / @kb,
+       reductions: info[:reductions]
+diff --git a/lib/new_relic/transaction/reporter.ex b/lib/new_relic/transaction/reporter.ex
+index 26f50d3..9fbc463 100644
+--- a/lib/new_relic/transaction/reporter.ex
++++ b/lib/new_relic/transaction/reporter.ex
+@@ -1,11 +1,8 @@
+ defmodule NewRelic.Transaction.Reporter do
+   use GenServer
+ 
+-  alias NewRelic.Util
+   alias NewRelic.Util.AttrStore
+   alias NewRelic.Transaction
+-  alias NewRelic.Harvest.Collector
+-  alias NewRelic.DistributedTrace
+ 
+   # This GenServer collects and reports Transaction related data
+   #  - Transaction Events
+@@ -51,6 +48,13 @@ defmodule NewRelic.Transaction.Reporter do
+     )
+   end
+ 
++  def start_other_transaction(category, name) do
++    unless tracking?(self()) do
++      start()
++      AttrStore.add(__MODULE__, self(), other_transaction_name: "#{category}/#{name}")
++    end
++  end
++
+   def fail(%{kind: kind, reason: reason, stack: stack} = error) do
+     if tracking?(self()) do
+       if NewRelic.Config.feature?(:error_collector) do
+@@ -67,15 +71,6 @@ defmodule NewRelic.Transaction.Reporter do
+     end
+   end
+ 
+-  def stop(%Plug.Conn{} = conn) do
+-    add_attributes(
+-      plug_name: Transaction.Plug.plug_name(conn),
+-      end_time_mono: System.monotonic_time()
+-    )
+-
+-    complete()
+-  end
+-
+   def add_trace_segment(segment) do
+     if tracking?(self()) do
+       AttrStore.add(__MODULE__, self(), trace_function_segments: {:list, segment})
+@@ -90,8 +85,12 @@ defmodule NewRelic.Transaction.Reporter do
+ 
+   def complete(pid \\ self()) do
+     if tracking?(pid) do
++      AttrStore.add(__MODULE__, pid, end_time_mono: System.monotonic_time())
++      AttrStore.untrack(__MODULE__, pid)
++
+       Task.Supervisor.start_child(NewRelic.Transaction.TaskSupervisor, fn ->
+-        complete_transaction(pid)
++        AttrStore.collect(__MODULE__, pid)
++        |> Transaction.Complete.run(pid)
+       end)
+     end
+   end
+@@ -149,337 +148,4 @@ defmodule NewRelic.Transaction.Reporter do
+   def tracking?(pid), do: AttrStore.tracking?(__MODULE__, pid)
+ 
+   def root(pid), do: AttrStore.find_root(__MODULE__, pid)
+-
+-  def complete_transaction(pid) do
+-    AttrStore.untrack(__MODULE__, pid)
+-    tx_attrs = AttrStore.collect(__MODULE__, pid)
+-
+-    {tx_segments, tx_attrs, tx_error, span_events} = gather_transaction_info(tx_attrs, pid)
+-    tx_attrs = Map.merge(tx_attrs, NewRelic.Config.automatic_attributes())
+-
+-    report_transaction_event(tx_attrs)
+-    report_transaction_trace(tx_attrs, tx_segments)
+-    report_transaction_error_event(tx_attrs, tx_error)
+-    report_transaction_metric(tx_attrs)
+-    report_aggregate(tx_attrs)
+-    report_caller_metric(tx_attrs)
+-    report_span_events(span_events)
+-  end
+-
+-  defp gather_transaction_info(tx_attrs, pid) do
+-    tx_attrs
+-    |> transform_name_attrs
+-    |> transform_time_attrs
+-    |> extract_transaction_info(pid)
+-  end
+-
+-  defp transform_time_attrs(
+-         %{start_time: start_time, end_time_mono: end_time_mono, start_time_mono: start_time_mono} =
+-           tx
+-       ),
+-       do:
+-         tx
+-         |> Map.drop([:start_time_mono, :end_time_mono])
+-         |> Map.merge(%{
+-           start_time: System.convert_time_unit(start_time, :native, :millisecond),
+-           end_time:
+-             System.convert_time_unit(
+-               start_time + (end_time_mono - start_time_mono),
+-               :native,
+-               :millisecond
+-             ),
+-           duration_us:
+-             System.convert_time_unit(end_time_mono - start_time_mono, :native, :microsecond),
+-           duration_ms:
+-             System.convert_time_unit(end_time_mono - start_time_mono, :native, :millisecond)
+-         })
+-
+-  defp transform_name_attrs(%{custom_name: name} = tx), do: Map.put(tx, :name, name)
+-  defp transform_name_attrs(%{framework_name: name} = tx), do: Map.put(tx, :name, name)
+-  defp transform_name_attrs(%{plug_name: name} = tx), do: Map.put(tx, :name, name)
+-
+-  defp extract_transaction_info(tx_attrs, pid) do
+-    {function_segments, tx_attrs} = Map.pop(tx_attrs, :trace_function_segments, [])
+-    {process_spawns, tx_attrs} = Map.pop(tx_attrs, :trace_process_spawns, [])
+-    {process_names, tx_attrs} = Map.pop(tx_attrs, :trace_process_names, [])
+-    {process_exits, tx_attrs} = Map.pop(tx_attrs, :trace_process_exits, [])
+-    {tx_error, tx_attrs} = Map.pop(tx_attrs, :transaction_error, nil)
+-
+-    span_events =
+-      spawned_process_events(tx_attrs, process_spawns, process_names, process_exits)
+-      |> add_cowboy_process_event(tx_attrs, pid)
+-
+-    function_segments =
+-      function_segments
+-      |> Enum.map(&transform_time_attrs/1)
+-      |> Enum.map(&transform_trace_time_attrs(&1, tx_attrs.start_time))
+-      |> Enum.map(&transform_trace_name_attrs/1)
+-      |> Enum.map(&struct(Transaction.Trace.Segment, &1))
+-      |> Enum.group_by(& &1.pid)
+-      |> Enum.into(%{}, &generate_process_segment_tree(&1))
+-
+-    top_segment =
+-      tx_attrs
+-      |> Map.take([:name, :pid, :start_time, :end_time])
+-      |> List.wrap()
+-      |> Enum.map(&transform_trace_time_attrs(&1, tx_attrs.start_time))
+-      |> Enum.map(&transform_trace_name_attrs/1)
+-      |> Enum.map(&struct(Transaction.Trace.Segment, &1))
+-      |> List.first()
+-      |> Map.put(:id, pid)
+-
+-    top_segment =
+-      process_spawns
+-      |> collect_process_segments(process_names, process_exits)
+-      |> Enum.map(&transform_trace_time_attrs(&1, tx_attrs.start_time))
+-      |> Enum.map(&transform_trace_name_attrs/1)
+-      |> Enum.map(&struct(Transaction.Trace.Segment, &1))
+-      |> Enum.sort_by(& &1.relative_start_time)
+-      |> Enum.map(&Map.put(&1, :children, function_segments[&1.pid] || []))
+-      |> generate_process_tree(root: top_segment)
+-
+-    top_children = List.wrap(function_segments[inspect(pid)])
+-    top_segment = Map.update!(top_segment, :children, &(&1 ++ top_children))
+-
+-    {[top_segment], tx_attrs, tx_error, span_events}
+-  end
+-
+-  defp add_cowboy_process_event(spans, %{sampled: true} = tx_attrs, pid) do
+-    [
+-      %NewRelic.Span.Event{
+-        trace_id: tx_attrs[:traceId],
+-        transaction_id: tx_attrs[:guid],
+-        sampled: true,
+-        priority: tx_attrs[:priority],
+-        category: "generic",
+-        name: "Cowboy Process #{inspect(pid)}",
+-        guid: DistributedTrace.generate_guid(pid: pid),
+-        parent_id: tx_attrs[:parentSpanId],
+-        timestamp: tx_attrs[:start_time],
+-        duration: tx_attrs[:duration_ms] / 1000,
+-        entry_point: true
+-      }
+-      | spans
+-    ]
+-  end
+-
+-  defp add_cowboy_process_event(spans, _tx_attrs, _pid), do: spans
+-
+-  defp spawned_process_events(tx_attrs, process_spawns, process_names, process_exits) do
+-    process_spawns
+-    |> collect_process_segments(process_names, process_exits)
+-    |> Enum.map(&transform_trace_name_attrs/1)
+-    |> Enum.map(fn proc ->
+-      %NewRelic.Span.Event{
+-        trace_id: tx_attrs[:traceId],
+-        transaction_id: tx_attrs[:guid],
+-        sampled: tx_attrs[:sampled],
+-        priority: tx_attrs[:priority],
+-        category: "generic",
+-        name: "Process #{proc.name || proc.pid}",
+-        guid: DistributedTrace.generate_guid(pid: proc.id),
+-        parent_id: DistributedTrace.generate_guid(pid: proc.parent_id),
+-        timestamp: proc[:start_time],
+-        duration: (proc[:end_time] - proc[:start_time]) / 1000
+-      }
+-    end)
+-  end
+-
+-  defp collect_process_segments(spawns, names, exits) do
+-    for {pid, start_time, original} <- spawns,
+-        {^pid, name} <- names,
+-        {^pid, end_time} <- exits do
+-      %{
+-        pid: inspect(pid),
+-        id: pid,
+-        parent_id: original,
+-        name: name,
+-        start_time: start_time,
+-        end_time: end_time
+-      }
+-    end
+-  end
+-
+-  defp transform_trace_time_attrs(
+-         %{start_time: start_time, end_time: end_time} = attrs,
+-         trace_start_time
+-       ),
+-       do:
+-         attrs
+-         |> Map.merge(%{
+-           relative_start_time: start_time - trace_start_time,
+-           relative_end_time: end_time - trace_start_time
+-         })
+-
+-  defp transform_trace_name_attrs(
+-         %{
+-           primary_name: metric_name,
+-           secondary_name: class_name,
+-           attributes: attributes
+-         } = attrs
+-       ) do
+-    attrs
+-    |> Map.merge(%{
+-      class_name: class_name,
+-      method_name: nil,
+-      metric_name: metric_name |> String.replace("/", ""),
+-      attributes: attributes
+-    })
+-  end
+-
+-  defp transform_trace_name_attrs(
+-         %{
+-           module: module,
+-           function: function,
+-           arity: arity,
+-           args: args
+-         } = attrs
+-       ),
+-       do:
+-         attrs
+-         |> Map.merge(%{
+-           class_name: "#{function}/#{arity}",
+-           method_name: nil,
+-           metric_name: "#{inspect(module)}.#{function}",
+-           attributes: %{query: inspect(args, charlists: false)}
+-         })
+-
+-  defp transform_trace_name_attrs(%{pid: pid, name: name} = attrs),
+-    do:
+-      attrs
+-      |> Map.merge(%{class_name: name || "Process", method_name: nil, metric_name: pid})
+-
+-  defp generate_process_tree(processes, root: root) do
+-    parent_map = Enum.group_by(processes, & &1.parent_id)
+-    generate_tree(root, parent_map)
+-  end
+-
+-  defp generate_process_segment_tree({pid, segments}) do
+-    parent_map = Enum.group_by(segments, & &1.parent_id)
+-    %{children: children} = generate_tree(%{id: :root}, parent_map)
+-    {pid, children}
+-  end
+-
+-  defp generate_tree(leaf, parent_map) when map_size(parent_map) == 0 do
+-    leaf
+-  end
+-
+-  defp generate_tree(parent, parent_map) do
+-    {children, parent_map} = Map.pop(parent_map, parent.id, [])
+-
+-    children =
+-      children
+-      |> Enum.sort_by(& &1.relative_start_time)
+-      |> Enum.map(&generate_tree(&1, parent_map))
+-
+-    Map.update(parent, :children, children, &(&1 ++ children))
+-  end
+-
+-  defp report_caller_metric(
+-         %{
+-           "parent.type": parent_type,
+-           "parent.account": parent_account_id,
+-           "parent.app": parent_app_id,
+-           "parent.transportType": transport_type
+-         } = tx_attrs
+-       ) do
+-    NewRelic.report_metric(
+-      {:caller, parent_type, parent_account_id, parent_app_id, transport_type},
+-      duration_s: tx_attrs[:duration_ms] / 1000
+-    )
+-  end
+-
+-  defp report_caller_metric(tx_attrs) do
+-    NewRelic.report_metric(
+-      {:caller, "Unknown", "Unknown", "Unknown", "Unknown"},
+-      duration_s: tx_attrs[:duration_ms] / 1000
+-    )
+-  end
+-
+-  defp report_span_events(span_events) do
+-    Enum.each(span_events, &Collector.SpanEvent.Harvester.report_span_event/1)
+-  end
+-
+-  defp report_transaction_event(tx_attrs) do
+-    Collector.TransactionEvent.Harvester.report_event(%Transaction.Event{
+-      timestamp: tx_attrs.start_time,
+-      duration: tx_attrs.duration_ms / 1_000,
+-      name: "WebTransaction#{tx_attrs.name}",
+-      user_attributes:
+-        Map.merge(tx_attrs, %{
+-          request_url: "#{tx_attrs.host}#{tx_attrs.path}"
+-        })
+-    })
+-  end
+-
+-  defp report_transaction_trace(tx_attrs, tx_segments) do
+-    Collector.TransactionTrace.Harvester.report_trace(%Transaction.Trace{
+-      start_time: tx_attrs.start_time,
+-      metric_name: "WebTransaction#{tx_attrs.name}",
+-      request_url: "#{tx_attrs.host}#{tx_attrs.path}",
+-      attributes: %{agentAttributes: tx_attrs},
+-      segments: tx_segments,
+-      duration: tx_attrs.duration_ms
+-    })
+-  end
+-
+-  defp report_transaction_error_event(_tx_attrs, nil), do: :ignore
+-
+-  defp report_transaction_error_event(tx_attrs, {:error, error}) do
+-    attributes = Map.drop(tx_attrs, [:error, :error_kind, :error_reason, :error_stack])
+-
+-    {exception_type, exception_reason, exception_stacktrace} =
+-      Util.Error.normalize(error.reason, error.stack)
+-
+-    expected = parse_error_expected(error.reason)
+-
+-    Collector.ErrorTrace.Harvester.report_error(%NewRelic.Error.Trace{
+-      timestamp: tx_attrs.start_time / 1_000,
+-      error_type: inspect(exception_type),
+-      message: exception_reason,
+-      expected: expected,
+-      stack_trace: exception_stacktrace,
+-      transaction_name: "WebTransaction#{tx_attrs.name}",
+-      request_uri: "#{tx_attrs.host}#{tx_attrs.path}",
+-      user_attributes:
+-        Map.merge(attributes, %{
+-          process: error[:process]
+-        })
+-    })
+-
+-    Collector.TransactionErrorEvent.Harvester.report_error(%NewRelic.Error.Event{
+-      timestamp: tx_attrs.start_time / 1_000,
+-      error_class: inspect(exception_type),
+-      error_message: exception_reason,
+-      expected: expected,
+-      transaction_name: "WebTransaction#{tx_attrs.name}",
+-      http_response_code: tx_attrs.status,
+-      request_method: tx_attrs.request_method,
+-      user_attributes:
+-        Map.merge(attributes, %{
+-          process: error[:process],
+-          stacktrace: Enum.join(exception_stacktrace, "\n")
+-        })
+-    })
+-
+-    unless expected do
+-      NewRelic.report_metric({:supportability, :error_event}, error_count: 1)
+-      NewRelic.report_metric(:error, error_count: 1)
+-    end
+-  end
+-
+-  defp report_aggregate(tx) do
+-    NewRelic.report_aggregate(%{type: :Transaction, name: tx[:name]}, %{
+-      duration_us: tx.duration_us,
+-      duration_ms: tx.duration_ms,
+-      call_count: 1
+-    })
+-  end
+-
+-  def report_transaction_metric(tx) do
+-    NewRelic.report_metric({:transaction, tx.name}, duration_s: tx.duration_ms / 1_000)
+-  end
+-
+-  defp parse_error_expected(%{expected: true}), do: true
+-  defp parse_error_expected(_), do: false
+ end
+diff --git a/lib/new_relic/util.ex b/lib/new_relic/util.ex
+index 4f86d67..0862187 100644
+--- a/lib/new_relic/util.ex
++++ b/lib/new_relic/util.ex
+@@ -24,6 +24,15 @@ defmodule NewRelic.Util do
+     end
+   end
+ 
++  def metric_join(segments) when is_list(segments) do
++    segments
++    |> Enum.filter(& &1)
++    |> Enum.map(&to_string/1)
++    |> Enum.map(&String.replace_leading(&1, "/", ""))
++    |> Enum.map(&String.replace_trailing(&1, "/", ""))
++    |> Enum.join("/")
++  end
++
+   def deep_flatten(attrs) when is_list(attrs) do
+     Enum.flat_map(attrs, &deep_flatten/1)
+   end

@@ -1,0 +1,574 @@
+diff --git a/lib/assets/tree/main.css b/lib/assets/tree/main.css
+new file mode 100644
+index 0000000..ed2288b
+--- /dev/null
++++ b/lib/assets/tree/main.css
+@@ -0,0 +1,82 @@
++.app {
++  font-family: "JetBrains Mono", monospace;
++  font-size: 0.875rem;
++
++  --gray-50: #f8fafc;
++  --gray-100: #f0f5f9;
++  --gray-200: #e1e8f0;
++  --gray-300: #cad5e0;
++  --gray-400: #91a4b7;
++  --gray-500: #61758a;
++  --gray-700: #304254;
++  --gray-800: #1c2a3a;
++
++  --ansi-color-black: black;
++  --ansi-color-red: #ca1243;
++  --ansi-color-green: #50a14f;
++  --ansi-color-yellow: #c18401;
++  --ansi-color-blue: #4078f2;
++  --ansi-color-magenta: #a726a4;
++  --ansi-color-cyan: #0184bc;
++  --ansi-color-white: white;
++  --ansi-color-light-black: #5c6370;
++  --ansi-color-light-red: #e45649;
++  --ansi-color-light-green: #34d399;
++  --ansi-color-light-yellow: #fde68a;
++  --ansi-color-light-blue: #61afef;
++  --ansi-color-light-magenta: #c678dd;
++  --ansi-color-light-cyan: #56b6c2;
++  --ansi-color-light-white: white;
++
++  color: var(--gray-500);
++}
++
++div.item {
++  display: flex;
++}
++
++div.clickable {
++  cursor: pointer;
++}
++
++div.icon-container {
++  flex-shrink: 0;
++  display: inline-block;
++  width: 2ch;
++  margin-right: 2px;
++}
++
++.ri {
++  font-size: 1.25rem;
++  vertical-align: middle;
++}
++
++.ri-empty {
++  display: inline-block;
++  width: 2ch;
++}
++
++ol {
++  display: none;
++  list-style-type: none;
++  margin: 0;
++  padding: 0;
++  margin-left: 2ch;
++}
++
++ol.show {
++  display: block;
++}
++
++ol li {
++  display: flex;
++  flex-direction: column;
++}
++
++div.suffix {
++  margin-left: 2ch;
++}
++
++span.code {
++  white-space: pre;
++}
+diff --git a/lib/assets/tree/main.js b/lib/assets/tree/main.js
+new file mode 100644
+index 0000000..b0779a1
+--- /dev/null
++++ b/lib/assets/tree/main.js
+@@ -0,0 +1,60 @@
++import * as Vue from "https://cdn.jsdelivr.net/npm/vue@3.2.26/dist/vue.esm-browser.prod.js";
++
++export function init(ctx, tree) {
++  ctx.importCSS("main.css");
++  ctx.importCSS(
++    "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
++  );
++  ctx.importCSS(
++    "https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.min.css"
++  );
++
++  const app = Vue.createApp({
++    template: `
++      <div class="app">
++        <div class="tree">
++          <TreeNode :node="tree" :level="1" />
++        </div>
++      </div>
++    `,
++    data() {
++      return { tree };
++    },
++    methods: {},
++    components: {
++      TreeNode: {
++        // Need an explicit name for recursive components.
++        name: "TreeNode",
++        props: ["node", "level"],
++        data() {
++          return { expanded: this.level === 1 };
++        },
++        methods: {
++          style(span) {
++            return span.color == null ? {} : { color: span.color };
++          },
++        },
++        template: `
++          <div class="item" @click="expanded = !expanded" :class="{clickable: node.children != null}">
++            <div class="icon-container">
++              <i class="ri ri-arrow-right-s-fill" v-if="node.children != null && !expanded"></i>
++              <i class="ri ri-arrow-down-s-fill" v-if="node.children != null && expanded"></i>
++            </div>
++            <div>
++              <span v-if="node.children == null || !expanded" v-for="span in node.content" class="code" :style="style(span)">{{ span.text }}</span>
++              <span v-if="node.children != null && expanded" v-for="span in node.expanded.prefix" class="code" :style="style(span)">{{ span.text }}</span>
++            </div>
++          </div>
++          <ol v-if="node.children != null" :class="{show: expanded}">
++            <li v-for="(child, index) in node.children">
++              <TreeNode :node="child" :level="level + 1" />
++            </li>
++          </ol>
++          <div class="suffix" v-if="node.children != null && expanded">
++            <span v-for="span in node.expanded.suffix" class="code" :style="style(span)">{{ span.text }}</span>
++          </div>
++        `,
++      },
++    },
++  }).mount(ctx.root);
++}
+diff --git a/lib/kino.ex b/lib/kino.ex
+index 37359fc..b5f72be 100644
+--- a/lib/kino.ex
++++ b/lib/kino.ex
+@@ -89,6 +89,14 @@ defmodule Kino do
+ 
+   Also see `Kino.animate/3`.
+ 
++  ### Kino.Tree
++
++  `Kino.Tree` displays arbitrarily nested data structure as a
++  tree view.
++
++      data = Process.info(self())
++      Kino.Tree.new(data)
++
+   ### User interactions
+ 
+   `Kino.Input` and `Kino.Control` provide a set of widgets for
+diff --git a/lib/kino/input.ex b/lib/kino/input.ex
+index dcd49f4..bce7ad6 100644
+--- a/lib/kino/input.ex
++++ b/lib/kino/input.ex
+@@ -258,6 +258,85 @@ defmodule Kino.Input do
+     new(%{type: :color, label: label, default: default})
+   end
+ 
++  @doc """
++  Creates a new image input.
++
++  The input value is a map, with the image binary and metadata:
++
++  ```elixir
++  %{
++    data: binary(),
++    height: pos_integer(),
++    width: pos_integer(),
++    format: :rgb | :png | :jpeg
++  }
++  ```
++
++  Note that the value can also be `nil`, if no image is selected.
++
++  ## Options
++
++    * `:format` - the format to read the image as, either of:
++
++      * `:rgb` (default) - the binary includes raw pixel values, each
++        encoded as a single byte in the HWC order. Such binary can be
++        directly converted to an `Nx` tensor, with no additional decoding
++
++      * `:png`
++
++      * `:jpeg` (or `:jpg`)
++
++    * `:size` - the size to fit the image into, given as `{height, width}`
++
++    * `:fit` - the strategy of fitting the image into `:size`, either of:
++
++      * `:match` (default) - resizes the image to `:size`, with no
++        respect for aspect ratio
++
++      * `:contain` - resizes the image, such that it fits in a box of
++        `:size`, but preserving the aspect ratio. The resulting image
++        can be smaller or equal to `:size`
++
++      * `:pad` - same as `:contain`, but pads the image to match `:size`
++        exactly
++
++      * `:crop` - resizes the image, such that one edge fits in `:size`
++        and the other overflows, then center-crops the image to match
++        `:size` exactly
++
++  """
++  @spec image(String.t(), keyword()) :: t()
++  def image(label, opts \\ []) do
++    format =
++      case Keyword.get(opts, :format, :rgb) do
++        :rgb ->
++          :rgb
++
++        :png ->
++          :png
++
++        :jpeg ->
++          :jpeg
++
++        :jpg ->
++          :jpeg
++
++        other ->
++          raise ArgumentError,
++                "expected :format to be either of :rgb, :png or :jpeg/:jpg, got: #{inspect(other)}"
++      end
++
++    size = Keyword.get(opts, :size, nil)
++    fit = Keyword.get(opts, :fit, :match)
++
++    unless fit in [:match, :contain, :pad, :crop] do
++      raise ArgumentError,
++            "expected :fit to be either of :match, :contain, :pad or :crop, got: #{inspect(fit)}"
++    end
++
++    new(%{type: :image, label: label, default: nil, size: size, format: format, fit: fit})
++  end
++
+   @doc """
+   Synchronously reads the current input value.
+ 
+diff --git a/lib/kino/output.ex b/lib/kino/output.ex
+index 27fb185..f0f8955 100644
+--- a/lib/kino/output.ex
++++ b/lib/kino/output.ex
+@@ -273,6 +273,17 @@ defmodule Kino.Output do
+               default: String.t(),
+               destination: Process.dest()
+             }
++          | %{
++              type: :image,
++              ref: ref(),
++              id: input_id(),
++              label: String.t(),
++              default: nil,
++              destination: Process.dest(),
++              format: :rgb | :png | :jpeg,
++              size: {pos_integer(), pos_integer()} | nil,
++              fit: :match | :contain | :pad | :crop
++            }
+ 
+   @typedoc """
+   A control widget.
+diff --git a/lib/kino/smart_cell.ex b/lib/kino/smart_cell.ex
+index 4fcca61..61a1373 100644
+--- a/lib/kino/smart_cell.ex
++++ b/lib/kino/smart_cell.ex
+@@ -208,8 +208,12 @@ defmodule Kino.SmartCell do
+ 
+   @doc """
+   Invoked to generate source code based on the given attributes.
++
++  A list of sources can be returned, in which case the sources are
++  joined into a single source, however converting to a Code cell
++  results in multiple cells.
+   """
+-  @callback to_source(attrs()) :: String.t()
++  @callback to_source(attrs()) :: String.t() | list(String.t())
+ 
+   @doc """
+   Invoked whenever the base evaluation context changes.
+diff --git a/lib/kino/smart_cell/server.ex b/lib/kino/smart_cell/server.ex
+index a30de02..890b5fe 100644
+--- a/lib/kino/smart_cell/server.ex
++++ b/lib/kino/smart_cell/server.ex
+@@ -5,12 +5,15 @@ defmodule Kino.SmartCell.Server do
+ 
+   import Kino.Utils, only: [has_function?: 3]
+ 
++  @chunk_joiner "\n\n"
++  @chunk_joiner_size byte_size(@chunk_joiner)
++
+   def start_link(module, ref, attrs, target_pid) do
+     case :proc_lib.start_link(__MODULE__, :init, [module, ref, attrs, target_pid]) do
+       {:error, error} ->
+         {:error, error}
+ 
+-      {:ok, pid, source, init_opts} ->
++      {:ok, pid, source, chunks, init_opts} ->
+         editor =
+           if editor_opts = init_opts[:editor] do
+             source = attrs[editor_opts[:attribute]] || editor_opts[:default_source]
+@@ -25,6 +28,7 @@ defmodule Kino.SmartCell.Server do
+         {:ok, pid,
+          %{
+            source: source,
++           chunks: chunks,
+            js_view: %{
+              ref: ref,
+              pid: pid,
+@@ -55,9 +59,9 @@ defmodule Kino.SmartCell.Server do
+         attrs
+       end
+ 
+-    source = module.to_source(attrs)
++    {source, chunks} = to_source(module, attrs)
+ 
+-    :proc_lib.init_ack({:ok, self(), source, init_opts})
++    :proc_lib.init_ack({:ok, self(), source, chunks, init_opts})
+ 
+     state = %{
+       module: module,
+@@ -128,14 +132,31 @@ defmodule Kino.SmartCell.Server do
+   defp set_attrs(%{attrs: attrs} = state, attrs), do: state
+ 
+   defp set_attrs(state, attrs) do
+-    source = state.module.to_source(attrs)
++    {source, chunks} = to_source(state.module, attrs)
+ 
+     send(
+       state.target_pid,
+       {:runtime_smart_cell_update, state.ctx.__private__.ref, attrs, source,
+-       %{reevaluate: state.reevaluate_on_change}}
++       %{chunks: chunks, reevaluate: state.reevaluate_on_change}}
+     )
+ 
+     %{state | attrs: attrs}
+   end
++
++  defp to_source(module, attrs) do
++    case module.to_source(attrs) do
++      sources when is_list(sources) ->
++        {chunks, _} =
++          Enum.map_reduce(sources, 0, fn source, offset ->
++            size = byte_size(source)
++            {{offset, size}, offset + size + @chunk_joiner_size}
++          end)
++
++        source = Enum.join(sources, @chunk_joiner)
++        {source, chunks}
++
++      source when is_binary(source) ->
++        {source, nil}
++    end
++  end
+ end
+diff --git a/lib/kino/tree.ex b/lib/kino/tree.ex
+new file mode 100644
+index 0000000..af3ebe9
+--- /dev/null
++++ b/lib/kino/tree.ex
+@@ -0,0 +1,190 @@
++defmodule Kino.Tree do
++  @moduledoc """
++  A kino for interactively viewing nested data as a tree view.
++
++  The data can be any term.
++
++  ## Examples
++
++      data = %{
++        id: 1,
++        email: "user@example.com",
++        inserted_at: ~U[2022-01-01T10:00:00Z],
++        addresses: [
++          %{
++            country: "pl",
++            city: "Kraków",
++            street: "Karmelicka",
++            zip: "00123"
++          }
++        ]
++      }
++
++      Kino.Tree.new(data)
++
++  The tree view is particularly useful when inspecting larger data
++  structures:
++
++      data = Process.info(self())
++      Kino.Tree.new(data)
++
++  """
++
++  use Kino.JS, assets_path: "lib/assets/tree"
++
++  @doc """
++  Creates a new kino displaying the given data structure.
++  """
++  @spec new(term()) :: Kino.Layout.t()
++  def new(data) do
++    tree = to_node(data, [])
++    kino = Kino.JS.new(__MODULE__, tree)
++    Kino.Layout.grid([kino], boxed: true)
++  end
++
++  defp to_node(string, suffix) when is_binary(string) do
++    %{content: [green(inspect(string)) | suffix], children: nil}
++  end
++
++  defp to_node(atom, suffix) when is_atom(atom) do
++    span =
++      if atom in [nil, true, false] do
++        magenta(inspect(atom))
++      else
++        blue(inspect(atom))
++      end
++
++    %{content: [span | suffix], children: nil}
++  end
++
++  defp to_node(number, suffix) when is_number(number) do
++    %{content: [blue(inspect(number)) | suffix], children: nil}
++  end
++
++  defp to_node({}, suffix) do
++    %{content: [black("{}") | suffix], children: nil}
++  end
++
++  defp to_node(tuple, suffix) when is_tuple(tuple) do
++    size = tuple_size(tuple)
++    children = tuple |> Tuple.to_list() |> to_children(size)
++
++    %{
++      content: [black("{...}") | suffix],
++      children: children,
++      expanded: %{prefix: [black("{")], suffix: [black("}") | suffix]}
++    }
++  end
++
++  defp to_node([], suffix) do
++    %{content: [black("[]") | suffix], children: nil}
++  end
++
++  defp to_node(list, suffix) when is_list(list) do
++    size = length(list)
++
++    children =
++      if Keyword.keyword?(list) do
++        to_key_value_children(list, size)
++      else
++        to_children(list, size)
++      end
++
++    %{
++      content: [black("[...]") | suffix],
++      children: children,
++      expanded: %{prefix: [black("[")], suffix: [black("]") | suffix]}
++    }
++  end
++
++  defp to_node(%Regex{} = regex, suffix) do
++    %{content: [red(inspect(regex)) | suffix], children: nil}
++  end
++
++  defp to_node(%module{} = struct, suffix) when is_struct(struct) do
++    if Inspect.impl_for(struct) != Inspect.Any do
++      %{content: [black(inspect(struct)) | suffix], children: nil}
++    else
++      map = Map.from_struct(struct)
++      size = map_size(map)
++      children = to_key_value_children(map, size)
++
++      %{
++        content: [black("%"), blue(inspect(module)), black("{...}") | suffix],
++        children: children,
++        expanded: %{
++          prefix: [black("%"), blue(inspect(module)), black("{")],
++          suffix: [black("}") | suffix]
++        }
++      }
++    end
++  end
++
++  defp to_node(%{} = map, suffix) when map_size(map) == 0 do
++    %{content: [black("%{}") | suffix], children: nil}
++  end
++
++  defp to_node(map, suffix) when is_map(map) do
++    size = map_size(map)
++    children = to_key_value_children(map, size)
++
++    %{
++      content: [black("%{...}") | suffix],
++      children: children,
++      expanded: %{prefix: [black("%{")], suffix: [black("}") | suffix]}
++    }
++  end
++
++  defp to_node(other, suffix) do
++    %{content: [black(inspect(other)) | suffix], children: nil}
++  end
++
++  defp to_key_value_node({key, value}, suffix) do
++    {key_span, sep_span} =
++      case to_node(key, []) do
++        %{content: [%{text: ":" <> name} = span]} when is_atom(key) ->
++          {%{span | text: name <> ":"}, black(" ")}
++
++        %{content: [span]} ->
++          {%{span | text: inspect(key, width: :infinity)}, black(" => ")}
++      end
++
++    case to_node(value, suffix) do
++      %{content: content, expanded: %{prefix: prefix} = expanded} = node ->
++        %{
++          node
++          | content: [key_span, sep_span | content],
++            expanded: %{expanded | prefix: [key_span, sep_span | prefix]}
++        }
++
++      %{content: content} = node ->
++        %{node | content: [key_span, sep_span | content]}
++    end
++  end
++
++  defp to_children(items, container_size) do
++    Enum.with_index(items, fn item, index ->
++      to_node(item, suffix(index, container_size))
++    end)
++  end
++
++  defp to_key_value_children(items, container_size) do
++    Enum.with_index(items, fn item, index ->
++      to_key_value_node(item, suffix(index, container_size))
++    end)
++  end
++
++  defp suffix(index, container_size) do
++    if index != container_size - 1 do
++      [black(",")]
++    else
++      []
++    end
++  end
++
++  defp black(text), do: %{text: text, color: nil}
++  defp red(text), do: %{text: text, color: "var(--ansi-color-red)"}
++  defp green(text), do: %{text: text, color: "var(--ansi-color-green)"}
++  defp blue(text), do: %{text: text, color: "var(--ansi-color-blue)"}
++  defp magenta(text), do: %{text: text, color: "var(--ansi-color-magenta)"}
++end

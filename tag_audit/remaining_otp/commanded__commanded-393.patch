@@ -1,0 +1,640 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0dcfb7b..16ec6e9 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,11 @@
+ # Changelog
+ 
++## Next release
++
++### Enhancements
++
++- Add `init/1` callback function to event handlers and process managers ([#393](https://github.com/commanded/commanded/pull/393)).
++
+ ## v1.1.1
+ 
+ ### Enhancements
+diff --git a/lib/commanded/event/handler.ex b/lib/commanded/event/handler.ex
+index 0669834..dcf7d54 100644
+--- a/lib/commanded/event/handler.ex
++++ b/lib/commanded/event/handler.ex
+@@ -28,8 +28,8 @@ defmodule Commanded.Event.Handler do
+ 
+   The name you specify is used when subscribing to the event store. Therefore
+   you *should not* change the name once the handler has been deployed. A new
+-  subscription will be created when you change the name, and you event handler
+-  will receive already handled events.
++  subscription will be created if you change the name and the event handler will
++  receive already handled events.
+ 
+   You can use the module name of your event handler using the `__MODULE__`
+   special form:
+@@ -89,12 +89,30 @@ defmodule Commanded.Event.Handler do
+ 
+   This will ensure the handler only receives events appended to that stream.
+ 
++  ## Runtime event handler configuration
++
++  Runtime options can be provided to the event handler's `start_link/1` function
++  or its child spec. The `c:init/1` callback function can also be used to define
++  runtime configuration.
++
++  ### Example
++
++  Provide runtime configuration to `start_link/1`:
++
++      {:ok, _pid} = ExampleHandler.start_link(application: ExampleApp, name: "ExampleHandler")
++
++  Or when supervised:
++
++      Supervisor.start_link([
++        {ExampleHandler, application: ExampleApp, name: "ExampleHandler"}
++      ], strategy: :one_for_one)
++
+   ## `c:init/0` callback
+ 
+   You can define an `c:init/0` function in your handler to be called once it has
+   started and successfully subscribed to the event store.
+ 
+-  This callback function must return `:ok`, any other return value will
++  This callback function must return `:ok`. Any other return value will
+   terminate the event handler with an error.
+ 
+       defmodule ExampleHandler do
+@@ -102,8 +120,8 @@ defmodule Commanded.Event.Handler do
+           application: ExampleApp,
+           name: "ExampleHandler"
+ 
++        # Optional initialisation
+         def init do
+-          # optional initialisation
+           :ok
+         end
+ 
+@@ -113,6 +131,36 @@ defmodule Commanded.Event.Handler do
+         end
+       end
+ 
++    ## `c:init/1` callback
++
++    An `c:init/1` function can be defined in your handler which is used to
++    provide runtime configuration. This callback function must return
++    `{:ok, config}` with the updated config.
++
++    ### Example
++
++    The `c:init/1` function is used to define the handler's application and name
++    based upon a value provided at runtime:
++
++        defmodule ExampleHandler do
++          use Commanded.Event.Handler
++
++          def init(config) do
++            {tenant, config} = Keyword.pop!(config, :tenant)
++
++            config =
++              config
++              |> Keyword.put(:application, Module.concat([ExampleApp, tenant]))
++              |> Keyword.put(:name, Module.concat([__MODULE__, tenant]))
++
++            {:ok, config}
++          end
++        end
++
++    Usage:
++
++        {:ok, _pid} = ExampleHandler.start_link(tenant: :tenant1)
++
+   ## `c:error/3` callback
+ 
+   You can define an `c:error/3` callback function to handle any errors returned
+@@ -253,6 +301,14 @@ defmodule Commanded.Event.Handler do
+   """
+   @callback init() :: :ok | {:stop, reason :: any()}
+ 
++  @doc """
++  Optional callback function called to configure the handler before it starts.
++
++  It is passed the merged compile-time and runtime config, and must return the
++  updated config.
++  """
++  @callback init(config :: Keyword.t()) :: {:ok, Keyword.t()}
++
+   @doc """
+   Event handler behaviour to handle a domain event and its metadata.
+ 
+@@ -305,22 +361,16 @@ defmodule Commanded.Event.Handler do
+   defmacro __using__(opts) do
+     quote location: :keep do
+       @before_compile unquote(__MODULE__)
+-
+       @behaviour Handler
+-
+-      {application, name} = Handler.compile_config(__MODULE__, unquote(opts))
+-
+       @opts unquote(opts)
+-      @application application
+-      @name name
+ 
+       @doc false
+       def start_link(opts \\ []) do
+-        application = Keyword.get(opts, :application, @application)
+-        module_opts = Keyword.drop(@opts, [:application, :name])
+-        opts = Handler.start_opts(__MODULE__, module_opts, opts)
++        opts = Keyword.merge(@opts, opts)
+ 
+-        Handler.start_link(application, @name, __MODULE__, opts)
++        {application, name, config} = Handler.parse_config!(__MODULE__, opts)
++
++        Handler.start_link(application, name, __MODULE__, config)
+       end
+ 
+       @doc """
+@@ -335,11 +385,13 @@ defmodule Commanded.Event.Handler do
+ 
+       """
+       def child_spec(opts) do
+-        application = Keyword.get(opts, :application, @application)
++        opts = Keyword.merge(@opts, opts)
++
++        {application, name, config} = Handler.parse_config!(__MODULE__, opts)
+ 
+         default = %{
+-          id: {__MODULE__, application, @name},
+-          start: {__MODULE__, :start_link, [opts]},
++          id: {__MODULE__, application, name},
++          start: {Handler, :start_link, [application, name, __MODULE__, config]},
+           restart: :permanent,
+           type: :worker
+         }
+@@ -348,60 +400,53 @@ defmodule Commanded.Event.Handler do
+       end
+ 
+       @doc false
+-      def __name__, do: @name
++      def init, do: :ok
+ 
+       @doc false
+-      def init, do: :ok
++      def init(config), do: {:ok, config}
+ 
+       @doc false
+       def before_reset, do: :ok
+ 
+-      defoverridable init: 0, before_reset: 0
++      defoverridable init: 0, init: 1, before_reset: 0
+     end
+   end
+ 
+   @doc false
+-  def compile_config(module, opts) do
+-    application = Keyword.get(opts, :application)
+-
+-    unless application do
+-      raise ArgumentError, inspect(module) <> " expects :application option"
+-    end
++  def parse_config!(module, config) do
++    {:ok, config} = module.init(config)
+ 
+-    name = parse_name(module, Keyword.get(opts, :name))
++    {_valid, invalid} =
++      Keyword.split(config, [:application, :consistency, :name, :start_from, :subscribe_to])
+ 
+-    {application, name}
+-  end
++    if Enum.any?(invalid) do
++      raise ArgumentError,
++            inspect(module) <> " specifies invalid options: " <> inspect(Keyword.keys(invalid))
++    end
+ 
+-  @doc false
+-  def parse_name(module, name) when name in [nil, ""] do
+-    raise ArgumentError, inspect(module) <> " expects :name option"
+-  end
++    application = Keyword.get(config, :application)
+ 
+-  def parse_name(_module, name) when is_binary(name), do: name
+-  def parse_name(_module, name), do: inspect(name)
++    unless application do
++      raise ArgumentError, inspect(module) <> " expects :application option"
++    end
+ 
+-  @doc false
+-  def start_opts(module, module_opts, local_opts, additional_allowed_opts \\ []) do
+-    {valid, invalid} =
+-      module_opts
+-      |> Keyword.merge(local_opts)
+-      |> Keyword.split(
+-        [:application, :consistency, :start_from, :subscribe_to] ++ additional_allowed_opts
+-      )
++    name = parse_name(Keyword.get(config, :name))
+ 
+-    if Enum.any?(invalid) do
+-      raise ArgumentError,
+-            inspect(module) <> " specifies invalid options: " <> inspect(Keyword.keys(invalid))
++    unless name do
++      raise ArgumentError, inspect(module) <> " expects :name option"
+     end
+ 
+-    valid
++    {application, name, config}
+   end
+ 
+-  # Include default `handle/2` and `error/3` callback functions in module
++  @doc false
++  def parse_name(name) when name in [nil, ""], do: nil
++  def parse_name(name) when is_binary(name), do: name
++  def parse_name(name), do: inspect(name)
+ 
+   @doc false
+   defmacro __before_compile__(_env) do
++    # Include default `handle/2` and `error/3` callback functions in module
+     quote generated: true do
+       @doc false
+       def handle(_event, _metadata), do: :ok
+@@ -445,7 +490,7 @@ defmodule Commanded.Event.Handler do
+ 
+     with {:ok, pid} <- Registration.start_link(application, name, __MODULE__, handler) do
+       # Register the started event handler as a subscription with the given consistency
+-      :ok = Subscriptions.register(application, handler_name, pid, consistency)
++      :ok = Subscriptions.register(application, handler_name, handler_module, pid, consistency)
+ 
+       {:ok, pid}
+     end
+@@ -473,19 +518,6 @@ defmodule Commanded.Event.Handler do
+     {:reply, last_seen_event, state}
+   end
+ 
+-  @doc false
+-  @impl GenServer
+-  def handle_call(:config, _from, %Handler{} = state) do
+-    %Handler{
+-      consistency: consistency,
+-      subscription: %Subscription{subscribe_from: subscribe_from, subscribe_to: subscribe_to}
+-    } = state
+-
+-    config = [consistency: consistency, start_from: subscribe_from, subscribe_to: subscribe_to]
+-
+-    {:reply, config, state}
+-  end
+-
+   @doc false
+   @impl GenServer
+   def handle_info(:reset, %Handler{} = state) do
+diff --git a/lib/commanded/process_managers/process_manager.ex b/lib/commanded/process_managers/process_manager.ex
+index e7059b5..dd960a3 100644
+--- a/lib/commanded/process_managers/process_manager.ex
++++ b/lib/commanded/process_managers/process_manager.ex
+@@ -50,6 +50,36 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+ 
+       {:ok, process_manager} = ExampleProcessManager.start_link()
+ 
++  ## `c:init/1` callback
++
++  An `c:init/1` function can be defined in your process manager which is used to
++  provide runtime configuration. This callback function must return
++  `{:ok, config}` with the updated config.
++
++  ### Example
++
++  The `c:init/1` function is used to define the process manager's application
++  and name based upon a value provided at runtime:
++
++      defmodule ExampleProcessManager do
++        use Commanded.ProcessManagers.ProcessManager
++
++        def init(config) do
++          {tenant, config} = Keyword.pop!(config, :tenant)
++
++          config =
++            config
++            |> Keyword.put(:application, Module.concat([ExampleApp, tenant]))
++            |> Keyword.put(:name, Module.concat([__MODULE__, tenant]))
++
++          {:ok, config}
++        end
++      end
++
++  Usage:
++
++      {:ok, _pid} = ExampleProcessManager.start_link(tenant: :tenant1)
++
+   ## Error handling
+ 
+   You can define an `c:error/3` callback function to handle any errors or
+@@ -199,6 +229,15 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+   @type process_uuid :: String.t() | [String.t()]
+   @type consistency :: :eventual | :strong
+ 
++  @doc """
++  Optional callback function called to configure the process manager before it
++  starts.
++
++  It is passed the merged compile-time and runtime config, and must return the
++  updated config.
++  """
++  @callback init(config :: Keyword.t()) :: {:ok, Keyword.t()}
++
+   @doc """
+   Is the process manager interested in the given command?
+ 
+@@ -326,7 +365,6 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+               | {:skip, :continue_pending}
+               | {:stop, reason :: term()}
+ 
+-  alias Commanded.Event.Handler
+   alias Commanded.ProcessManagers.ProcessManager
+   alias Commanded.ProcessManagers.ProcessRouter
+ 
+@@ -334,21 +372,15 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+   defmacro __using__(opts) do
+     quote location: :keep do
+       @before_compile unquote(__MODULE__)
+-
+       @behaviour ProcessManager
+-
+-      {application, name} = ProcessManager.compile_config(__MODULE__, unquote(opts))
+-
+       @opts unquote(opts)
+-      @application application
+-      @name name
+ 
+       def start_link(opts \\ []) do
+-        application = Keyword.get(opts, :application, @application)
+-        module_opts = Keyword.drop(@opts, [:application, :name])
+-        opts = Handler.start_opts(__MODULE__, module_opts, opts, [:event_timeout, :idle_timeout])
++        opts = Keyword.merge(@opts, opts)
+ 
+-        ProcessRouter.start_link(application, @name, __MODULE__, opts)
++        {application, name, config} = ProcessManager.parse_config!(__MODULE__, opts)
++
++        ProcessRouter.start_link(application, name, __MODULE__, config)
+       end
+ 
+       @doc """
+@@ -363,11 +395,13 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+ 
+       """
+       def child_spec(opts) do
+-        application = Keyword.get(opts, :application, @application)
++        opts = Keyword.merge(@opts, opts)
++
++        {application, name, config} = ProcessManager.parse_config!(__MODULE__, opts)
+ 
+         default = %{
+-          id: {__MODULE__, application, @name},
+-          start: {__MODULE__, :start_link, [opts]},
++          id: {__MODULE__, application, name},
++          start: {ProcessRouter, :start_link, [application, name, __MODULE__, config]},
+           restart: :permanent,
+           type: :worker
+         }
+@@ -376,13 +410,15 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+       end
+ 
+       @doc false
+-      def __name__, do: @name
++      def init(config), do: {:ok, config}
++
++      defoverridable init: 1
+     end
+   end
+ 
+   @doc false
+   defmacro __before_compile__(_env) do
+-    # include default fallback functions at end, with lowest precedence
++    # Include default fallback functions at end, with lowest precedence
+     quote generated: true do
+       @doc false
+       def interested?(_event), do: false
+@@ -425,15 +461,42 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+   """
+   defdelegate identity, to: Commanded.ProcessManagers.ProcessManagerInstance
+ 
+-  def compile_config(module, opts) do
+-    application = Keyword.get(opts, :application)
++  def parse_config!(module, config) do
++    {:ok, config} = module.init(config)
++
++    {_valid, invalid} =
++      Keyword.split(config, [
++        :application,
++        :consistency,
++        :name,
++        :start_from,
++        :subscribe_to,
++        :event_timeout,
++        :idle_timeout
++      ])
++
++    if Enum.any?(invalid) do
++      raise ArgumentError,
++            inspect(module) <> " specifies invalid options: " <> inspect(Keyword.keys(invalid))
++    end
++
++    application = Keyword.get(config, :application)
+ 
+     unless application do
+       raise ArgumentError, inspect(module) <> " expects :application option"
+     end
+ 
+-    name = Handler.parse_name(module, Keyword.get(opts, :name))
++    name = parse_name(Keyword.get(config, :name))
+ 
+-    {application, name}
++    unless name do
++      raise ArgumentError, inspect(module) <> " expects :name option"
++    end
++
++    {application, name, config}
+   end
++
++  @doc false
++  def parse_name(name) when name in [nil, ""], do: nil
++  def parse_name(name) when is_binary(name), do: name
++  def parse_name(name), do: inspect(name)
+ end
+diff --git a/lib/commanded/process_managers/process_router.ex b/lib/commanded/process_managers/process_router.ex
+index 344bb5e..0bad09e 100644
+--- a/lib/commanded/process_managers/process_router.ex
++++ b/lib/commanded/process_managers/process_router.ex
+@@ -60,7 +60,7 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+ 
+     with {:ok, pid} <- Registration.start_link(application, name, __MODULE__, state) do
+       # Register the process manager as a subscription with the given consistency.
+-      :ok = Subscriptions.register(application, process_name, pid, consistency)
++      :ok = Subscriptions.register(application, process_name, process_module, pid, consistency)
+ 
+       {:ok, pid}
+     end
+diff --git a/lib/commanded/subscriptions.ex b/lib/commanded/subscriptions.ex
+index 558795c..638cf5a 100644
+--- a/lib/commanded/subscriptions.ex
++++ b/lib/commanded/subscriptions.ex
+@@ -22,7 +22,9 @@ defmodule Commanded.Subscriptions do
+     GenServer.start_link(__MODULE__, subscriptions_opts, start_opts)
+   end
+ 
+-  defdelegate register(application, name, pid \\ self(), consistency), to: Subscriptions.Registry
++  defdelegate register(application, name, module, pid \\ self(), consistency),
++    to: Subscriptions.Registry
++
+   defdelegate all(application), to: Subscriptions.Registry
+ 
+   @doc """
+@@ -205,15 +207,20 @@ defmodule Commanded.Subscriptions do
+     %Subscriptions{application: application} = state
+ 
+     Subscriptions.Registry.all(application)
+-    |> Enum.reject(fn {_name, pid} -> MapSet.member?(exclude, pid) end)
+-    |> Enum.filter(fn {name, _pid} ->
++    |> Enum.reject(fn {_name, _module, pid} -> MapSet.member?(exclude, pid) end)
++    |> Enum.filter(fn {name, module, _pid} ->
+       # Optionally filter subscriptions to those provided by the `consistency` option
+       case consistency do
+-        :strong -> true
+-        consistency when is_list(consistency) -> Enum.member?(consistency, name)
++        :strong ->
++          true
++
++        consistency when is_list(consistency) ->
++          Enum.member?(consistency, module) or Enum.member?(consistency, name)
+       end
+     end)
+-    |> Enum.all?(fn {name, _pid} -> handled_by?(name, stream_uuid, stream_version, state) end)
++    |> Enum.all?(fn {name, _module, _pid} ->
++      handled_by?(name, stream_uuid, stream_version, state)
++    end)
+   end
+ 
+   # Has the named subscription handled the event for the given stream and version
+@@ -287,18 +294,9 @@ defmodule Commanded.Subscriptions do
+ 
+   defp parse_consistency(consistency) when is_list(consistency) do
+     Enum.map(consistency, fn
+-      name when is_binary(name) ->
+-        name
+-
+-      module when is_atom(module) ->
+-        if function_exported?(module, :__name__, 0) do
+-          apply(module, :__name__, [])
+-        else
+-          raise "Expected module #{module} to contain a public `__name__/0` function"
+-        end
+-
+-      invalid ->
+-        raise "Invalid consistency: #{inspect(invalid)}"
++      name when is_binary(name) -> name
++      module when is_atom(module) -> module
++      invalid -> raise "Invalid consistency: #{inspect(invalid)}"
+     end)
+   end
+ 
+diff --git a/lib/commanded/subscriptions/registry.ex b/lib/commanded/subscriptions/registry.ex
+index 777d0af..0414a91 100644
+--- a/lib/commanded/subscriptions/registry.ex
++++ b/lib/commanded/subscriptions/registry.ex
+@@ -16,16 +16,16 @@ defmodule Commanded.Subscriptions.Registry do
+   @doc """
+   Register an event store subscription with the given consistency guarantee.
+   """
+-  def register(application, name, pid, consistency)
++  def register(application, name, module, pid, consistency)
+ 
+   # Ignore subscriptions with `:eventual` consistency
+-  def register(_application, _name, _pid, :eventual), do: :ok
++  def register(_application, _name, _module, _pid, :eventual), do: :ok
+ 
+   # Register subscriptions with `:strong` consistency
+-  def register(application, name, pid, :strong) do
++  def register(application, name, module, pid, :strong) do
+     table_name = table_name(application)
+ 
+-    true = :ets.insert(table_name, {name, pid})
++    true = :ets.insert(table_name, {name, module, pid})
+ 
+     :ok
+   end
+diff --git a/lib/mix/tasks/commanded.reset.ex b/lib/mix/tasks/commanded.reset.ex
+index 3325844..a241eea 100644
+--- a/lib/mix/tasks/commanded.reset.ex
++++ b/lib/mix/tasks/commanded.reset.ex
+@@ -4,7 +4,7 @@ defmodule Mix.Tasks.Commanded.Reset do
+ 
+   ## Usage
+ 
+-      mix commanded.reset --app <app> --handler <handler>
++      mix commanded.reset --app <app> --handler <handler_name>
+ 
+   ## Examples
+ 
+@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Commanded.Reset do
+   ## Command line options
+ 
+     * `-a`, `--app` - the Commanded application
+-    * `-h`, `--handler` - the event handler to reset
++    * `-h`, `--handler` - the name of the event handler to reset
+     * `-q`, `--quiet` - do not log output
+ 
+   """
+@@ -49,12 +49,11 @@ defmodule Mix.Tasks.Commanded.Reset do
+     end
+ 
+     app = String.to_atom("Elixir." <> app)
+-    handler = String.to_atom("Elixir." <> handler)
+ 
+     reset(app, handler, parsed)
+   end
+ 
+-  defp reset(app, handler, opts) do
++  defp reset(app, handler_name, opts) do
+     case app.start_link() do
+       {:ok, _pid} ->
+         :ok
+@@ -67,16 +66,14 @@ defmodule Mix.Tasks.Commanded.Reset do
+     end
+ 
+     quiet = Keyword.get(opts, :quiet, false)
+-
+-    handler_name = handler.__name__()
+     registry_name = Commanded.Event.Handler.name(app, handler_name)
+ 
+     case Commanded.Registration.whereis_name(app, registry_name) do
+       :undefined ->
+-        unless quiet, do: Mix.shell().info("No process found for #{inspect(handler)}")
++        unless quiet, do: Mix.shell().info("No process found for #{inspect(handler_name)}")
+ 
+       pid ->
+-        unless quiet, do: Mix.shell().info("Resetting #{inspect(handler)}")
++        unless quiet, do: Mix.shell().info("Resetting #{inspect(handler_name)}")
+         send(pid, :reset)
+     end
+   end
+diff --git a/mix.lock b/mix.lock
+index 0db78cd..dfb5d60 100644
+--- a/mix.lock
++++ b/mix.lock
+@@ -2,18 +2,18 @@
+   "backoff": {:hex, :backoff, "1.1.6", "83b72ed2108ba1ee8f7d1c22e0b4a00cfe3593a67dbc792799e8cce9f42f796b", [:rebar3], [], "hexpm", "cf0cfff8995fb20562f822e5cc47d8ccf664c5ecdc26a684cbe85c225f9d7c39"},
+   "benchfella": {:hex, :benchfella, "0.3.5", "b2122c234117b3f91ed7b43b6e915e19e1ab216971154acd0a80ce0e9b8c05f5", [:mix], [], "hexpm", "23f27cbc482cbac03fc8926441eb60a5e111759c17642bac005c3225f5eb809d"},
+   "dialyxir": {:hex, :dialyxir, "1.0.0", "6a1fa629f7881a9f5aaf3a78f094b2a51a0357c843871b8bc98824e7342d00a5", [:mix], [{:erlex, ">= 0.2.6", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm", "aeb06588145fac14ca08d8061a142d52753dbc2cf7f0d00fc1013f53f8654654"},
+-  "earmark": {:hex, :earmark, "1.4.4", "4821b8d05cda507189d51f2caeef370cf1e18ca5d7dfb7d31e9cafe6688106a4", [:mix], [], "hexpm", "1f93aba7340574847c0f609da787f0d79efcab51b044bb6e242cae5aca9d264d"},
++  "earmark_parser": {:hex, :earmark_parser, "1.4.10", "6603d7a603b9c18d3d20db69921527f82ef09990885ed7525003c7fe7dc86c56", [:mix], [], "hexpm", "8e2d5370b732385db2c9b22215c3f59c84ac7dda7ed7e544d7c459496ae519c0"},
+   "elixir_uuid": {:hex, :elixir_uuid, "1.2.1", "dce506597acb7e6b0daeaff52ff6a9043f5919a4c3315abb4143f0b00378c097", [:mix], [], "hexpm", "f7eba2ea6c3555cea09706492716b0d87397b88946e6380898c2889d68585752"},
+   "erlex": {:hex, :erlex, "0.2.6", "c7987d15e899c7a2f34f5420d2a2ea0d659682c06ac607572df55a43753aa12e", [:mix], [], "hexpm", "2ed2e25711feb44d52b17d2780eabf998452f6efda104877a3881c2f8c0c0c75"},
+-  "ex_doc": {:hex, :ex_doc, "0.22.1", "9bb6d51508778193a4ea90fa16eac47f8b67934f33f8271d5e1edec2dc0eee4c", [:mix], [{:earmark, "~> 1.4.0", [hex: :earmark, repo: "hexpm", optional: false]}, {:makeup_elixir, "~> 0.14", [hex: :makeup_elixir, repo: "hexpm", optional: false]}], "hexpm", "d957de1b75cb9f78d3ee17820733dc4460114d8b1e11f7ee4fd6546e69b1db60"},
++  "ex_doc": {:hex, :ex_doc, "0.22.2", "03a2a58bdd2ba0d83d004507c4ee113b9c521956938298eba16e55cc4aba4a6c", [:mix], [{:earmark_parser, "~> 1.4.0", [hex: :earmark_parser, repo: "hexpm", optional: false]}, {:makeup_elixir, "~> 0.14", [hex: :makeup_elixir, repo: "hexpm", optional: false]}], "hexpm", "cf60e1b3e2efe317095b6bb79651f83a2c1b3edcb4d319c421d7fcda8b3aff26"},
+   "file_system": {:hex, :file_system, "0.2.8", "f632bd287927a1eed2b718f22af727c5aeaccc9a98d8c2bd7bff709e851dc986", [:mix], [], "hexpm", "97a3b6f8d63ef53bd0113070102db2ce05352ecf0d25390eb8d747c2bde98bca"},
+   "global_flags": {:hex, :global_flags, "1.0.0", "ee6b864979a1fb38d1fbc67838565644baf632212bce864adca21042df036433", [:rebar3], [], "hexpm", "85d944cecd0f8f96b20ce70b5b16ebccedfcd25e744376b131e89ce61ba93176"},
+   "jason": {:hex, :jason, "1.2.1", "12b22825e22f468c02eb3e4b9985f3d0cb8dc40b9bd704730efa11abd2708c44", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, repo: "hexpm", optional: true]}], "hexpm", "b659b8571deedf60f79c5a608e15414085fa141344e2716fbd6988a084b5f993"},
+   "local_cluster": {:hex, :local_cluster, "1.1.0", "a2a0e3e965aa1549939108066bfa537ce89f0107917f5b0260153e2fdb304116", [:mix], [{:global_flags, "~> 1.0", [hex: :global_flags, repo: "hexpm", optional: false]}], "hexpm", "fef6476083cf6f4c0526bb682de7ff75cd8b4bd4b7e20b3be60c1dab05f28ca7"},
+-  "makeup": {:hex, :makeup, "1.0.1", "82f332e461dc6c79dbd82fbe2a9c10d48ed07146f0a478286e590c83c52010b5", [:mix], [{:nimble_parsec, "~> 0.5.0", [hex: :nimble_parsec, repo: "hexpm", optional: false]}], "hexpm", "49736fe5b66a08d8575bf5321d716bac5da20c8e6b97714fec2bcd6febcfa1f8"},
+-  "makeup_elixir": {:hex, :makeup_elixir, "0.14.0", "cf8b7c66ad1cff4c14679698d532f0b5d45a3968ffbcbfd590339cb57742f1ae", [:mix], [{:makeup, "~> 1.0", [hex: :makeup, repo: "hexpm", optional: false]}], "hexpm", "d4b316c7222a85bbaa2fd7c6e90e37e953257ad196dc229505137c5e505e9eff"},
++  "makeup": {:hex, :makeup, "1.0.3", "e339e2f766d12e7260e6672dd4047405963c5ec99661abdc432e6ec67d29ef95", [:mix], [{:nimble_parsec, "~> 0.5", [hex: :nimble_parsec, repo: "hexpm", optional: false]}], "hexpm", "2e9b4996d11832947731f7608fed7ad2f9443011b3b479ae288011265cdd3dad"},
++  "makeup_elixir": {:hex, :makeup_elixir, "0.14.1", "4f0e96847c63c17841d42c08107405a005a2680eb9c7ccadfd757bd31dabccfb", [:mix], [{:makeup, "~> 1.0", [hex: :makeup, repo: "hexpm", optional: false]}], "hexpm", "f2438b1a80eaec9ede832b5c41cd4f373b38fd7aa33e3b22d9db79e640cbde11"},
+   "mix_test_watch": {:hex, :mix_test_watch, "1.0.2", "34900184cbbbc6b6ed616ed3a8ea9b791f9fd2088419352a6d3200525637f785", [:mix], [{:file_system, "~> 0.2.1 or ~> 0.3", [hex: :file_system, repo: "hexpm", optional: false]}], "hexpm", "47ac558d8b06f684773972c6d04fcc15590abdb97aeb7666da19fcbfdc441a07"},
+   "mox": {:hex, :mox, "0.5.2", "55a0a5ba9ccc671518d068c8dddd20eeb436909ea79d1799e2209df7eaa98b6c", [:mix], [], "hexpm", "df4310628cd628ee181df93f50ddfd07be3e5ecc30232d3b6aadf30bdfe6092b"},
+-  "nimble_parsec": {:hex, :nimble_parsec, "0.5.3", "def21c10a9ed70ce22754fdeea0810dafd53c2db3219a0cd54cf5526377af1c6", [:mix], [], "hexpm", "589b5af56f4afca65217a1f3eb3fee7e79b09c40c742fddc1c312b3ac0b3399f"},
++  "nimble_parsec": {:hex, :nimble_parsec, "0.6.0", "32111b3bf39137144abd7ba1cce0914533b2d16ef35e8abc5ec8be6122944263", [:mix], [], "hexpm", "27eac315a94909d4dc68bc07a4a83e06c8379237c5ea528a9acff4ca1c873c52"},
+   "phoenix_pubsub": {:hex, :phoenix_pubsub, "2.0.0", "a1ae76717bb168cdeb10ec9d92d1480fec99e3080f011402c0a2d68d47395ffb", [:mix], [], "hexpm", "c52d948c4f261577b9c6fa804be91884b381a7f8f18450c5045975435350f771"},
+ }

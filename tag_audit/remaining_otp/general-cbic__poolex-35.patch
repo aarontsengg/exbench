@@ -1,0 +1,722 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index d1fefa6..4f0a35a 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ 
+ ## [Unreleased]
+ 
++### Changed
++
++- [INCOMPATIBLE] Changed approach to configuring custom implementations for queues of workers and callers.
++  - Reasons: [Avoid application configuration](https://hexdocs.pm/elixir/library-guidelines.html#avoid-application-configuration)
++  - Now for the configuration you need to use the initialization parameters instead of `Application` config.
++
++    ```elixir
++    # Before
++    import Config
++
++    config :poolex,
++      callers_impl: SomeCallersImpl,
++      busy_workers_impl: SomeBusyWorkersImpl,
++      idle_workers_impl: SomeIdleWorkersImpl
++
++    # After
++    Poolex.child_spec(
++      pool_id: :some_pool,
++      worker_module: SomeWorker,
++      workers_count: 10,
++      waiting_callers_impl: SomeCallersImpl,
++      busy_workers_impl: SomeBusyWorkersImpl,
++      idle_workers_impl: SomeIdleWorkersImpl
++    )
++    ```
++
+ ## [0.5.1] - 2023-03-04
+ 
+ ### Added
+diff --git a/docs/guides/custom-implementations.md b/docs/guides/custom-implementations.md
+index 3581c12..7e638cd 100644
+--- a/docs/guides/custom-implementations.md
++++ b/docs/guides/custom-implementations.md
+@@ -71,18 +71,27 @@ If you have any ideas about what implementations can be added to the library or
+ 
+ ### Configuring custom implementations
+ 
+-After that, you need to add the following to the configuration (for example, `runtime.exs`):
++After that, you need to provide your module names to Poolex initialization:
+ 
+ ```elixir
+-config :poolex, callers_impl: MyApp.MyAmazingCallersImpl
++Poolex.child_spec(
++  pool_id: :some_pool,
++  worker_module: SomeWorker,
++  workers_count: 10,
++  waiting_callers_impl: MyApp.MyAmazingCallersImpl
++)
+ ```
+ 
+-That's it! Your implementation will be used in `Poolex`.
++That's it! Your implementation will be used in launched pool.
+ 
+ The configuration for workers might look like this:
+ 
+ ```elixir
+-config :poolex,
++Poolex.child_spec(
++  pool_id: :some_pool,
++  worker_module: SomeWorker,
++  workers_count: 10,
+   busy_workers_impl: MyApp.PerfectBusyWorkersImpl,
+   idle_workers_impl: MyApp.FancyIdleWorkersImpl
++)
+ ```
+diff --git a/docs/guides/getting-started.md b/docs/guides/getting-started.md
+index f60e929..72a57c4 100644
+--- a/docs/guides/getting-started.md
++++ b/docs/guides/getting-started.md
+@@ -27,14 +27,17 @@ The second argument should contain a set of options for starting the pool.
+ 
+ ### Poolex configuration options
+ 
+-| Option             | Description                                    | Example        | Default value          |
+-|--------------------|------------------------------------------------|----------------|------------------------|
+-| `pool_id`          | Identifier by which you will access the pool   | `:my_pool`     | **option is required** |
+-| `worker_module`    | Name of module that implements our worker      | `MyApp.Worker` | **option is required** |
+-| `workers_count`    | How many workers should be running in the pool | `5`            | **option is required** |
+-| `max_overflow`     | How many workers can be created over the limit | `2`            | `0`                    |
+-| `worker_args`      | List of arguments passed to the start function | `[:gg, "wp"]`  | `[]`                   |
+-| `worker_start_fun` | Name of the function that starts the worker    | `:run`         | `:start_link`          |
++| Option                 | Description                                          | Example               | Default value                     |
++|------------------------|------------------------------------------------------|-----------------------|-----------------------------------|
++| `pool_id`              | Identifier by which you will access the pool         | `:my_pool`            | **option is required**            |
++| `worker_module`        | Name of module that implements our worker            | `MyApp.Worker`        | **option is required**            |
++| `workers_count`        | How many workers should be running in the pool       | `5`                   | **option is required**            |
++| `max_overflow`         | How many workers can be created over the limit       | `2`                   | `0`                               |
++| `worker_args`          | List of arguments passed to the start function       | `[:gg, "wp"]`         | `[]`                              |
++| `worker_start_fun`     | Name of the function that starts the worker          | `:run`                | `:start_link`                     |
++| `busy_workers_impl`    | Module that describes how to work with busy workers  | `SomeBusyWorkersImpl` | `Poolex.Workers.Impl.List`        |
++| `idle_workers_impl`    | Module that describes how to work with idle workers  | `SomeIdleWorkersImpl` | `Poolex.Workers.Impl.List`        |
++| `waiting_callers_impl` | Module that describes how to work with callers queue | `WaitingCallersImpl`  | `Poolex.Callers.Impl.ErlangQueue` |
+ 
+ ## Working with the pool
+ 
+diff --git a/lib/poolex.ex b/lib/poolex.ex
+index 2633731..ed435b5 100644
+--- a/lib/poolex.ex
++++ b/lib/poolex.ex
+@@ -32,29 +32,36 @@ defmodule Poolex do
+   alias Poolex.DebugInfo
+   alias Poolex.IdleWorkers
+   alias Poolex.Monitoring
++  alias Poolex.Settings
+   alias Poolex.State
+   alias Poolex.WaitingCallers
+ 
+   @default_wait_timeout :timer.seconds(5)
+   @poolex_options_table """
+-  | Option             | Description                                    | Example        | Default value          |
+-  |--------------------|------------------------------------------------|----------------|------------------------|
+-  | `pool_id`          | Identifier by which you will access the pool   | `:my_pool`     | **option is required** |
+-  | `worker_module`    | Name of module that implements our worker      | `MyApp.Worker` | **option is required** |
+-  | `workers_count`    | How many workers should be running in the pool | `5`            | **option is required** |
+-  | `max_overflow`     | How many workers can be created over the limit | `2`            | `0`                    |
+-  | `worker_args`      | List of arguments passed to the start function | `[:gg, "wp"]`  | `[]`                   |
+-  | `worker_start_fun` | Name of the function that starts the worker    | `:run`         | `:start_link`          |
++  | Option                 | Description                                          | Example               | Default value                     |
++  |------------------------|------------------------------------------------------|-----------------------|-----------------------------------|
++  | `pool_id`              | Identifier by which you will access the pool         | `:my_pool`            | **option is required**            |
++  | `worker_module`        | Name of module that implements our worker            | `MyApp.Worker`        | **option is required**            |
++  | `workers_count`        | How many workers should be running in the pool       | `5`                   | **option is required**            |
++  | `max_overflow`         | How many workers can be created over the limit       | `2`                   | `0`                               |
++  | `worker_args`          | List of arguments passed to the start function       | `[:gg, "wp"]`         | `[]`                              |
++  | `worker_start_fun`     | Name of the function that starts the worker          | `:run`                | `:start_link`                     |
++  | `busy_workers_impl`    | Module that describes how to work with busy workers  | `SomeBusyWorkersImpl` | `Poolex.Workers.Impl.List`        |
++  | `idle_workers_impl`    | Module that describes how to work with idle workers  | `SomeIdleWorkersImpl` | `Poolex.Workers.Impl.List`        |
++  | `waiting_callers_impl` | Module that describes how to work with callers queue | `WaitingCallersImpl`  | `Poolex.Callers.Impl.ErlangQueue` |
+   """
+ 
+   @type pool_id() :: atom()
+   @type poolex_option() ::
+           {:pool_id, pool_id()}
+           | {:worker_module, module()}
+-          | {:worker_start_fun, atom()}
+-          | {:worker_args, list(any())}
+           | {:workers_count, pos_integer()}
+           | {:max_overflow, non_neg_integer()}
++          | {:worker_args, list(any())}
++          | {:worker_start_fun, atom()}
++          | {:busy_workers_impl, module()}
++          | {:idle_workers_impl, module()}
++          | {:waiting_callers_impl, module()}
+ 
+   @doc """
+   Starts a Poolex process without links (outside of a supervision tree).
+@@ -232,19 +239,27 @@ defmodule Poolex do
+     worker_module = Keyword.fetch!(opts, :worker_module)
+     workers_count = Keyword.fetch!(opts, :workers_count)
+ 
+-    worker_start_fun = Keyword.get(opts, :worker_start_fun, :start_link)
+-    worker_args = Keyword.get(opts, :worker_args, [])
+     max_overflow = Keyword.get(opts, :max_overflow, 0)
++    worker_args = Keyword.get(opts, :worker_args, [])
++    worker_start_fun = Keyword.get(opts, :worker_start_fun, :start_link)
++
++    busy_workers_impl = Keyword.get(opts, :busy_workers_impl, Poolex.Workers.Impl.List)
++    idle_workers_impl = Keyword.get(opts, :idle_workers_impl, Poolex.Workers.Impl.List)
++
++    waiting_callers_impl =
++      Keyword.get(opts, :waiting_callers_impl, Poolex.Callers.Impl.ErlangQueue)
+ 
++    :ok = Settings.init()
+     {:ok, monitor_id} = Monitoring.init(pool_id)
+     {:ok, supervisor} = Poolex.Supervisor.start_link()
+ 
+     state = %State{
+-      busy_workers_state: BusyWorkers.init(),
++      busy_workers_state: BusyWorkers.init(pool_id, busy_workers_impl),
+       max_overflow: max_overflow,
+       monitor_id: monitor_id,
++      pool_id: pool_id,
+       supervisor: supervisor,
+-      waiting_callers_state: WaitingCallers.init(),
++      waiting_callers_state: WaitingCallers.init(pool_id, waiting_callers_impl),
+       worker_args: worker_args,
+       worker_module: worker_module,
+       worker_start_fun: worker_start_fun
+@@ -258,7 +273,8 @@ defmodule Poolex do
+         worker_pid
+       end)
+ 
+-    {:ok, %State{state | idle_workers_state: IdleWorkers.init(worker_pids)}}
++    {:ok,
++     %State{state | idle_workers_state: IdleWorkers.init(pool_id, idle_workers_impl, worker_pids)}}
+   end
+ 
+   @spec start_worker(State.t()) :: {:ok, pid()}
+@@ -276,7 +292,7 @@ defmodule Poolex do
+ 
+   @impl GenServer
+   def handle_call(:get_idle_worker, {from_pid, _} = caller, %State{} = state) do
+-    if IdleWorkers.empty?(state.idle_workers_state) do
++    if IdleWorkers.empty?(state.pool_id, state.idle_workers_state) do
+       if state.overflow < state.max_overflow do
+         {:ok, new_worker} = start_worker(state)
+ 
+@@ -284,20 +300,25 @@ defmodule Poolex do
+ 
+         new_state = %State{
+           state
+-          | busy_workers_state: BusyWorkers.add(state.busy_workers_state, new_worker),
++          | busy_workers_state:
++              BusyWorkers.add(state.pool_id, state.busy_workers_state, new_worker),
+             overflow: state.overflow + 1
+         }
+ 
+         {:reply, {:ok, new_worker}, new_state}
+       else
+         Monitoring.add(state.monitor_id, from_pid, :caller)
+-        new_callers_state = WaitingCallers.add(state.waiting_callers_state, caller)
++
++        new_callers_state = WaitingCallers.add(state.pool_id, state.waiting_callers_state, caller)
+ 
+         {:noreply, %{state | waiting_callers_state: new_callers_state}}
+       end
+     else
+-      {idle_worker_pid, new_idle_workers_state} = IdleWorkers.pop(state.idle_workers_state)
+-      new_busy_workers_state = BusyWorkers.add(state.busy_workers_state, idle_worker_pid)
++      {idle_worker_pid, new_idle_workers_state} =
++        IdleWorkers.pop(state.pool_id, state.idle_workers_state)
++
++      new_busy_workers_state =
++        BusyWorkers.add(state.pool_id, state.busy_workers_state, idle_worker_pid)
+ 
+       new_state = %State{
+         state
+@@ -315,13 +336,16 @@ defmodule Poolex do
+ 
+   def handle_call(:get_debug_info, _form, %Poolex.State{} = state) do
+     debug_info = %DebugInfo{
+-      busy_workers_count: BusyWorkers.count(state.busy_workers_state),
+-      busy_workers_pids: BusyWorkers.to_list(state.busy_workers_state),
+-      idle_workers_count: IdleWorkers.count(state.idle_workers_state),
+-      idle_workers_pids: IdleWorkers.to_list(state.idle_workers_state),
++      busy_workers_count: BusyWorkers.count(state.pool_id, state.busy_workers_state),
++      busy_workers_impl: BusyWorkers.impl(state.pool_id),
++      busy_workers_pids: BusyWorkers.to_list(state.pool_id, state.busy_workers_state),
++      idle_workers_count: IdleWorkers.count(state.pool_id, state.idle_workers_state),
++      idle_workers_impl: IdleWorkers.impl(state.pool_id),
++      idle_workers_pids: IdleWorkers.to_list(state.pool_id, state.idle_workers_state),
+       max_overflow: state.max_overflow,
+       overflow: state.overflow,
+-      waiting_callers: WaitingCallers.to_list(state.waiting_callers_state),
++      waiting_callers: WaitingCallers.to_list(state.pool_id, state.waiting_callers_state),
++      waiting_callers_impl: WaitingCallers.impl(state.pool_id),
+       worker_args: state.worker_args,
+       worker_module: state.worker_module,
+       worker_start_fun: state.worker_start_fun
+@@ -332,9 +356,10 @@ defmodule Poolex do
+ 
+   @impl GenServer
+   def handle_cast({:release_busy_worker, worker_pid}, %State{} = state) do
+-    if WaitingCallers.empty?(state.waiting_callers_state) do
+-      if BusyWorkers.member?(state.busy_workers_state, worker_pid) do
+-        busy_workers_state = BusyWorkers.remove(state.busy_workers_state, worker_pid)
++    if WaitingCallers.empty?(state.pool_id, state.waiting_callers_state) do
++      if BusyWorkers.member?(state.pool_id, state.busy_workers_state, worker_pid) do
++        busy_workers_state =
++          BusyWorkers.remove(state.pool_id, state.busy_workers_state, worker_pid)
+ 
+         if state.overflow > 0 do
+           stop_worker(state.supervisor, worker_pid)
+@@ -345,14 +370,16 @@ defmodule Poolex do
+            %State{
+              state
+              | busy_workers_state: busy_workers_state,
+-               idle_workers_state: IdleWorkers.add(state.idle_workers_state, worker_pid)
++               idle_workers_state:
++                 IdleWorkers.add(state.pool_id, state.idle_workers_state, worker_pid)
+            }}
+         end
+       else
+         {:noreply, state}
+       end
+     else
+-      {caller, new_waiting_callers_state} = WaitingCallers.pop(state.waiting_callers_state)
++      {caller, new_waiting_callers_state} =
++        WaitingCallers.pop(state.pool_id, state.waiting_callers_state)
+ 
+       GenServer.reply(caller, {:ok, worker_pid})
+ 
+@@ -371,7 +398,12 @@ defmodule Poolex do
+          %State{
+            state
+            | overflow: state.overflow - 1,
+-             idle_workers_state: IdleWorkers.remove(state.idle_workers_state, dead_process_pid)
++             idle_workers_state:
++               IdleWorkers.remove(
++                 state.pool_id,
++                 state.idle_workers_state,
++                 dead_process_pid
++               )
+          }}
+ 
+       :worker ->
+@@ -379,22 +411,28 @@ defmodule Poolex do
+ 
+         Monitoring.add(state.monitor_id, new_worker, :worker)
+ 
++        temp_idle_workers_state =
++          IdleWorkers.remove(state.pool_id, state.idle_workers_state, dead_process_pid)
++
+         new_idle_workers_state =
+-          state.idle_workers_state
+-          |> IdleWorkers.remove(dead_process_pid)
+-          |> IdleWorkers.add(new_worker)
++          IdleWorkers.add(state.pool_id, temp_idle_workers_state, new_worker)
+ 
+         state = %State{
+           state
+           | idle_workers_state: new_idle_workers_state,
+-            busy_workers_state: BusyWorkers.remove(state.busy_workers_state, dead_process_pid)
++            busy_workers_state:
++              BusyWorkers.remove(state.pool_id, state.busy_workers_state, dead_process_pid)
+         }
+ 
+         {:noreply, state}
+ 
+       :caller ->
+         new_waiting_callers_state =
+-          WaitingCallers.remove_by_pid(state.waiting_callers_state, dead_process_pid)
++          WaitingCallers.remove_by_pid(
++            state.pool_id,
++            state.waiting_callers_state,
++            dead_process_pid
++          )
+ 
+         {:noreply, %{state | waiting_callers_state: new_waiting_callers_state}}
+     end
+diff --git a/lib/poolex/busy_workers.ex b/lib/poolex/busy_workers.ex
+index 2c9a6e9..ffa918f 100644
+--- a/lib/poolex/busy_workers.ex
++++ b/lib/poolex/busy_workers.ex
+@@ -1,25 +1,36 @@
+ defmodule Poolex.BusyWorkers do
+   @moduledoc false
+-  @behaviour Poolex.Workers.Behaviour
++  alias Poolex.Workers.Behaviour
++  alias Poolex.Settings
+ 
+-  @impl true
+-  def init(), do: impl().init()
+-  @impl true
+-  def init(workers), do: impl().init(workers)
+-  @impl true
+-  def add(state, worker), do: impl().add(state, worker)
+-  @impl true
+-  def member?(state, worker), do: impl().member?(state, worker)
+-  @impl true
+-  def remove(state, worker), do: impl().remove(state, worker)
+-  @impl true
+-  def count(state), do: impl().count(state)
+-  @impl true
+-  def to_list(state), do: impl().to_list(state)
+-  @impl true
+-  def empty?(state), do: impl().empty?(state)
+-  @impl true
+-  def pop(state), do: impl().pop(state)
++  @doc false
++  @spec init(Poolex.pool_id(), module()) :: Behaviour.state()
++  def init(pool_id, impl) do
++    :ok = Settings.set_implementation(pool_id, :busy_workers, impl)
++    impl(pool_id).init()
++  end
+ 
+-  defp impl, do: Poolex.Workers.Settings.busy_workers_impl()
++  @doc false
++  @spec add(Poolex.pool_id(), Behaviour.state(), Behaviour.worker()) :: Behaviour.state()
++  def add(pool_id, state, worker), do: impl(pool_id).add(state, worker)
++
++  @doc false
++  @spec member?(Poolex.pool_id(), Behaviour.state(), Behaviour.worker()) :: boolean()
++  def member?(pool_id, state, worker), do: impl(pool_id).member?(state, worker)
++
++  @doc false
++  @spec remove(Poolex.pool_id(), Behaviour.state(), Behaviour.worker()) :: Behaviour.state()
++  def remove(pool_id, state, worker), do: impl(pool_id).remove(state, worker)
++
++  @doc false
++  @spec count(Poolex.pool_id(), Behaviour.state()) :: non_neg_integer()
++  def count(pool_id, state), do: impl(pool_id).count(state)
++
++  @doc false
++  @spec to_list(Poolex.pool_id(), Behaviour.state()) :: list(Behaviour.worker())
++  def to_list(pool_id, state), do: impl(pool_id).to_list(state)
++
++  @doc false
++  @spec impl(Poolex.pool_id()) :: module()
++  def impl(pool_id), do: Settings.get_implementation(pool_id, :busy_workers)
+ end
+diff --git a/lib/poolex/callers/behaviour.ex b/lib/poolex/callers/behaviour.ex
+index 248fc6c..73b45b7 100644
+--- a/lib/poolex/callers/behaviour.ex
++++ b/lib/poolex/callers/behaviour.ex
+@@ -8,17 +8,18 @@ defmodule Poolex.Callers.Behaviour do
+   """
+ 
+   @type state() :: any()
++  @type caller() :: GenServer.from()
+ 
+   @doc "Returns `state` (any data structure) which will be passed as the first argument to all other functions."
+   @callback init() :: state()
+   @doc "Adds caller to `state` and returns new state."
+-  @callback add(state(), caller :: GenServer.from()) :: state()
++  @callback add(state(), caller()) :: state()
+   @doc "Returns `true` if the `state` is empty, `false` otherwise."
+   @callback empty?(state()) :: boolean()
+   @doc "Removes one of callers from `state` and returns it as `{caller, state}`. Returns `:empty` if state is empty."
+-  @callback pop(state()) :: {caller :: GenServer.from(), state()} | :empty
++  @callback pop(state()) :: {caller(), state()} | :empty
+   @doc "Removes given caller by caller's pid from `state` and returns new state."
+   @callback remove_by_pid(state(), caller_pid :: pid()) :: state()
+   @doc "Returns list of callers."
+-  @callback to_list(state()) :: list(GenServer.from())
++  @callback to_list(state()) :: list(caller())
+ end
+diff --git a/lib/poolex/callers/settings.ex b/lib/poolex/callers/settings.ex
+deleted file mode 100644
+index a054772..0000000
+--- a/lib/poolex/callers/settings.ex
++++ /dev/null
+@@ -1,9 +0,0 @@
+-defmodule Poolex.Callers.Settings do
+-  @moduledoc false
+-
+-  @doc false
+-  @spec callers_impl() :: module()
+-  def callers_impl do
+-    Application.get_env(:poolex, :callers_impl, Poolex.Callers.Impl.ErlangQueue)
+-  end
+-end
+diff --git a/lib/poolex/debug_info.ex b/lib/poolex/debug_info.ex
+index 3dbf45c..3e45347 100644
+--- a/lib/poolex/debug_info.ex
++++ b/lib/poolex/debug_info.ex
+@@ -6,11 +6,14 @@ defmodule Poolex.DebugInfo do
+   """
+ 
+   defstruct busy_workers_count: 0,
++            busy_workers_impl: nil,
+             busy_workers_pids: [],
+             idle_workers_count: 0,
++            idle_workers_impl: nil,
+             idle_workers_pids: [],
+             max_overflow: 0,
+             overflow: 0,
++            waiting_callers_impl: nil,
+             waiting_callers: [],
+             worker_args: [],
+             worker_module: nil,
+@@ -18,11 +21,14 @@ defmodule Poolex.DebugInfo do
+ 
+   @type t() :: %__MODULE__{
+           busy_workers_count: non_neg_integer(),
++          busy_workers_impl: module(),
+           busy_workers_pids: list(pid()),
+           idle_workers_count: non_neg_integer(),
++          idle_workers_impl: module(),
+           idle_workers_pids: list(pid()),
+           max_overflow: non_neg_integer(),
+           overflow: non_neg_integer(),
++          waiting_callers_impl: module(),
+           waiting_callers: list(pid()),
+           worker_args: list(any()),
+           worker_module: module(),
+diff --git a/lib/poolex/idle_workers.ex b/lib/poolex/idle_workers.ex
+index 307e63a..5e71936 100644
+--- a/lib/poolex/idle_workers.ex
++++ b/lib/poolex/idle_workers.ex
+@@ -1,25 +1,48 @@
+ defmodule Poolex.IdleWorkers do
+   @moduledoc false
+-  @behaviour Poolex.Workers.Behaviour
+-
+-  @impl true
+-  def init(), do: impl().init()
+-  @impl true
+-  def init(workers), do: impl().init(workers)
+-  @impl true
+-  def add(state, worker), do: impl().add(state, worker)
+-  @impl true
+-  def member?(state, worker), do: impl().member?(state, worker)
+-  @impl true
+-  def remove(state, worker), do: impl().remove(state, worker)
+-  @impl true
+-  def count(state), do: impl().count(state)
+-  @impl true
+-  def to_list(state), do: impl().to_list(state)
+-  @impl true
+-  def empty?(state), do: impl().empty?(state)
+-  @impl true
+-  def pop(state), do: impl().pop(state)
+-
+-  defp impl, do: Poolex.Workers.Settings.idle_workers_impl()
++  alias Poolex.Settings
++  alias Poolex.Workers.Behaviour
++
++  @doc false
++  @spec init(Poolex.pool_id(), module()) :: Behaviour.state()
++  def init(pool_id, impl) do
++    :ok = Settings.set_implementation(pool_id, :idle_workers, impl)
++    impl(pool_id).init()
++  end
++
++  @doc false
++  @spec init(Poolex.pool_id(), module(), list(Behaviour.worker())) :: Behaviour.state()
++  def init(pool_id, impl, workers) do
++    :ok = Settings.set_implementation(pool_id, :idle_workers, impl)
++    impl(pool_id).init(workers)
++  end
++
++  @doc false
++  @spec add(Poolex.pool_id(), Behaviour.state(), Behaviour.worker()) :: Behaviour.state()
++  def add(pool_id, state, worker), do: impl(pool_id).add(state, worker)
++
++  @doc false
++  @spec remove(Poolex.pool_id(), Behaviour.state(), Behaviour.worker()) :: Behaviour.state()
++  def remove(pool_id, state, worker), do: impl(pool_id).remove(state, worker)
++
++  @doc false
++  @spec count(Poolex.pool_id(), Behaviour.state()) :: non_neg_integer()
++  def count(pool_id, state), do: impl(pool_id).count(state)
++
++  @doc false
++  @spec to_list(Poolex.pool_id(), Behaviour.state()) :: list(Behaviour.worker())
++  def to_list(pool_id, state), do: impl(pool_id).to_list(state)
++
++  @doc false
++  @spec empty?(Poolex.pool_id(), Behaviour.state()) :: boolean()
++  def empty?(pool_id, state), do: impl(pool_id).empty?(state)
++
++  @doc false
++  @spec pop(Poolex.pool_id(), Behaviour.state()) ::
++          {Behaviour.worker(), Behaviour.state()} | :empty
++  def pop(pool_id, state), do: impl(pool_id).pop(state)
++
++  @doc false
++  @spec impl(Poolex.pool_id()) :: module()
++  def impl(pool_id), do: Settings.get_implementation(pool_id, :idle_workers)
+ end
+diff --git a/lib/poolex/settings.ex b/lib/poolex/settings.ex
+new file mode 100644
+index 0000000..e6ef40c
+--- /dev/null
++++ b/lib/poolex/settings.ex
+@@ -0,0 +1,34 @@
++defmodule Poolex.Settings do
++  @moduledoc false
++  @impl_types ~w(idle_workers busy_workers waiting_callers)a
++  @table_name :poolex_settings
++
++  @type impl_type() :: :idle_workers | :busy_workers | :waiting_callers
++
++  @doc false
++  @spec init() :: :ok
++  def init do
++    case :ets.info(@table_name) do
++      :undefined -> :ets.new(@table_name, [:set, :named_table, :public])
++      _ -> nil
++    end
++
++    :ok
++  end
++
++  @doc false
++  @spec set_implementation(Poolex.pool_id(), impl_type(), module()) :: :ok
++  def set_implementation(pool_id, impl_type, impl_module) when impl_type in @impl_types do
++    :ets.insert(@table_name, {{pool_id, impl_type}, impl_module})
++
++    :ok
++  end
++
++  @doc false
++  @spec get_implementation(Poolex.pool_id(), impl_type()) :: module()
++  def get_implementation(pool_id, impl_type) when impl_type in @impl_types do
++    [{{_pool_id, _impl_type}, impl_module}] = :ets.lookup(@table_name, {pool_id, impl_type})
++
++    impl_module
++  end
++end
+diff --git a/lib/poolex/state.ex b/lib/poolex/state.ex
+index 73d2fe5..d820bdc 100644
+--- a/lib/poolex/state.ex
++++ b/lib/poolex/state.ex
+@@ -10,6 +10,7 @@ defmodule Poolex.State do
+             max_overflow: 0,
+             monitor_id: nil,
+             overflow: 0,
++            pool_id: nil,
+             supervisor: nil,
+             waiting_callers_state: nil,
+             worker_args: [],
+@@ -22,6 +23,7 @@ defmodule Poolex.State do
+           max_overflow: non_neg_integer(),
+           monitor_id: atom() | reference(),
+           overflow: non_neg_integer(),
++          pool_id: Poolex.pool_id(),
+           supervisor: pid(),
+           waiting_callers_state: Poolex.Callers.Behaviour.state(),
+           worker_args: list(any()),
+diff --git a/lib/poolex/waiting_callers.ex b/lib/poolex/waiting_callers.ex
+index aab33a1..a90a8ba 100644
+--- a/lib/poolex/waiting_callers.ex
++++ b/lib/poolex/waiting_callers.ex
+@@ -1,24 +1,39 @@
+ defmodule Poolex.WaitingCallers do
+   @moduledoc false
+-  @behaviour Poolex.Callers.Behaviour
++  alias Poolex.Settings
++  alias Poolex.Callers.Behaviour
+ 
+-  @impl true
+-  def init(), do: impl().init()
++  @doc false
++  @spec init(Poolex.pool_id(), module()) :: Behaviour.state()
++  def init(pool_id, impl) do
++    :ok = Settings.set_implementation(pool_id, :waiting_callers, impl)
++    impl(pool_id).init()
++  end
+ 
+-  @impl true
+-  def add(state, caller), do: impl().add(state, caller)
++  @doc false
++  @spec add(Poolex.pool_id(), Behaviour.state(), Behaviour.caller()) :: Behaviour.state()
++  def add(pool_id, state, caller), do: impl(pool_id).add(state, caller)
+ 
+-  @impl true
+-  def empty?(state), do: impl().empty?(state)
++  @doc false
++  @spec empty?(Poolex.pool_id(), Behaviour.state()) :: boolean()
++  def empty?(pool_id, state), do: impl(pool_id).empty?(state)
+ 
+-  @impl true
+-  def pop(state), do: impl().pop(state)
++  @doc false
++  @spec pop(Poolex.pool_id(), Behaviour.state()) ::
++          {Behaviour.caller(), Behaviour.state()} | :empty
++  def pop(pool_id, state), do: impl(pool_id).pop(state)
+ 
+-  @impl true
+-  def remove_by_pid(state, caller_pid), do: impl().remove_by_pid(state, caller_pid)
++  @doc false
++  @spec remove_by_pid(Poolex.pool_id(), Behaviour.state(), pid()) :: Behaviour.state()
++  def remove_by_pid(pool_id, state, caller_pid) do
++    impl(pool_id).remove_by_pid(state, caller_pid)
++  end
+ 
+-  @impl true
+-  def to_list(state), do: impl().to_list(state)
++  @doc false
++  @spec to_list(Poolex.pool_id(), Behaviour.state()) :: list(Behaviour.caller())
++  def to_list(pool_id, state), do: impl(pool_id).to_list(state)
+ 
+-  defp impl, do: Poolex.Callers.Settings.callers_impl()
++  @doc false
++  @spec impl(Poolex.pool_id()) :: module()
++  def impl(pool_id), do: Settings.get_implementation(pool_id, :waiting_callers)
+ end
+diff --git a/lib/poolex/workers/behaviour.ex b/lib/poolex/workers/behaviour.ex
+index 185fdbf..a27fa0e 100644
+--- a/lib/poolex/workers/behaviour.ex
++++ b/lib/poolex/workers/behaviour.ex
+@@ -4,23 +4,24 @@ defmodule Poolex.Workers.Behaviour do
+   """
+ 
+   @type state() :: any()
++  @type worker() :: pid()
+ 
+   @doc "Returns `state` (any data structure) which will be passed as the first argument to all other functions."
+   @callback init() :: state()
+   @doc "Same as `init/0` but returns `state` initialized with passed list of workers."
+   @callback init(list(pid())) :: state()
+   @doc "Adds worker's pid to `state` and returns new state."
+-  @callback add(state(), worker :: pid()) :: state()
++  @callback add(state(), worker()) :: state()
+   @doc "Returns `true` if given worker contained in the `state`, `false` otherwise."
+-  @callback member?(state(), worker :: pid()) :: boolean()
++  @callback member?(state(), worker()) :: boolean()
+   @doc "Removes given worker from `state` and returns new state."
+-  @callback remove(state(), worker :: pid()) :: state()
++  @callback remove(state(), worker()) :: state()
+   @doc "Returns the number of workers in the state."
+   @callback count(state()) :: non_neg_integer()
+   @doc "Returns list of workers pids."
+-  @callback to_list(state()) :: list(pid())
++  @callback to_list(state()) :: list(worker())
+   @doc "Returns `true` if the `state` is empty, `false` otherwise."
+   @callback empty?(state()) :: boolean()
+   @doc "Removes one of workers from `state` and returns it as `{caller, state}`. Returns `:empty` if state is empty."
+-  @callback pop(state()) :: {worker :: pid(), state()} | :empty
++  @callback pop(state()) :: {worker(), state()} | :empty
+ end
+diff --git a/lib/poolex/workers/settings.ex b/lib/poolex/workers/settings.ex
+deleted file mode 100644
+index 67943da..0000000
+--- a/lib/poolex/workers/settings.ex
++++ /dev/null
+@@ -1,15 +0,0 @@
+-defmodule Poolex.Workers.Settings do
+-  @moduledoc false
+-
+-  @doc false
+-  @spec busy_workers_impl() :: module()
+-  def busy_workers_impl do
+-    Application.get_env(:poolex, :busy_workers_impl, Poolex.Workers.Impl.List)
+-  end
+-
+-  @doc false
+-  @spec idle_workers_impl() :: module()
+-  def idle_workers_impl do
+-    Application.get_env(:poolex, :idle_workers_impl, Poolex.Workers.Impl.List)
+-  end
+-end

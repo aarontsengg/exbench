@@ -1,0 +1,1182 @@
+diff --git a/.credo.exs b/.credo.exs
+index 8cbfd26..c505906 100644
+--- a/.credo.exs
++++ b/.credo.exs
+@@ -10,7 +10,7 @@
+   configs: [
+     %{
+       #
+-      # Run any exec using `mix credo -C <name>`. If no exec name is given
++      # Run any config using `mix credo -C <name>`. If no config name is given
+       # "default" is used.
+       #
+       name: "default",
+@@ -21,10 +21,23 @@
+         # You can give explicit globs or simply directories.
+         # In the latter case `**/*.{ex,exs}` will be used.
+         #
+-        included: ["lib/", "src/", "test/", "web/", "apps/"],
++        included: [
++          "lib/",
++          "src/",
++          "test/",
++          "web/",
++          "apps/*/lib/",
++          "apps/*/src/",
++          "apps/*/test/",
++          "apps/*/web/"
++        ],
+         excluded: [~r"/_build/", ~r"/deps/", ~r"/node_modules/"]
+       },
+       #
++      # Load and configure plugins here:
++      #
++      plugins: [],
++      #
+       # If you create your own checks, you must specify the source files for
+       # them here, so they can be loaded by Credo before running the analysis.
+       #
+@@ -35,6 +48,10 @@
+       #
+       strict: true,
+       #
++      # To modify the timeout for parsing files, change this value:
++      #
++      parse_timeout: 5000,
++      #
+       # If you want to use uncolored output by default, you can change `color`
+       # to `false` below:
+       #
+@@ -47,111 +64,147 @@
+       #
+       #     {Credo.Check.Design.DuplicatedCode, false}
+       #
+-      checks: [
+-        #
+-        ## Consistency Checks
+-        #
+-        {Credo.Check.Consistency.ExceptionNames, []},
+-        {Credo.Check.Consistency.LineEndings, []},
+-        {Credo.Check.Consistency.ParameterPatternMatching, []},
+-        {Credo.Check.Consistency.SpaceAroundOperators, false},
+-        {Credo.Check.Consistency.SpaceInParentheses, []},
+-        {Credo.Check.Consistency.TabsOrSpaces, []},
++      checks: %{
++        enabled: [
++          #
++          ## Consistency Checks
++          #
++          {Credo.Check.Consistency.ExceptionNames, []},
++          {Credo.Check.Consistency.LineEndings, []},
++          {Credo.Check.Consistency.ParameterPatternMatching, []},
++          {Credo.Check.Consistency.SpaceAroundOperators, []},
++          {Credo.Check.Consistency.SpaceInParentheses, []},
++          {Credo.Check.Consistency.TabsOrSpaces, []},
+ 
+-        #
+-        ## Design Checks
+-        #
+-        # You can customize the priority of any check
+-        # Priority values are: `low, normal, high, higher`
+-        #
+-        # {Credo.Check.Design.AliasUsage, [priority: :low, if_nested_deeper_than: 2, if_called_more_often_than: 0]},
+-        {Credo.Check.Design.AliasUsage, false},
+-        # You can also customize the exit_status of each check.
+-        # If you don't want TODO comments to cause `mix credo` to fail, just
+-        # set this value to 0 (zero).
+-        #
+-        {Credo.Check.Design.TagTODO, [exit_status: 2]},
+-        {Credo.Check.Design.TagFIXME, []},
++          #
++          ## Design Checks
++          #
++          # You can customize the priority of any check
++          # Priority values are: `low, normal, high, higher`
++          #
++          #{Credo.Check.Design.AliasUsage,
++          # [priority: :low, if_nested_deeper_than: 2, if_called_more_often_than: 0]},
++          # You can also customize the exit_status of each check.
++          # If you don't want TODO comments to cause `mix credo` to fail, just
++          # set this value to 0 (zero).
++          #
++          {Credo.Check.Design.TagTODO, [exit_status: 2]},
++          {Credo.Check.Design.TagFIXME, []},
+ 
+-        #
+-        ## Readability Checks
+-        #
+-        {Credo.Check.Readability.AliasOrder, []},
+-        {Credo.Check.Readability.FunctionNames, []},
+-        {Credo.Check.Readability.LargeNumbers, []},
+-        {Credo.Check.Readability.MaxLineLength, [priority: :low, max_length: 120]},
+-        {Credo.Check.Readability.ModuleAttributeNames, []},
+-        {Credo.Check.Readability.ModuleDoc, []},
+-        {Credo.Check.Readability.ModuleNames, []},
+-        {Credo.Check.Readability.ParenthesesInCondition, []},
+-        {Credo.Check.Readability.ParenthesesOnZeroArityDefs, [parens: true]},
+-        {Credo.Check.Readability.PredicateFunctionNames, []},
+-        {Credo.Check.Readability.PreferImplicitTry, []},
+-        {Credo.Check.Readability.RedundantBlankLines, []},
+-        {Credo.Check.Readability.Semicolons, []},
+-        {Credo.Check.Readability.SpaceAfterCommas, []},
+-        {Credo.Check.Readability.StringSigils, []},
+-        {Credo.Check.Readability.TrailingBlankLine, []},
+-        {Credo.Check.Readability.TrailingWhiteSpace, []},
+-        {Credo.Check.Readability.VariableNames, []},
++          #
++          ## Readability Checks
++          #
++          {Credo.Check.Readability.AliasOrder, []},
++          {Credo.Check.Readability.FunctionNames, []},
++          {Credo.Check.Readability.LargeNumbers, []},
++          {Credo.Check.Readability.MaxLineLength, [priority: :low, max_length: 120]},
++          {Credo.Check.Readability.ModuleAttributeNames, []},
++          {Credo.Check.Readability.ModuleDoc, []},
++          {Credo.Check.Readability.ModuleNames, []},
++          {Credo.Check.Readability.ParenthesesInCondition, []},
++          {Credo.Check.Readability.ParenthesesOnZeroArityDefs, [parens: true]},
++          {Credo.Check.Readability.PipeIntoAnonymousFunctions, []},
++          {Credo.Check.Readability.PredicateFunctionNames, []},
++          {Credo.Check.Readability.PreferImplicitTry, []},
++          {Credo.Check.Readability.RedundantBlankLines, []},
++          {Credo.Check.Readability.Semicolons, []},
++          {Credo.Check.Readability.SpaceAfterCommas, []},
++          {Credo.Check.Readability.StringSigils, []},
++          {Credo.Check.Readability.TrailingBlankLine, []},
++          {Credo.Check.Readability.TrailingWhiteSpace, []},
++          {Credo.Check.Readability.UnnecessaryAliasExpansion, []},
++          {Credo.Check.Readability.VariableNames, []},
++          {Credo.Check.Readability.WithSingleClause, []},
+ 
+-        #
+-        ## Refactoring Opportunities
+-        #
+-        {Credo.Check.Refactor.CondStatements, []},
+-        {Credo.Check.Refactor.CyclomaticComplexity, []},
+-        {Credo.Check.Refactor.FunctionArity, []},
+-        {Credo.Check.Refactor.LongQuoteBlocks, []},
+-        {Credo.Check.Refactor.MatchInCondition, []},
+-        {Credo.Check.Refactor.NegatedConditionsInUnless, []},
+-        {Credo.Check.Refactor.NegatedConditionsWithElse, []},
+-        {Credo.Check.Refactor.Nesting, []},
+-        {Credo.Check.Refactor.PipeChainStart,
+-         [excluded_argument_types: [:atom, :binary, :fn, :keyword], excluded_functions: []]},
+-        {Credo.Check.Refactor.UnlessWithElse, []},
++          #
++          ## Refactoring Opportunities
++          #
++          {Credo.Check.Refactor.Apply, []},
++          {Credo.Check.Refactor.CondStatements, []},
++          {Credo.Check.Refactor.CyclomaticComplexity, []},
++          {Credo.Check.Refactor.FunctionArity, []},
++          {Credo.Check.Refactor.LongQuoteBlocks, []},
++          {Credo.Check.Refactor.MatchInCondition, []},
++          {Credo.Check.Refactor.MapJoin, []},
++          {Credo.Check.Refactor.NegatedConditionsInUnless, []},
++          {Credo.Check.Refactor.NegatedConditionsWithElse, []},
++          {Credo.Check.Refactor.Nesting, []},
++          {Credo.Check.Refactor.UnlessWithElse, []},
++          {Credo.Check.Refactor.WithClauses, []},
++          {Credo.Check.Refactor.FilterFilter, []},
++          {Credo.Check.Refactor.RejectReject, []},
++          {Credo.Check.Refactor.RedundantWithClauseResult, []},
+ 
+-        #
+-        ## Warnings
+-        #
+-        {Credo.Check.Warning.BoolOperationOnSameValues, []},
+-        {Credo.Check.Warning.ExpensiveEmptyEnumCheck, []},
+-        {Credo.Check.Warning.IExPry, []},
+-        {Credo.Check.Warning.IoInspect, []},
+-        {Credo.Check.Warning.OperationOnSameValues, []},
+-        {Credo.Check.Warning.OperationWithConstantResult, []},
+-        {Credo.Check.Warning.RaiseInsideRescue, []},
+-        {Credo.Check.Warning.UnusedEnumOperation, []},
+-        {Credo.Check.Warning.UnusedFileOperation, []},
+-        {Credo.Check.Warning.UnusedKeywordOperation, []},
+-        {Credo.Check.Warning.UnusedListOperation, []},
+-        {Credo.Check.Warning.UnusedPathOperation, []},
+-        {Credo.Check.Warning.UnusedRegexOperation, []},
+-        {Credo.Check.Warning.UnusedStringOperation, []},
+-        {Credo.Check.Warning.UnusedTupleOperation, []},
++          #
++          ## Warnings
++          #
++          {Credo.Check.Warning.ApplicationConfigInModuleAttribute, []},
++          {Credo.Check.Warning.BoolOperationOnSameValues, []},
++          {Credo.Check.Warning.ExpensiveEmptyEnumCheck, []},
++          {Credo.Check.Warning.IExPry, []},
++          {Credo.Check.Warning.IoInspect, []},
++          {Credo.Check.Warning.OperationOnSameValues, []},
++          {Credo.Check.Warning.OperationWithConstantResult, []},
++          {Credo.Check.Warning.RaiseInsideRescue, []},
++          {Credo.Check.Warning.SpecWithStruct, []},
++          {Credo.Check.Warning.WrongTestFileExtension, []},
++          {Credo.Check.Warning.UnusedEnumOperation, []},
++          {Credo.Check.Warning.UnusedFileOperation, []},
++          {Credo.Check.Warning.UnusedKeywordOperation, []},
++          {Credo.Check.Warning.UnusedListOperation, []},
++          {Credo.Check.Warning.UnusedPathOperation, []},
++          {Credo.Check.Warning.UnusedRegexOperation, []},
++          {Credo.Check.Warning.UnusedStringOperation, []},
++          {Credo.Check.Warning.UnusedTupleOperation, []},
++          {Credo.Check.Warning.UnsafeExec, []}
++        ],
++        disabled: [
++          #
++          # Checks scheduled for next check update (opt-in for now, just replace `false` with `[]`)
+ 
+-        #
+-        # Controversial and experimental checks (opt-in, just remove `, false`)
+-        #
+-        {Credo.Check.Consistency.MultiAliasImportRequireUse, false},
+-        {Credo.Check.Design.DuplicatedCode, false},
+-        {Credo.Check.Readability.Specs, [include_defp: false]},
+-        {Credo.Check.Refactor.ABCSize, false},
+-        {Credo.Check.Refactor.AppendSingleItem, false},
+-        {Credo.Check.Refactor.DoubleBooleanNegation, false},
+-        {Credo.Check.Refactor.VariableRebinding, false},
+-        {Credo.Check.Warning.MapGetUnsafePass, false},
+-        {Credo.Check.Warning.UnsafeToAtom, false},
++          #
++          # Controversial and experimental checks (opt-in, just move the check to `:enabled`
++          #   and be sure to use `mix credo --strict` to see low priority checks)
++          #
++          {Credo.Check.Consistency.MultiAliasImportRequireUse, []},
++          {Credo.Check.Consistency.UnusedVariableNames, []},
++          {Credo.Check.Design.DuplicatedCode, []},
++          {Credo.Check.Design.SkipTestWithoutComment, []},
++          {Credo.Check.Readability.AliasAs, []},
++          {Credo.Check.Readability.BlockPipe, []},
++          {Credo.Check.Readability.ImplTrue, []},
++          {Credo.Check.Readability.MultiAlias, []},
++          {Credo.Check.Readability.NestedFunctionCalls, []},
++          {Credo.Check.Readability.SeparateAliasRequire, []},
++          {Credo.Check.Readability.SingleFunctionToBlockPipe, []},
++          {Credo.Check.Readability.SinglePipe, []},
++          {Credo.Check.Readability.Specs, []},
++          {Credo.Check.Readability.StrictModuleLayout, []},
++          {Credo.Check.Readability.WithCustomTaggedTuple, []},
++          {Credo.Check.Refactor.ABCSize, []},
++          {Credo.Check.Refactor.AppendSingleItem, []},
++          {Credo.Check.Refactor.DoubleBooleanNegation, []},
++          {Credo.Check.Refactor.FilterReject, []},
++          {Credo.Check.Refactor.IoPuts, []},
++          {Credo.Check.Refactor.MapMap, []},
++          {Credo.Check.Refactor.ModuleDependencies, []},
++          {Credo.Check.Refactor.NegatedIsNil, []},
++          {Credo.Check.Refactor.PipeChainStart, []},
++          {Credo.Check.Refactor.RejectFilter, []},
++          {Credo.Check.Refactor.VariableRebinding, []},
++          {Credo.Check.Warning.LazyLogging, []},
++          {Credo.Check.Warning.LeakyEnvironment, []},
++          {Credo.Check.Warning.MapGetUnsafePass, []},
++          {Credo.Check.Warning.MixEnv, []},
++          {Credo.Check.Warning.UnsafeToAtom, []}
+ 
+-        #
+-        # Custom checks can be created using `mix credo.gen.check`.
+-        #
++          # {Credo.Check.Refactor.MapInto, []},
+ 
+-        #
+-        # Deprecated after 1.10.4
+-        #
+-        {Credo.Check.Refactor.MapInto, false},
+-        {Credo.Check.Warning.LazyLogging, false}
+-      ]
++          #
++          # Custom checks can be created using `mix credo.gen.check`.
++          #
++        ]
++      }
+     }
+   ]
+ }
+diff --git a/guides/controllers.livemd b/guides/controllers.livemd
+index 3b1d9b7..0e6eeb6 100644
+--- a/guides/controllers.livemd
++++ b/guides/controllers.livemd
+@@ -7,7 +7,7 @@ Application.put_env(:bonny, :group, "example.com")
+ Application.put_env(:bonny, :operator_name, "livebook-operator")
+ ```
+ 
+-## Creating a Simple Controller
++## Event Handlers - Creating a simple Controller
+ 
+ Use `mix bonny.gen.controller KindOfYourResource` to create a controller.
+ 
+@@ -25,29 +25,54 @@ defmodule Apple do
+   use Bonny.ControllerV2
+ 
+   @impl true
+-  def add(resource),
++  def add(resource) do
+     # Do your work (e.g. create further resources)
+-    do: IO.inspect(resource)
++    IO.inspect(resource)
++    :ok
++  end
+ 
+   @impl true
+-  def modify(resource),
++  def modify(resource) do
+     # Do your work (e.g. create further resources)
+-    do: IO.inspect(resource)
++    IO.inspect(resource)
++    :ok
++  end
+ 
+   @impl true
+-  def delete(resource),
+-    #  Clean up
+-    do: IO.inspect(resource)
++  def delete(resource) do
++    # Do your work (e.g. create further resources)
++    IO.inspect(resource)
++    :ok
++  end
+ 
+   @impl true
+-  def reconcile(resource),
+-    # fix deviated state
+-    do: IO.inspect(resource)
++  def reconcile(resource) do
++    # Do your work (e.g. create further resources)
++    IO.inspect(resource)
++    :ok
++  end
+ end
+ ```
+ 
++### Return Values for Event Handlers
++
++Your event handlers should return one of the following atoms or tuples:
++
++* `:ok` or `:error`  
++  Let Bonny know about success or filure.
++* `{:ok, "Custom event message"}` or `{:error, "Custom event message"}`  
++  (See section [Kubernetes Events](#kubernetes-events))
++* `{:ok, resource_with_status}` or `{:error, resource_with_status}`   
++  If you decide to set values inside the status subresource (`.status.*`), you can return the resource. Bonny is gonna apply the status for you.
++* `{:ok, "Custom event message", resource_with_status}` or `{:error, "Custom event message", resource_with_status}`  
++  The combination of the above.
++
++<!-- livebook:{"break_markdown":true} -->
++
+ ### Features when creating further resources
+ 
++#### Owner Reference
++
+ If your controller creates other resources for your custom resource (e.g. pods, services,...), it is best practice to reference the owner(s). In kubernetes, you do this by adding an entry to `.metadata.ownerReferences`. In your controller's action callbacks, you can use `add_owner_reference/2` for this:
+ 
+ <!-- livebook:{"reevaluate_automatically":true} -->
+@@ -68,16 +93,17 @@ defmodule Orange do
+ 
+     # |> K8s.Client.create()
+     # |> then(&(K8s.Client.run(conn(), &1))
++    :ok
+   end
+ 
+   @impl true
+-  def modify(resource), do: IO.inspect(resource)
++  def modify(resource), do: :ok
+ 
+   @impl true
+-  def delete(resource), do: IO.inspect(resource)
++  def delete(resource), do: :ok
+ 
+   @impl true
+-  def reconcile(resource), do: IO.inspect(resource)
++  def reconcile(resource), do: :ok
+ end
+ ```
+ 
+@@ -95,6 +121,10 @@ Orange.add(%{
+ })
+ ```
+ 
++#### Events
++
++See the section [Kubernetes Events](#kubernetes-events) below.
++
+ ## RBAC Rules
+ 
+ Your controller might need special permissions on the kubernetes cluster. Maybe it needs to be able to read secrets. Or it has to be able to create pods. These permissions need to be reflected in the final manifest generated by `mix bonny.gen.manifest` through RBAC rules.
+@@ -108,16 +138,15 @@ defmodule Pear do
+     rbac_rule: {"v1", ["pods"], ["get", "watch", "list"]}
+ 
+   @impl true
+-  def add(resource), do: IO.inspect(resource)
++  def add(resource), do: :ok
+ 
+   @impl true
+-  def modify(resource), do: IO.inspect(resource)
+-
++  def modify(resource), do: :ok
+   @impl true
+-  def delete(resource), do: IO.inspect(resource)
++  def delete(resource), do: :ok
+ 
+   @impl true
+-  def reconcile(resource), do: IO.inspect(resource)
++  def reconcile(resource), do: :ok
+ end
+ 
+ # When generating the manifest, an auto-generated function `rules/0` is called.
+@@ -143,16 +172,15 @@ defmodule Peach do
+   use Bonny.ControllerV2
+ 
+   @impl true
+-  def add(resource), do: IO.inspect(resource)
++  def add(resource), do: :ok
+ 
+   @impl true
+-  def modify(resource), do: IO.inspect(resource)
+-
++  def modify(resource), do: :ok
+   @impl true
+-  def delete(resource), do: IO.inspect(resource)
++  def delete(resource), do: :ok
+ 
+   @impl true
+-  def reconcile(resource), do: IO.inspect(resource)
++  def reconcile(resource), do: :ok
+ 
+   @impl true
+   @spec customize_crd(Bonny.CRDV2.t()) :: Bonny.CRDV2.t()
+@@ -184,16 +212,16 @@ defmodule DatabaseUser do
+   use Bonny.ControllerV2
+ 
+   @impl true
+-  def add(resource), do: IO.inspect(resource)
++  def add(resource), do: :ok
+ 
+   @impl true
+-  def modify(resource), do: IO.inspect(resource)
++  def modify(resource), do: :ok
+ 
+   @impl true
+-  def delete(resource), do: IO.inspect(resource)
++  def delete(resource), do: :ok
+ 
+   @impl true
+-  def reconcile(resource), do: IO.inspect(resource)
++  def reconcile(resource), do: :ok
+ 
+   @impl true
+   @spec customize_crd(Bonny.CRDV2.t()) :: Bonny.CRDV2.t()
+@@ -255,16 +283,15 @@ defmodule Plum do
+     skip_observed_generations: true
+ 
+   @impl true
+-  def add(resource), do: IO.inspect(resource)
+-
++  def add(resource), do: :ok
+   @impl true
+-  def modify(resource), do: IO.inspect(resource)
++  def modify(resource), do: :ok
+ 
+   @impl true
+-  def delete(resource), do: IO.inspect(resource)
++  def delete(resource), do: :ok
+ 
+   @impl true
+-  def reconcile(resource), do: IO.inspect(resource)
++  def reconcile(resource), do: :ok
+ end
+ 
+ Plum.crd() |> Bonny.CRDV2.to_manifest()
+@@ -275,3 +302,89 @@ Plum.crd() |> Bonny.CRDV2.to_manifest()
+ * When enabling skipping of observed generations, you MUST re-generate the manifest using `mix bonny.gen.manifest`.
+ * Your `apply/1` (and/or `add/1` and `modify/1`) callbacks are not called if you change the metadata of a resource, e.g. labels or annotations (since only changing the spec increments the generation).
+ * The `reconcile/1` action is meant to "fix" deviated states. Therefore it is always called, even if the reconciled generation has already been observed.
++
++## Kubernetes Events
++
++Kubernetes events provide a way to report back to the client. A Kubernetes event always references the object to which the event relates. For a controller the regarding object would be the handled resource. The user can then use `kubectl describe` on the custom resource to see the events.
++
++For any `:add`, `:modify` or `:delete` action, Bonny creates events for the handled resource.
++
++* If the handler returns `:ok` or one of the allowed result tuples with `:ok` as first element, an event of type `Normal` is created with a default or the given message.
++* If the handler returns `:error` or one of the allowed result tuples with `:error` as first element, an event of type `Warning` is created with a default or the given message.
++
++### Example
++
++Assume the following handler for an `ADDED` event:
++
++<!-- livebook:{"force_markdown":true} -->
++
++```elixir
++def add(resource) do
++  # do the work
++  {:ok, "All good over here."}
++end
++```
++
++Now we can use `kubectl` to create and describe a resource:
++
++```bash
++$ kubectl apply -f orange_named_carl.yaml
++orange.example.com/carl created
++
++$ kubectl describe orange carl
++Name:         carl
++Namespace:    default
++...
++Events:
++  Type     Reason        Age    From             Message
++  ----     ------        ----   ----             -------
++  Normal  SuccessfulAdd  45s    ExampleOperator  All good over here.
++ 
++```
++
++<!-- livebook:{"break_markdown":true} -->
++
++### Manual Event Creation
++
++Besides the events described above which are created by Bonny, you can create your own events. This is especially useful when your controller creates further resources. For this purpose, Bonny adds functions `event/5` and `event/6` to your controller. You can call it from within any event handler:
++
++<!-- livebook:{"force_markdown":true} -->
++
++```elixir
++@doc """
++Creates a kubernetes event.
++
++  * regarding: regarding contains the object this Event is about. 
++    In most cases it's an Object reporting controller implements, 
++    e.g. ReplicaSetController implements ReplicaSets and this event 
++    is emitted because it acts on some changes in a ReplicaSet object.
++  * related: the related related is the optional secondary object for 
++    more complex actions. E.g. when regarding object triggers a creation 
++    or deletion of related object.
++  * event_type: `:Normal` or `:Warning`
++  * reason: reason is why the action was taken. It is human-readable. 
++    This field cannot be empty for new Events and it can have at most 
++    128 characters.
++    e.g "SuccessfulResourceCreation" 
++  * action: e.g. "Add"
++  * message: note is a human-readable description of the status of this operation
++"""
++event(regarding, related \\ nil, event_type, reason, action, message)
++```
++
++Note the second argument called `related`. This is where you would pass the resource that was created or modified within your event handler:
++
++<!-- livebook:{"force_markdown":true} -->
++
++```elixir
++def add(resource) do
++  pod = K8s.Client.create("v1", "pod", name: "foobar", namespace: resource["metadata"]["namespace"])
++  case K8s.Client.run(pod) do
++    {:ok, created_pod} ->
++      event(resource, created_pod, :Normal, "SuccessfulPodCreation", "The pod \"foobar\" was created successfully")
++      :ok
++    {:error, _} -> 
++      {:error, "An error occurred during the creation of pod \"foobar\"."}
++  end
++end
++```
+diff --git a/lib/bonny/config.ex b/lib/bonny/config.ex
+index c4b0e3e..d018375 100644
+--- a/lib/bonny/config.ex
++++ b/lib/bonny/config.ex
+@@ -23,6 +23,17 @@ defmodule Bonny.Config do
+     dns_safe_name(Application.get_env(:bonny, :operator_name) || project_name())
+   end
+ 
++  @doc """
++  The name of the operator instance.
++
++  This is set via environment variable `BONNY_POD_NAME`
++  ```
++  """
++  @spec instance_name() :: binary
++  def instance_name() do
++    System.get_env("BONNY_POD_NAME") || name()
++  end
++
+   @doc """
+   Kubernetes service account name to run operator as.
+ 
+diff --git a/lib/bonny/controller_v2.ex b/lib/bonny/controller_v2.ex
+index 7068c18..a46d77d 100644
+--- a/lib/bonny/controller_v2.ex
++++ b/lib/bonny/controller_v2.ex
+@@ -14,6 +14,16 @@ defmodule Bonny.ControllerV2 do
+ 
+   alias Bonny.CRDV2, as: CRD
+ 
++  @type action :: Bonny.Server.Watcher.action() | :reconcile
++  @type event_handler_result_type :: :ok | :error
++  @type event_handler_result ::
++          event_handler_result_type()
++          | {event_handler_result_type(), binary() | nil}
++          | {event_handler_result_type(), binary() | nil, Bonny.Resource.t()}
++          | {event_handler_result_type(), Bonny.Resource.t()}
++  @type watch_or_reconcile_event ::
++          Bonny.Server.Watcher.watch_event() | {:reconcile, Bonny.Resource.t()}
++
+   @doc """
+   Should return an operation to list resources for watching and reconciliation.
+ 
+@@ -35,10 +45,10 @@ defmodule Bonny.ControllerV2 do
+   @callback customize_crd(Bonny.CRDV2.t()) :: Bonny.CRDV2.t()
+ 
+   #  Action Callbacks
+-  @callback add(map()) :: :ok | :error
+-  @callback modify(map()) :: :ok | :error
+-  @callback delete(map()) :: :ok | :error
+-  @callback reconcile(map()) :: :ok | :error
++  @callback add(map()) :: event_handler_result_type()
++  @callback modify(map()) :: event_handler_result_type()
++  @callback delete(map()) :: event_handler_result_type()
++  @callback reconcile(map()) :: event_handler_result_type()
+ 
+   @optional_callbacks customize_crd: 1
+ 
+@@ -65,6 +75,7 @@ defmodule Bonny.ControllerV2 do
+       use Supervisor
+ 
+       import Bonny.Resource, only: [add_owner_reference: 2]
++      import Bonny.ControllerV2, only: [event: 5, event: 6]
+ 
+       @behaviour Bonny.ControllerV2
+ 
+@@ -82,16 +93,14 @@ defmodule Bonny.ControllerV2 do
+         list_operation = list_operation()
+ 
+         watcher_stream =
+-          __MODULE__
+-          |> Bonny.Server.Watcher.get_stream(conn, list_operation,
+-            skip_observed_generations: unquote(skip_observed_generations)
+-          )
+-          |> Stream.map(&post_process_resource/1)
++          Bonny.Server.Watcher.get_raw_stream(conn, list_operation)
++          |> maybe_reject_watch_event()
++          |> Stream.map(&process_event/1)
+ 
+         reconciler_stream =
+           __MODULE__
+           |> Bonny.Server.Reconciler.get_stream(conn, list_operation)
+-          |> Task.async_stream(&post_process_resource/1)
++          |> Task.async_stream(&process_event({:reconcile, &1}))
+ 
+         children = [
+           {Bonny.Server.AsyncStreamRunner,
+@@ -103,7 +112,8 @@ defmodule Bonny.ControllerV2 do
+            id: __MODULE__.ReconcileServer,
+            name: __MODULE__.ReconcileServer,
+            stream: reconciler_stream,
+-           termination_delay: 30_000}
++           termination_delay: 30_000},
++          {Bonny.EventRecorder, name: __MODULE__.EventRecorder, conn: conn()}
+         ]
+ 
+         Supervisor.init(
+@@ -114,10 +124,19 @@ defmodule Bonny.ControllerV2 do
+         )
+       end
+ 
++      defp process_event({action, resource} = watch_event) do
++        apply(__MODULE__, action, [resource])
++        |> Bonny.ControllerV2.map_event_handler_result(watch_event)
++        |> Bonny.ControllerV2.process_event_handler_result(&event/6)
++        |> post_process_resource()
++      end
++
+       defp post_process_resource(resource) do
+         resource
+         |> maybe_set_observed_generation()
+         |> Bonny.Resource.apply_status(crd().names.plural, conn())
++
++        :ok
+       end
+ 
+       if skip_observed_generations do
+@@ -131,9 +150,22 @@ defmodule Bonny.ControllerV2 do
+               & &1.storage,
+               &Bonny.CRD.Version.add_observed_generation_status/1
+             )
++
++        defp maybe_reject_watch_event(stream) do
++          Stream.reject(stream, fn
++            {:delete, _} ->
++              false
++
++            {_, resource} ->
++              # skip resource if generation has been observed
++              get_in(resource, ~w(metadata generation)) ==
++                get_in(resource, [Access.key("status", %{}), "observedGeneration"])
++          end)
++        end
+       else
+         defp maybe_set_observed_generation(resource), do: resource
+         defp maybe_add_obseved_generation_status(crd), do: crd
++        defp maybe_reject_watch_event(stream), do: stream
+       end
+ 
+       @impl Bonny.ControllerV2
+@@ -152,6 +184,38 @@ defmodule Bonny.ControllerV2 do
+     end
+   end
+ 
++  @doc """
++  Creates a kubernetes event.
++
++  * **regarding**: regarding contains the object this Event is about.
++    In most cases it's an Object reporting controller implements,
++    e.g. ReplicaSetController implements ReplicaSets and this event
++    is emitted because it acts on some changes in a ReplicaSet object.
++  * **related**: the related related is the optional secondary object for
++    more complex actions. E.g. when regarding object triggers a creation
++    or deletion of related object.
++  * **event_type**: `:Normal` or `:Warning`
++  * **reason**: reason is why the action was taken. It is human-readable.
++    This field cannot be empty for new Events and it can have at most
++    128 characters.
++    e.g "SuccessfulResourceCreation"
++  * **action**: e.g. "Add"
++  * **message**: note is a human-readable description of the status of this operation
++  """
++  defmacro event(regarding, related \\ nil, event_type, reason, action, message) do
++    quote do
++      Bonny.EventRecorder.event(
++        __MODULE__.EventRecorder,
++        unquote(regarding),
++        unquote(related),
++        unquote(event_type),
++        unquote(reason),
++        unquote(action),
++        unquote(message)
++      )
++    end
++  end
++
+   @spec crd(module()) :: Bonny.CRDV2.t()
+   def crd(controller) do
+     names =
+@@ -187,4 +251,72 @@ defmodule Bonny.ControllerV2 do
+       _ -> K8s.Client.list(api_version, kind)
+     end
+   end
++
++  @doc """
++  To be called by a controller.
++  """
++  @spec map_event_handler_result(
++          event_handler_result(),
++          watch_or_reconcile_event()
++        ) :: {event_handler_result_type(), binary() | nil, action(), Bonny.Resource.t()}
++  def map_event_handler_result(type, watch_or_reconcile_event) when type in [:ok, :error],
++    do: map_event_handler_result({type, nil}, watch_or_reconcile_event)
++
++  def map_event_handler_result({type, %{} = resource}, watch_or_reconcile_event),
++    do: map_event_handler_result({type, nil, resource}, watch_or_reconcile_event)
++
++  def map_event_handler_result({type, message}, {action, original_resource}),
++    do: {type, message, action, original_resource}
++
++  def map_event_handler_result({type, message, resource}, {action, original_resource}) do
++    if Map.get(resource, "apiVersion") == original_resource["apiVersion"] &&
++         Map.get(resource, "kind") == original_resource["kind"],
++       do: {type, message, action, resource},
++       else: {type, message, action, original_resource}
++  end
++
++  def map_event_handler_result(_, {action, original_resource}) do
++    {:ok, nil, action, original_resource}
++  end
++
++  @doc """
++  To be called by a controller.
++  """
++  @spec process_event_handler_result(
++          {event_handler_result_type(), binary() | nil, action(), Bonny.Resource.t()},
++          fun()
++        ) :: Bonny.Resource.t()
++  def process_event_handler_result({:ok, message, action, resource}, create_event)
++      when action in [:add, :modify, :delete] do
++    action_string = action |> Atom.to_string() |> String.capitalize()
++
++    create_event.(
++      resource,
++      nil,
++      :Normal,
++      "Successful" <> action_string,
++      action,
++      message || "Resource #{action} was successful."
++    )
++
++    resource
++  end
++
++  def process_event_handler_result({_, message, action, resource}, create_event)
++      when action in [:add, :modify, :delete] do
++    action_string = action |> Atom.to_string() |> String.capitalize()
++
++    create_event.(
++      resource,
++      nil,
++      :Normal,
++      "Successful" <> action_string,
++      action,
++      message || "Resource #{action} failed."
++    )
++
++    resource
++  end
++
++  def process_event_handler_result({_, _, _, resource}, _), do: resource
+ end
+diff --git a/lib/bonny/event_recorder.ex b/lib/bonny/event_recorder.ex
+new file mode 100644
+index 0000000..90fb72f
+--- /dev/null
++++ b/lib/bonny/event_recorder.ex
+@@ -0,0 +1,105 @@
++defmodule Bonny.EventRecorder do
++  @moduledoc """
++  Records kubernetes events regarding objects controlled by this operator.
++
++
++  """
++
++  use Agent
++
++  alias Bonny.Resource
++
++  @api_version "events.k8s.io/v1"
++  @kind "Event"
++
++  @type event_type :: :Normal | :Warning
++
++  def start_link(opts) do
++    name = Keyword.fetch!(opts, :name)
++    conn = Keyword.fetch!(opts, :conn)
++    Agent.start_link(fn -> %{conn: conn} end, name: name)
++  end
++
++  @doc """
++  Create a kubernetes event in the cluster.
++  Documentation: https://kubernetes.io/docs/reference/kubernetes-api/cluster-resources/event-v1/
++  """
++  @spec event(
++          atom(),
++          Resource.t(),
++          Resource.t() | nil,
++          event_type(),
++          binary(),
++          binary(),
++          binary()
++        ) ::
++          :ok
++  def event(agent_name, regarding, related \\ nil, event_type, reason, action, message) do
++    ref_regarding = Resource.resource_reference(regarding)
++    ref_related = Resource.resource_reference(related)
++    event_time = DateTime.utc_now()
++    reporting_controller = Bonny.Config.name()
++    reporting_instance = Bonny.Config.instance_name()
++    conn = Agent.get(agent_name, &Map.fetch!(&1, :conn))
++    unix_nano = DateTime.utc_now() |> DateTime.to_unix(:nanosecond)
++
++    event = %{
++      "apiVersion" => @api_version,
++      "kind" => @kind,
++      "metadata" => %{
++        "namespace" => Map.get(ref_regarding, "namespace", "default"),
++        "name" => "#{Map.fetch!(ref_regarding, "name")}.#{unix_nano}"
++      },
++      "eventTime" => event_time,
++      "reportingController" => reporting_controller,
++      "reportingInstance" => reporting_instance,
++      "action" => action,
++      "reason" => reason,
++      "regarding" => ref_regarding,
++      "related" => ref_related,
++      "note" => message,
++      "type" => event_type
++    }
++
++    key = key(event)
++
++    event =
++      get_cache(agent_name, key, event)
++      |> increment_series_count()
++
++    apply_op = K8s.Client.apply(event, field_manager: reporting_controller, force: true)
++    {:ok, _} = K8s.Client.run(conn, apply_op)
++
++    put_cache(agent_name, key, event)
++    :ok
++  end
++
++  defp get_cache(agent_name, key, default) do
++    Agent.get(agent_name, &Map.get(&1, key, default))
++  end
++
++  defp put_cache(agent_name, key, event) do
++    event = Map.put_new(event, "series", %{"count" => 1})
++    Agent.update(agent_name, &Map.put(&1, key, event))
++  end
++
++  defp increment_series_count(event) when is_map_key(event, "series") do
++    Map.update!(
++      event,
++      "series",
++      &%{"count" => &1["count"] + 1, "lastObservedTime" => DateTime.utc_now()}
++    )
++  end
++
++  defp increment_series_count(event), do: event
++
++  defp key(event) do
++    %{
++      action: event["action"],
++      reason: event["reason"],
++      reporting_controller: event["reportingController"],
++      regarding: event["regarding"],
++      related: event["related"]
++    }
++  end
++end
+diff --git a/lib/bonny/operator.ex b/lib/bonny/operator.ex
+index e1f8143..3928fdd 100644
+--- a/lib/bonny/operator.ex
++++ b/lib/bonny/operator.ex
+@@ -25,13 +25,24 @@ defmodule Bonny.Operator do
+         apiGroups: ["apiextensions.k8s.io"],
+         resources: ["customresourcedefinitions"],
+         verbs: ["*"]
++      },
++      %{
++        apiGroups: ["events.k8s.io/v1"],
++        resources: ["events"],
++        verbs: ["*"]
+       }
+     ]
+ 
+     crd_rules =
+       Enum.map(Bonny.Config.controllers(), fn controller ->
+         crd = controller.crd()
+-        %{apiGroups: [crd.group], resources: [crd.names.plural], verbs: ["*"]}
++        plural_name = crd.names.plural
++
++        %{
++          apiGroups: [crd.group],
++          resources: [plural_name, "#{plural_name}/status", "#{plural_name}/scale"],
++          verbs: ["*"]
++        }
+       end)
+ 
+     controller_rules = Enum.flat_map(Bonny.Config.controllers(), & &1.rules())
+diff --git a/lib/bonny/resource.ex b/lib/bonny/resource.ex
+index 51e8f03..9b0b70a 100644
+--- a/lib/bonny/resource.ex
++++ b/lib/bonny/resource.ex
+@@ -5,6 +5,41 @@ defmodule Bonny.Resource do
+ 
+   @type t :: map()
+ 
++  @doc """
++  Get a reference to the given resource
++
++  ### Example
++
++      iex> resource = %{
++      ...>   "apiVersion" => "example.com/v1",
++      ...>   "kind" => "Orange",
++      ...>   "metadata" => %{
++      ...>     "name" => "annoying",
++      ...>     "namespace" => "default",
++      ...>     "uid" => "e19b6f40-3293-11ed-a261-0242ac120002"
++      ...>   }
++      ...> }
++      ...> Bonny.Resource.resource_reference(resource)
++      %{
++        "apiVersion" => "example.com/v1",
++        "kind" => "Orange",
++        "name" => "annoying",
++        "namespace" => "default",
++        "uid" => "e19b6f40-3293-11ed-a261-0242ac120002"
++      }
++  """
++  def resource_reference(nil), do: nil
++
++  def resource_reference(resource) do
++    %{
++      "apiVersion" => K8s.Resource.FieldAccessors.api_version(resource),
++      "namespace" => K8s.Resource.FieldAccessors.namespace(resource),
++      "kind" => K8s.Resource.FieldAccessors.kind(resource),
++      "name" => K8s.Resource.FieldAccessors.name(resource),
++      "uid" => get_in(resource, ~w(metadata uid))
++    }
++  end
++
+   @doc """
+   Add an owner reference to the given resource.
+ 
+@@ -38,6 +73,7 @@ defmodule Bonny.Resource do
+             "controller" => true,
+             "kind" => "Orange",
+             "name" => "annoying",
++            "namespace" => "default",
+             "uid" => "e19b6f40-3293-11ed-a261-0242ac120002"
+           }]
+         }
+@@ -75,14 +111,10 @@ defmodule Bonny.Resource do
+   end
+ 
+   defp owner_reference(resource, opts) do
+-    %{
+-      "apiVersion" => get_in(resource, ["apiVersion"]),
+-      "kind" => get_in(resource, ["kind"]),
+-      "name" => get_in(resource, ["metadata", "name"]),
+-      "uid" => get_in(resource, ["metadata", "uid"]),
+-      "blockOwnerDeletion" => Keyword.get(opts, :block_owner_deletion, false),
+-      "controller" => true
+-    }
++    resource
++    |> resource_reference()
++    |> Map.put("blockOwnerDeletion", Keyword.get(opts, :block_owner_deletion, false))
++    |> Map.put("controller", true)
+   end
+ 
+   @doc """
+diff --git a/lib/bonny/server/reconciler.ex b/lib/bonny/server/reconciler.ex
+index 5aa3791..1c70004 100644
+--- a/lib/bonny/server/reconciler.ex
++++ b/lib/bonny/server/reconciler.ex
+@@ -9,26 +9,29 @@ defmodule Bonny.Server.Reconciler do
+       Task.async(fn -> Stream.run(reconciliation_stream) end)
+   """
+ 
+-  @doc """
+-  Takes a controller that must define the following functions and returns a (prepared) stream.
+-
+-  * `conn/0` - should return a K8s.Conn.t()
+-  * `reconcile_operation/0` - should return a K8s.Operation.t() list operation that produces the stream of resources
+-  * `reconcile/1` - takes a map and processes it
+-  """
+-
+   require Logger
+ 
+   @callback reconcile(map()) :: :ok | {:ok, any()} | {:error, any()}
+ 
++  @doc """
++  """
++  @spec get_raw_stream(K8s.Conn.t(), K8s.Operation.t(), keyword()) :: Enumerable.t()
++  def get_raw_stream(conn, reconcile_operation, stream_opts \\ []) do
++    {:ok, reconciliation_stream} = K8s.Client.stream(conn, reconcile_operation, stream_opts)
++
++    Stream.filter(reconciliation_stream, &fetch_succeeded?/1)
++  end
++
++  @doc """
++  Prepares a stream wich maps each resoruce returned by the `reconcile_operation` to
++  a function `reconcile/1` on the given `module`. If given, the stream_opts are passed
++  to K8s.Client.stream/3
++  """
+   @spec get_stream(module(), K8s.Conn.t(), K8s.Operation.t(), keyword()) ::
+           Enumerable.t(Bonny.Resource.t())
+-  def get_stream(controller, conn, reconcile_operation, opts \\ []) do
+-    {:ok, reconciliation_stream} = K8s.Client.stream(conn, reconcile_operation, opts)
+-
+-    reconciliation_stream
+-    |> Stream.filter(&fetch_succeeded?/1)
+-    |> Task.async_stream(&reconcile_single_resource(&1, controller))
++  def get_stream(module, conn, reconcile_operation, stream_opts \\ []) do
++    get_raw_stream(conn, reconcile_operation, stream_opts)
++    |> Task.async_stream(&reconcile_single_resource(&1, module))
+     |> Stream.filter(&match?({:ok, {:ok, _}}, &1))
+     |> Stream.map(fn {:ok, {:ok, resource}} -> resource end)
+   end
+@@ -43,9 +46,9 @@ defmodule Bonny.Server.Reconciler do
+     true
+   end
+ 
+-  defp reconcile_single_resource(resource, controller) do
++  defp reconcile_single_resource(resource, module) do
+     metadata = %{
+-      module: controller,
++      module: module,
+       name: K8s.Resource.name(resource),
+       namespace: K8s.Resource.namespace(resource),
+       kind: K8s.Resource.kind(resource),
+@@ -53,7 +56,7 @@ defmodule Bonny.Server.Reconciler do
+     }
+ 
+     :telemetry.span([:reconciler, :reconcile], metadata, fn ->
+-      case controller.reconcile(resource) do
++      case module.reconcile(resource) do
+         :ok ->
+           Logger.debug("Reconciler reconciliation succeeded", metadata)
+           {{:ok, resource}, metadata}
+diff --git a/lib/bonny/server/watcher.ex b/lib/bonny/server/watcher.ex
+index 82961bb..5e5d323 100644
+--- a/lib/bonny/server/watcher.ex
++++ b/lib/bonny/server/watcher.ex
+@@ -13,27 +13,34 @@ defmodule Bonny.Server.Watcher do
+       Task.async(fn -> Stream.run(watch_stream) end)
+   """
+ 
++  @type action :: :add | :modify | :delete
++  @type watch_event :: {action(), Bonny.Resource.t()}
++
+   @operations %{
+     "ADDED" => :add,
+     "MODIFIED" => :modify,
+     "DELETED" => :delete
+   }
+ 
+-  @spec get_stream(module(), K8s.Conn.t(), K8s.Operation.t(), Keyword.t()) ::
+-          Enumerable.t(Bonny.Resource.t())
+-  def get_stream(controller, conn, watch_operation, opts \\ []) do
+-    skip_observed_generations = Keyword.get(opts, :skip_observed_generations, false)
++  @spec get_raw_stream(K8s.Conn.t(), K8s.Operation.t()) :: Enumerable.t(watch_event())
++  def get_raw_stream(conn, watch_operation) do
+     {:ok, watch_stream} = K8s.Client.watch_and_stream(conn, watch_operation)
+ 
+     watch_stream
+-    |> Stream.reject(&skip_resource?(&1, skip_observed_generations))
++    |> Stream.map(fn %{"type" => type, "object" => resource} -> {@operations[type], resource} end)
++  end
++
++  @spec get_stream(module(), K8s.Conn.t(), K8s.Operation.t()) ::
++          Enumerable.t(Bonny.Resource.t())
++  def get_stream(controller, conn, watch_operation) do
++    get_raw_stream(conn, watch_operation)
+     |> Stream.map(&run_action_callbacks(controller, &1))
+     |> Stream.reject(&(&1 == :error))
+   end
+ 
+   defp run_action_callbacks(
+          controller,
+-         %{"type" => type, "object" => resource}
++         {type, resource}
+        ) do
+     metadata = %{
+       module: controller,
+@@ -44,7 +51,7 @@ defmodule Bonny.Server.Watcher do
+     }
+ 
+     :telemetry.span([:watcher, :watch], metadata, fn ->
+-      case apply(controller, @operations[type], [resource]) do
++      case apply(controller, type, [resource]) do
+         :ok ->
+           {resource, metadata}
+ 
+@@ -56,13 +63,4 @@ defmodule Bonny.Server.Watcher do
+       end
+     end)
+   end
+-
+-  defp skip_resource?(_, false), do: false
+-  defp skip_resource?(%{"type" => "DELETED"}, _), do: false
+-
+-  defp skip_resource?(%{"object" => resource}, _) do
+-    # skip resource if generation has been observed
+-    get_in(resource, ~w(metadata generation)) ==
+-      get_in(resource, [Access.key("status", %{}), "observedGeneration"])
+-  end
+ end

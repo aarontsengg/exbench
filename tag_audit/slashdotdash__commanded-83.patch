@@ -1,0 +1,1298 @@
+diff --git a/guides/Commands.md b/guides/Commands.md
+index 03ffbe2..1a40892 100644
+--- a/guides/Commands.md
++++ b/guides/Commands.md
+@@ -91,6 +91,45 @@ defmodule BankRouter do
+ end
+ ```
+ 
++### Command dispatch consistency guarantee
++
++You can choose the consistency guarantee provided by a command dispatch using the `consistency` option:
++
++```elixir
++:ok = BankRouter.dispatch(command, consistency: :strong)
++```
++
++The available options are `:eventual` (default) and `:strong`:
++
++- *Strong consistency* offers up-to-date data but at the cost of high latency.
++- *Eventual consistency* offers low latency but read model queries may reply with stale data since they may not have processed the persisted events.
++
++When dispatching a command using `consistency: :strong` the dispatch will block until all of the strongly consistent event handlers and process managers have handled all events created by the command. This guarantees that when you receive the `:ok` response from dispatch your strongly consistent read models will have been updated and can safely be queried. Strong consistency helps to alleviate problems and workarounds you would otherwise encounter when dealing with eventual consistency in your own application.
++
++Use `:strong` consistency when you want to query a read model immediately after dispatching a command. You *must* also configure the event handler to use `:strong` consistency. Dispatching a command using `:strong` consistency but without any strongly consistent event handlers configured will have no effect.
++
++Using `:eventual` consistency, or omitting the `consistency` option, will cause the command dispatch to immediately return without waiting for any event handlers. The handlers run independently and asynchronously in the background, therefore you will need to deal with potentially stale read model data.  
++
++#### Consistency failures
++
++By opting-in to strong consistency you may encounter an additional error reply from command dispatch:
++
++```elixir
++case BankRouter.dispatch(command, consistency: :strong) do
++  :ok -> # ... all ok
++  {:error, :consistency_timeout} -> # command ok, handlers have not yet executed
++end
++```
++
++Receiving an `{:error, :consistency_timeout}` error indicates the command successfully dispatched, but some or all of the strongly consistent event handlers have not yet executed.
++
++The default timeout is configured as five seconds; this determines how long the dispatch will block waiting for the handlers. You can override the default value in your environment config file (e.g. `config/config.exs`):
++
++```elixir
++config :commanded,
++  dispatch_consistency_timeout: 10_000  # ten seconds
++```
++
+ ### Dispatch returning aggregate version
+ 
+ You can optionally choose to include the aggregate's version as part of the dispatch result by setting the  `include_aggregate_version` option to true:
+diff --git a/guides/Events.md b/guides/Events.md
+index 0b506a1..a835ac7 100644
+--- a/guides/Events.md
++++ b/guides/Events.md
+@@ -60,3 +60,22 @@ end
+ Use the `:current` position when you don't want newly created event handlers to go through all previous events. An example would be adding an event handler to send transactional emails to an already deployed system containing many historical events.
+ 
+ You should start your event handlers using a [supervisor](#supervision) to ensure they are restarted on error.
++
++
++### Consistency guarantee
++
++You can specify an event handler's consistency guarantee using the `consistency` option:
++
++```elixir
++defmodule AccountBalanceHandler do
++  use Commanded.Event.Handler,
++    name: "account_balance",
++    consistency: :eventual
++```
++
++The available options are `:eventual` (default) and `:strong`:
++
++- *Strong consistency* offers up-to-date data but at the cost of high latency.
++- *Eventual consistency* offers low latency but read model queries may reply with stale data since they may not have processed the persisted events.
++
++You request the consistency guarantee, either `:strong` or `:eventual`, when dispatching a command. Strong consistency will block the command dispatch and wait for all strongly consistent event handlers to successfully process all events created by the command. Whereas eventual consistency will immediately return after command dispatch, without waiting for any event handlers, even those configured for strong consistency.
+diff --git a/guides/Read Model Projections.md b/guides/Read Model Projections.md
+index f38b322..56a9e0d 100644
+--- a/guides/Read Model Projections.md
++++ b/guides/Read Model Projections.md
+@@ -21,3 +21,22 @@ defmodule MyApp.ExampleProjector do
+   end
+ end
+ ```
++
++## Consistency guarantee
++
++You will often chose to use `:strong` consistency for read model projections to ensure that you can query data affected by a dispatched command. In a typical web request using the [POST/Redirect/GET](https://en.wikipedia.org/wiki/Post/Redirect/Get) pattern you want to ensure the read model is up-to-date before redirecting the user to the modified resource.
++
++By opting in to strong consistency you are guaranteed that an `:ok` reply from command dispatch indicates all strongly consistent read models will have been updated.
++
++Configure the `consistency` option in your projector:
++
++```elixir
++defmodule MyApp.ExampleProjector do
++  use Commanded.Projections.Ecto,
++    name: "ExampleProjector",
++    consistency: :strong
++
++
++  # ...
++end
++```
+diff --git a/lib/commanded/commands/dispatcher.ex b/lib/commanded/commands/dispatcher.ex
+index 0a35e2d..36c5a14 100644
+--- a/lib/commanded/commands/dispatcher.ex
++++ b/lib/commanded/commands/dispatcher.ex
+@@ -10,6 +10,7 @@ defmodule Commanded.Commands.Dispatcher do
+     @moduledoc false
+     defstruct [
+       command: nil,
++      consistency: nil,
+       handler_module: nil,
+       handler_function: nil,
+       aggregate_module: nil,
+@@ -27,75 +28,76 @@ defmodule Commanded.Commands.Dispatcher do
+   Returns `:ok` on success, or `{:error, reason}` on failure.
+   """
+   @spec dispatch(payload :: struct) :: :ok | {:error, reason :: term}
+-  def dispatch(%Payload{command: command} = payload) do
+-    pipeline = before_dispatch(%Pipeline{command: command}, payload)
++  def dispatch(%Payload{} = payload) do
++    pipeline =
++      payload
++      |> to_pipeline()
++      |> before_dispatch(payload)
+ 
+     # don't allow command execution if pipeline has been halted
+-    case Map.get(pipeline, :halted, false) do
++    case Pipeline.halted?(pipeline) do
+       true ->
+-        respond_with_failure(pipeline, {:error, :halted}, payload)
++        pipeline
++        |> Pipeline.respond({:error, :halted})
++        |> after_failure(:halted, payload)
++        |> Pipeline.response()
+ 
+       false ->
+-        case extract_aggregate_uuid(payload) do
+-          nil ->
+-            respond_with_failure(pipeline, {:error, :invalid_aggregate_identity}, payload)
+-
+-          aggregate_uuid ->
+-            result = execute(payload, pipeline, aggregate_uuid)
+-
+-            extract_response(pipeline, result)
+-        end
++        pipeline
++        |> execute(payload)
++        |> Pipeline.response()
+     end
+   end
+ 
+-  defp respond_with_failure(pipeline, error, payload) do
+-    response = extract_response(pipeline, error)
+-
+-    after_failure(pipeline, response, payload)
+-
+-    response
++  defp to_pipeline(%Payload{command: command, consistency: consistency, identity: identity}) do
++    %Pipeline{command: command, consistency: consistency, identity: identity}
+   end
+ 
+   defp execute(
+-    %Payload{handler_module: handler_module, handler_function: handler_function, include_aggregate_version: include_aggregate_version, timeout: timeout, lifespan: lifespan} = payload,
+-    %Pipeline{command: command} = pipeline,
+-    aggregate_uuid)
++    %Pipeline{assigns: %{aggregate_uuid: aggregate_uuid}, command: command} = pipeline,
++    %Payload{handler_module: handler_module, handler_function: handler_function, timeout: timeout, lifespan: lifespan} = payload)
+   do
+     {:ok, ^aggregate_uuid} = Commanded.Aggregates.Supervisor.open_aggregate(payload.aggregate_module, aggregate_uuid)
+ 
+     task = Task.Supervisor.async_nolink(Commanded.Commands.TaskDispatcher, Aggregates.Aggregate, :execute, [aggregate_uuid, command, handler_module, handler_function, timeout, lifespan])
+     task_result = Task.yield(task, timeout) || Task.shutdown(task)
+ 
+-    result = case task_result do
+-      {:ok, reply} -> reply
+-      {:error, reason} -> {:error, :aggregate_execution_failed, reason}
+-      {:exit, reason} -> {:error, :aggregate_execution_failed, reason}
+-      nil -> {:error, :aggregate_execution_timeout}
+-    end
++    result =
++      case task_result do
++        {:ok, reply} -> reply
++        {:error, reason} -> {:error, :aggregate_execution_failed, reason}
++        {:exit, reason} -> {:error, :aggregate_execution_failed, reason}
++        nil -> {:error, :aggregate_execution_timeout}
++      end
+ 
+     case result do
+       {:ok, aggregate_version} ->
+-        after_dispatch(pipeline, payload)
+-
+-        case include_aggregate_version do
+-          true -> {:ok, aggregate_version}
+-          false -> :ok
+-        end
++        pipeline
++        |> Pipeline.assign(:aggregate_version, aggregate_version)
++        |> after_dispatch(payload)
++        |> respond_with_success(payload, aggregate_version)
+ 
+-      {:error, error} = reply ->
+-        after_failure(pipeline, error, payload)
+-        reply
++      {:error, error} ->
++        pipeline
++        |> after_failure(error, payload)
++        |> Pipeline.respond({:error, error})
+ 
+       {:error, error, reason} ->
+-        after_failure(pipeline, error, reason, payload)
+-        {:error, error}
++        pipeline
++        |> after_failure(error, reason, payload)
++        |> Pipeline.respond({:error, error})
+      end
+   end
+ 
+-  defp extract_aggregate_uuid(%Payload{command: command, identity: identity}), do: Map.get(command, identity)
++  defp respond_with_success(%Pipeline{} = pipeline, %Payload{include_aggregate_version: include_aggregate_version}, aggregate_version) do
++    response =
++      case include_aggregate_version do
++        true -> {:ok, aggregate_version}
++        false -> :ok
++      end
+ 
+-  defp extract_response(%Pipeline{response: nil}, response), do: response
+-  defp extract_response(%Pipeline{response: response}, _response), do: response
++    Pipeline.respond(pipeline, response)
++  end
+ 
+   defp before_dispatch(%Pipeline{} = pipeline, %Payload{middleware: middleware}) do
+     pipeline
+diff --git a/lib/commanded/commands/router.ex b/lib/commanded/commands/router.ex
+index 9b180bb..8b1072d 100644
+--- a/lib/commanded/commands/router.ex
++++ b/lib/commanded/commands/router.ex
+@@ -7,17 +7,25 @@ defmodule Commanded.Commands.Router do
+       defmodule BankRouter do
+         use Commanded.Commands.Router
+ 
+-        dispatch OpenAccount, to: OpenAccountHandler, aggregate: BankAccount, identity: :account_number
++        dispatch OpenAccount,
++          to: OpenAccountHandler,
++          aggregate: BankAccount,
++          identity: :account_number
+       end
+ 
+-      :ok = BankRouter.dispatch(%OpenAccount{account_number: "ACC123", initial_balance: 1_000})
++      :ok = BankRouter.dispatch(%OpenAccount{
++        account_number: "ACC123",
++        initial_balance: 1_000
++      })
+ 
+-  The command handler module must implement a `handle/2` function that receives the aggregate's state and the command to execute.
+-  It should delegate the command to the aggregate.
++  The command handler module must implement a `handle/2` function that receives
++  the aggregate's state and the command to execute. It should delegate the
++  command to the aggregate.
+ 
+   ## Dispatch command directly to an aggregate root
+ 
+-  You can route a command directly to an aggregate root, without requiring an intermediate command handler.
++  You can route a command directly to an aggregate root, without requiring an
++  intermediate command handler.
+ 
+   ## Example
+ 
+@@ -27,15 +35,32 @@ defmodule Commanded.Commands.Router do
+         dispatch OpenAccount, to: BankAccount, identity: :account_number
+       end
+ 
+-  The aggregate root must implement an `execute/2` function that receives the aggregate's state and the command being executed.
++  The aggregate root must implement an `execute/2` function that receives the
++  aggregate's state and the command being executed.
++
++  ## Consistency
++
++  You can choose to dispatch commands using either `:eventual` or `:strong`
++  consistency:
++
++      :ok = BankRouter.dispatch(command, consistency: :strong)
++
++  Using `:strong` consistency will block command dispatch until all strongly
++  consistent event handlers and process managers have successfully process all
++  events created by the command.
++
++  Use this when you have event handlers that update read models you need to
++  query immediately after dispatching the command.
+ 
+   ## Aggregate version
+ 
+-  You can optionally choose to include the aggregate's version as part of the dispatch result by setting `include_aggregate_version` true.
++  You can optionally choose to include the aggregate's version as part of the
++  dispatch result by setting `include_aggregate_version` true.
+ 
+       {:ok, aggregate_version} = BankRouter.dispatch(command, include_aggregate_version: true)
+ 
+-  This is useful when you need to wait for an event handler (e.g. a read model projection) to be up-to-date before continuing or querying its data.
++  This is useful when you need to wait for an event handler (e.g. a read model
++  projection) to be up-to-date before continuing or querying its data.
+ 
+   """
+   defmacro __using__(_) do
+@@ -45,15 +70,20 @@ defmodule Commanded.Commands.Router do
+       @before_compile unquote(__MODULE__)
+       @registered_commands []
+       @registered_middleware []
++      @default_middleware [
++        Commanded.Middleware.ExtractAggregateIdentity,
++        Commanded.Middleware.ConsistencyGuarantee,
++      ]
++      @default_consistency :eventual
+       @default_dispatch_timeout 5_000
+       @default_lifespan Commanded.Aggregates.DefaultLifespan
+       @include_aggregate_version false
+     end
+   end
+ 
+-
+   @doc """
+-  Include the given middleware module to be called before and after success or failure of each command dispatch
++  Include the given middleware module to be called before and after
++  success or failure of each command dispatch
+ 
+   The middleware module must implement the `Commanded.Middleware` behaviour.
+ 
+@@ -78,7 +108,8 @@ defmodule Commanded.Commands.Router do
+   end
+ 
+   @doc """
+-  Configure the command, or list of commands, to be dispatched to the corresponding handler for a given aggregate root
++  Configure the command, or list of commands, to be dispatched to the
++  corresponding handler for a given aggregate root
+   """
+   defmacro dispatch(command_module_or_modules, opts) do
+     opts = parse_opts(opts, [])
+@@ -92,10 +123,10 @@ defmodule Commanded.Commands.Router do
+     end)
+   end
+ 
+-  @register_params [:to, :function, :aggregate, :identity, :timeout, :lifespan]
++  @register_params [:to, :function, :aggregate, :identity, :timeout, :lifespan, :consistency]
+ 
+   @doc false
+-  defmacro register(command_module, to: handler, function: function, aggregate: aggregate, identity: identity, timeout: timeout, lifespan: lifespan) do
++  defmacro register(command_module, to: handler, function: function, aggregate: aggregate, identity: identity, timeout: timeout, lifespan: lifespan, consistency: consistency) do
+     quote do
+       if Enum.member?(@registered_commands, unquote(command_module)) do
+         raise "duplicate command registration for: #{inspect unquote(command_module)}"
+@@ -121,30 +152,40 @@ defmodule Commanded.Commands.Router do
+       Dispatch the given command to the registered handler providing a timeout.
+ 
+       - `timeout_or_opts` is either an integer timeout or a keyword list of options.
+-        The timeout must be an integer greater than zero which specifies how many milliseconds to allow the command to be handled, or the atom `:infinity` to wait indefinitely.
++        The timeout must be an integer greater than zero which specifies how
++        many milliseconds to allow the command to be handled, or the atom `:infinity` to wait indefinitely.
+         The default timeout value is 5000.
++
+         Alternatively, an options keyword list can be provided, it supports:
+ 
+         Options:
+ 
++          - `:consistency` as one of `:eventual` (default) or `:strong`
++            By setting the consistency to `:strong` a successful command dispatch
++            will block until all strongly consistent event handlers and process managers
++            have handled all events created by the command.
++
+           - `:timeout` as described above
++
+           - `:include_aggregate_version` set to true to include the aggregate stream version in the success response: `{:ok, aggregate_version}`
+             The default is false, to return just `:ok`
+ 
+       Returns `:ok` on success, unless `:include_aggregate_version` is enabled where it returns `{:ok, aggregate_version}`.
+       """
+-      @spec dispatch(command :: struct, timeout :: integer | :infinity | keyword()) :: :ok | {:error, reason :: term}
++      @spec dispatch(command :: struct, timeout :: integer | :infinity | keyword()) :: :ok | {:error, :consistency_timeout} | {:error, reason :: term}
+       def dispatch(command, timeout_or_opts)
+       def dispatch(%unquote(command_module){} = command, :infinity), do: do_dispatch(command, timeout: :infinity)
+       def dispatch(%unquote(command_module){} = command, timeout) when is_integer(timeout), do: do_dispatch(command, timeout: timeout)
+       def dispatch(%unquote(command_module){} = command, opts), do: do_dispatch(command, opts)
+ 
+       defp do_dispatch(%unquote(command_module){} = command, opts) do
++        consistency = Keyword.get(opts, :consistency, unquote(consistency) || @default_consistency)
+         timeout = Keyword.get(opts, :timeout, unquote(timeout) || @default_dispatch_timeout)
+         include_aggregate_version = Keyword.get(opts, :include_aggregate_version, @include_aggregate_version)
+ 
+         Commanded.Commands.Dispatcher.dispatch(%Commanded.Commands.Dispatcher.Payload{
+           command: command,
++          consistency: consistency,
+           handler_module: unquote(handler),
+           handler_function: unquote(function),
+           aggregate_module: unquote(aggregate),
+@@ -152,7 +193,7 @@ defmodule Commanded.Commands.Router do
+           include_aggregate_version: include_aggregate_version,
+           timeout: timeout,
+           lifespan: unquote(lifespan) || @default_lifespan,
+-          middleware: @registered_middleware,
++          middleware: @registered_middleware ++ @default_middleware,
+         })
+       end
+     end
+@@ -196,7 +237,6 @@ defmodule Commanded.Commands.Router do
+   end
+ 
+   defp parse_opts([], result) do
+-    @register_params
+-    |> Enum.map(fn key -> {key, Keyword.get(result, key)} end)
++    Enum.map(@register_params, fn key -> {key, Keyword.get(result, key)} end)
+   end
+ end
+diff --git a/lib/commanded/event/handler.ex b/lib/commanded/event/handler.ex
+index 829b17f..2956e52 100644
+--- a/lib/commanded/event/handler.ex
++++ b/lib/commanded/event/handler.ex
+@@ -2,38 +2,80 @@ defmodule Commanded.Event.Handler do
+   @moduledoc """
+   Defines the behaviour an event handler must implement.
+ 
+-  Provides a convenience macro that implements the behaviour, allowing you to handle only the events you are interested in processing.
++  Provides a convenience macro that implements the behaviour, allowing you to
++  handle only the events you are interested in processing.
+ 
+-  You should start your event handlers using a [Supervisor](supervision.html) to ensure they are restarted on error.
++  You should start your event handlers using a [Supervisor](supervision.html) to
++  ensure they are restarted on error.
+ 
+   # Event handler name
+ 
+-  The name you specify is used when subscribing to the event store.
+-  Therefore you *should not* change the name once the handler has been deployed.
+-  A new subscription will be created when you change the name, and you event handler will receive already handled events.
++  The name you specify is used when subscribing to the event store. Therefore you
++  *should not* change the name once the handler has been deployed. A new
++  subscription will be created when you change the name, and you event handler
++  will receive already handled events.
+ 
+   # Subscription options
+ 
+-  You can choose to start the event handler's event store subscription from `:origin`, `:current` position, or an exact event number using the `start_from` option.
+-  The default is to use the origin so your handler will receive *all* events.
++  You can choose to start the event handler's event store subscription from
++  `:origin`, `:current` position, or an exact event number using the `start_from`
++  option. The default is to use the origin so your handler will receive *all*
++  events.
+ 
+-  Use the `:current` position when you don't want newly created event handlers to go through all previous events.
+-  An example would be adding an event handler to send transactional emails to an already deployed system containing many historical events.
++  Use the `:current` position when you don't want newly created event handlers
++  to go through all previous events. An example would be adding an event handler
++  to send transactional emails to an already deployed system containing many
++  historical events.
+ 
+   ## Example
+ 
+-  Set the `start_from` option (`:origin`, `:current`, or an explicit event number) when using `Commanded.Event.Handler`:
++  Set the `start_from` option (`:origin`, `:current`, or an explicit event
++  number) when using `Commanded.Event.Handler`:
+ 
+       defmodule AccountBalanceHandler do
+-        use Commanded.Event.Handler, name: "AccountBalanceHandler", start_from: :origin
++        use Commanded.Event.Handler,
++          name: "AccountBalanceHandler",
++          start_from: :origin
+ 
+         # ...
+       end
+ 
+-  You can optionally override `:start_from` by passing it as option when starting your handler:
++  You can optionally override `:start_from` by passing it as option when
++  starting your handler:
+ 
+       {:ok, _handler} = AccountBalanceHandler.start_link(start_from: :current)
+ 
++  # Consistency
++
++  For each event handler you can define its consistency, as one of either
++  `:strong` or `:eventual`.
++
++  This setting is used when dispatching commands and specifying the `consistency`
++  option.
++
++  When you dispatch a command using `:strong` consistency, after successful
++  command dispatch the process will block until all event handlers configured to
++  use `:strong` consistency have processed the domain events created by the
++  command. This is useful when you have a read model updated by an event handler
++  that you wish to query for data affected by the command dispatch. With
++  `:strong` consistency you are guaranteed that the read model will be
++  up-to-date after the command has successfully dispatched. It can be safely
++  queried for data updated by any of the events created by the command.
++
++  The default setting is `:eventual` consistency. Command dispatch will return
++  immediately upon confirmation of event persistence, not waiting for any event
++  handlers.
++
++  ## Example
++
++    defmodule AccountBalanceHandler do
++      use Commanded.Event.Handler,
++        name: "AccountBalanceHandler",
++        consistency: :strong
++
++      # ...
++    end
++
+   """
+ 
+   use GenServer
+@@ -43,10 +85,12 @@ defmodule Commanded.Event.Handler do
+   alias Commanded.Event.Handler
+   alias Commanded.EventStore
+   alias Commanded.EventStore.RecordedEvent
++  alias Commanded.Subscriptions
+ 
+   @type domain_event :: struct
+   @type metadata :: struct
+   @type subscribe_from :: :origin | :current | non_neg_integer
++  @type consistency :: :eventual | :strong
+ 
+   @doc """
+   Event handler behaviour to handle a domain event and its metadata
+@@ -84,7 +128,7 @@ defmodule Commanded.Event.Handler do
+       def start_link(opts \\ []) do
+         opts =
+           @opts
+-          |> Keyword.take([:start_from])
++          |> Keyword.take([:consistency, :start_from])
+           |> Keyword.merge(opts)
+ 
+         Commanded.Event.Handler.start_link(@name, __MODULE__, opts)
+@@ -102,6 +146,7 @@ defmodule Commanded.Event.Handler do
+   end
+ 
+   defstruct [
++    consistency: nil,
+     handler_name: nil,
+     handler_module: nil,
+     last_seen_event: nil,
+@@ -113,6 +158,7 @@ defmodule Commanded.Event.Handler do
+     GenServer.start_link(__MODULE__, %Handler{
+       handler_name: handler_name,
+       handler_module: handler_module,
++      consistency: opts[:consistency] || :eventual,
+       subscribe_from: opts[:start_from] || :origin,
+     })
+   end
+@@ -122,14 +168,8 @@ defmodule Commanded.Event.Handler do
+     {:ok, state}
+   end
+ 
+-  def handle_cast({:subscribe_to_events}, %Handler{handler_name: handler_name, subscribe_from: subscribe_from} = state) do
+-    {:ok, subscription} = EventStore.subscribe_to_all_streams(handler_name, self(), subscribe_from)
+-
+-    state = %Handler{state |
+-      subscription: subscription,
+-    }
+-
+-    {:noreply, state}
++  def handle_cast({:subscribe_to_events}, %Handler{} = state) do
++    {:noreply, subscribe_to_all_streams(state)}
+   end
+ 
+   def handle_info({:events, events}, state) do
+@@ -149,6 +189,15 @@ defmodule Commanded.Event.Handler do
+     {:noreply, state}
+   end
+ 
++  defp subscribe_to_all_streams(%Handler{consistency: consistency, handler_name: handler_name, subscribe_from: subscribe_from} = state) do
++    {:ok, subscription} = EventStore.subscribe_to_all_streams(handler_name, self(), subscribe_from)
++
++    # register this event handler as a subscription with the given consistency
++    :ok = Subscriptions.register(handler_name, consistency)
++
++    %Handler{state | subscription: subscription}
++  end
++
+   # ignore already seen events
+   defp handle_event(event_number, _data, _metadata, %Handler{last_seen_event: last_seen_event})
+     when not is_nil(last_seen_event) and event_number <= last_seen_event
+@@ -163,14 +212,19 @@ defmodule Commanded.Event.Handler do
+   end
+ 
+   # confirm receipt of event
+-  defp confirm_receipt(%RecordedEvent{event_number: event_number} = event, %Handler{subscription: subscription} = state) do
++  defp confirm_receipt(%RecordedEvent{event_number: event_number} = event, %Handler{} = state) do
+     Logger.debug(fn -> "event handler confirming receipt of event: #{inspect event_number}" end)
+ 
+-    EventStore.ack_event(subscription, event)
++    ack_event(event, state)
+ 
+     %Handler{state | last_seen_event: event_number}
+   end
+ 
++  defp ack_event(event, %Handler{consistency: consistency, handler_name: handler_name, subscription: subscription}) do
++    EventStore.ack_event(subscription, event)
++    Subscriptions.ack_event(handler_name, consistency, event)
++  end
++
+   defp extract_event_number(%RecordedEvent{event_number: event_number}), do: event_number
+ 
+   defp extract_data(%RecordedEvent{data: data}), do: data
+diff --git a/lib/commanded/event_store/adapters/in_memory.ex b/lib/commanded/event_store/adapters/in_memory.ex
+index fdee8bc..575ac6f 100644
+--- a/lib/commanded/event_store/adapters/in_memory.ex
++++ b/lib/commanded/event_store/adapters/in_memory.ex
+@@ -12,7 +12,8 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     defstruct [
+       persisted_events: [],
+       streams: %{},
+-      subscriptions: %{},
++      transient_subscribers: [],
++      persistent_subscriptions: %{},
+       snapshots: %{},
+       next_event_number: 1
+     ]
+@@ -55,6 +56,10 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     GenServer.call(__MODULE__, {:stream_forward, stream_uuid, start_version})
+   end
+ 
++  def subscribe(subscriber) do
++    GenServer.call(__MODULE__, {:subscribe, subscriber})
++  end
++
+   def subscribe_to_all_streams(subscription_name, subscriber, start_from) do
+     subscription = %Subscription{name: subscription_name, subscriber: subscriber, start_from: start_from}
+ 
+@@ -111,7 +116,17 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     {:reply, reply, state}
+   end
+ 
+-  def handle_call({:subscribe_to_all_streams, %Subscription{name: subscription_name, subscriber: subscriber} = subscription}, _from, %State{subscriptions: subscriptions} = state) do
++  def handle_call({:subscribe, subscriber}, _from, %State{transient_subscribers: subscribers} = state) do
++    Process.monitor(subscriber)
++
++    state = %State{state |
++      transient_subscribers: [subscriber | subscribers],
++    }
++
++    {:reply, :ok, state}
++  end
++
++  def handle_call({:subscribe_to_all_streams, %Subscription{name: subscription_name, subscriber: subscriber} = subscription}, _from, %State{persistent_subscriptions: subscriptions} = state) do
+     {reply, state} = case Map.get(subscriptions, subscription_name) do
+       nil ->
+         state = subscribe(subscription, state)
+@@ -129,9 +144,9 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     {:reply, reply, state}
+   end
+ 
+-  def handle_call({:unsubscribe_from_all_streams, subscription_name}, _from, %State{subscriptions: subscriptions} = state) do
++  def handle_call({:unsubscribe_from_all_streams, subscription_name}, _from, %State{persistent_subscriptions: subscriptions} = state) do
+     state = %State{state |
+-      subscriptions: Map.delete(subscriptions, subscription_name),
++      persistent_subscriptions: Map.delete(subscriptions, subscription_name),
+     }
+ 
+     {:reply, :ok, state}
+@@ -162,17 +177,18 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     {:reply, :ok, state}
+   end
+ 
+-  def handle_cast({:ack_event, event, subscriber}, %State{subscriptions: subscriptions} = state) do
++  def handle_cast({:ack_event, event, subscriber}, %State{persistent_subscriptions: subscriptions} = state) do
+     state = %State{state |
+-      subscriptions: ack_subscription_by_pid(subscriptions, event, subscriber),
++      persistent_subscriptions: ack_subscription_by_pid(subscriptions, event, subscriber),
+     }
+ 
+     {:noreply, state}
+   end
+ 
+-  def handle_info({:DOWN, _ref, :process, pid, _reason}, %State{subscriptions: subscriptions} = state) do
++  def handle_info({:DOWN, _ref, :process, pid, _reason}, %State{persistent_subscriptions: subscriptions, transient_subscribers: subscribers} = state) do
+     state = %State{state |
+-      subscriptions: remove_subscriber_by_pid(subscriptions, pid),
++      persistent_subscriptions: remove_subscriber_by_pid(subscriptions, pid),
++      transient_subscribers: subscribers -- [pid],
+     }
+ 
+     {:noreply, state}
+@@ -198,7 +214,8 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+       next_event_number: next_event_number,
+     }
+ 
+-    publish(new_events, state)
++    publish_to_transient_subscribers(stream_uuid, new_events, state)
++    publish_to_persistent_subscriptions(new_events, state)
+ 
+     {{:ok, length(stream_events)}, state}
+   end
+@@ -216,13 +233,13 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     }
+   end
+ 
+-  defp subscribe(%Subscription{name: subscription_name, subscriber: subscriber} = subscription, %State{subscriptions: subscriptions, persisted_events: persisted_events} = state) do
++  defp subscribe(%Subscription{name: subscription_name, subscriber: subscriber} = subscription, %State{persistent_subscriptions: subscriptions, persisted_events: persisted_events} = state) do
+     Process.monitor(subscriber)
+ 
+     catch_up(subscription, persisted_events)
+ 
+     %State{state |
+-      subscriptions: Map.put(subscriptions, subscription_name, subscription),
++      persistent_subscriptions: Map.put(subscriptions, subscription_name, subscription),
+     }
+   end
+ 
+@@ -251,8 +268,14 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     for events <- unseen_events, do: send(subscriber, {:events, events})
+   end
+ 
++  defp publish_to_transient_subscribers(stream_uuid, events, %State{transient_subscribers: subscribers}) do
++    for subscriber <- subscribers |> Enum.filter(&is_pid/1) do
++      send(subscriber, {:events, stream_uuid, events})
++    end
++  end
++
+   # publish events to subscribers
+-  defp publish(events, %State{subscriptions: subscriptions}) do
++  defp publish_to_persistent_subscriptions(events, %State{persistent_subscriptions: subscriptions}) do
+     subscribers =
+       subscriptions
+       |> Map.values()
+diff --git a/lib/commanded/event_store/event_store.ex b/lib/commanded/event_store/event_store.ex
+index 9cb7d85..863092b 100644
+--- a/lib/commanded/event_store/event_store.ex
++++ b/lib/commanded/event_store/event_store.ex
+@@ -28,7 +28,18 @@ defmodule Commanded.EventStore do
+   @callback stream_forward(stream_uuid, start_version :: non_neg_integer, read_batch_size :: non_neg_integer) :: Enumerable.t | {:error, :stream_not_found} | {:error, reason}
+ 
+   @doc """
+-  Subscriber will be notified of every event persisted to any stream.
++  Create a persistent subscription to all event streams.
++
++  The event store will remember the subscribers last acknowledged event.
++  Restarting the named subscription will resume from the next event following
++  the last seen.
++
++  The subscriber process will be sent all events persisted to any stream. It
++  will receive a `{:events, events}` message for each batch of events persisted
++  for a single aggregate.
++
++  The subscriber must ack each received, and successfully processed event, using
++  `Commanded.EventStore.ack_event/2`.
+   """
+   @callback subscribe_to_all_streams(subscription_name, subscriber :: pid, start_from) :: {:ok, subscription :: pid}
+     | {:error, :subscription_already_exists}
+diff --git a/lib/commanded/event_store/recorded_event.ex b/lib/commanded/event_store/recorded_event.ex
+index 35e2485..eec37ad 100644
+--- a/lib/commanded/event_store/recorded_event.ex
++++ b/lib/commanded/event_store/recorded_event.ex
+@@ -7,7 +7,7 @@ defmodule Commanded.EventStore.RecordedEvent do
+ 
+   @type t :: %Commanded.EventStore.RecordedEvent{
+     event_number: non_neg_integer,
+-    stream_id: non_neg_integer,
++    stream_id: String.t,
+     stream_version: non_neg_integer,
+     correlation_id: String.t,
+     causation_id: String.t,
+diff --git a/lib/commanded/middleware/consistency_guarantee.ex b/lib/commanded/middleware/consistency_guarantee.ex
+new file mode 100644
+index 0000000..b91210d
+--- /dev/null
++++ b/lib/commanded/middleware/consistency_guarantee.ex
+@@ -0,0 +1,34 @@
++defmodule Commanded.Middleware.ConsistencyGuarantee do
++  @moduledoc """
++  A `Commanded.Middleware` that blocks after successful command dispatch until
++  the requested dispatch consistency has been met.
++
++  Only applies when the requested consistency is `:strong`. Has no effect for
++  `:eventual` consistency.
++  """
++
++  @behaviour Commanded.Middleware
++
++  require Logger
++
++  alias Commanded.Middleware.Pipeline
++  alias Commanded.Subscriptions
++
++  import Pipeline
++
++  def before_dispatch(%Pipeline{} = pipeline), do: pipeline
++
++  def after_dispatch(%Pipeline{consistency: :eventual} = pipeline), do: pipeline
++  def after_dispatch(%Pipeline{consistency: :strong, assigns: %{aggregate_uuid: aggregate_uuid, aggregate_version: aggregate_version}} = pipeline) do
++    case Subscriptions.wait_for(aggregate_uuid, aggregate_version) do
++      :ok ->
++        pipeline
++
++      {:error, :timeout} ->
++        Logger.warn(fn -> "Consistency timeout waiting for aggregate #{inspect aggregate_uuid} at version #{inspect aggregate_version}" end)
++        respond(pipeline, {:error, :consistency_timeout})
++    end
++  end
++
++  def after_failure(%Pipeline{} = pipeline), do: pipeline
++end
+diff --git a/lib/commanded/middleware/extract_aggregate_identity.ex b/lib/commanded/middleware/extract_aggregate_identity.ex
+new file mode 100644
+index 0000000..ceeae73
+--- /dev/null
++++ b/lib/commanded/middleware/extract_aggregate_identity.ex
+@@ -0,0 +1,30 @@
++defmodule Commanded.Middleware.ExtractAggregateIdentity do
++  @moduledoc """
++  A `Commanded.Middleware` that extracts the target aggregate's identity from the command
++  """
++
++  @behaviour Commanded.Middleware
++
++  alias Commanded.Middleware.Pipeline
++  import Pipeline
++
++  def before_dispatch(%Pipeline{} = pipeline) do
++    case extract_aggregate_uuid(pipeline) do
++      nil ->
++        pipeline
++        |> respond({:error, :invalid_aggregate_identity})
++        |> halt()
++
++      aggregate_uuid ->
++        assign(pipeline, :aggregate_uuid, aggregate_uuid)
++    end
++  end
++
++  def after_dispatch(%Pipeline{} = pipeline), do: pipeline
++
++  def after_failure(%Pipeline{} = pipeline), do: pipeline
++
++  defp extract_aggregate_uuid(%Pipeline{command: command, identity: identity}) do
++    Map.get(command, identity)
++  end
++end
+diff --git a/lib/commanded/middleware/pipeline.ex b/lib/commanded/middleware/pipeline.ex
+index f6d1803..995b7e2 100644
+--- a/lib/commanded/middleware/pipeline.ex
++++ b/lib/commanded/middleware/pipeline.ex
+@@ -8,14 +8,18 @@ defmodule Commanded.Middleware.Pipeline do
+ 
+     * `assigns` - shared user data as a map
+     * `command` - the command struct being dispatched
++    * `consistency` - the requested dispatch consistency, either `:eventual` (default) or `:strong`
++    * `identity` - the field in the command containing the aggregate's identity
+     * `halted` - the boolean status on whether the pipeline was halted
+-    * `response` - override the response to send back to the caller (optional)
++    * `response` - set the response to send back to the caller
+ 
+   """
+ 
+   defstruct [
+     assigns: %{},
+     command: nil,
++    consistency: nil,
++    identity: nil,
+     halted: false,
+     response: nil,
+   ]
+@@ -29,6 +33,11 @@ defmodule Commanded.Middleware.Pipeline do
+     %Pipeline{pipeline | assigns: Map.put(assigns, key, value)}
+   end
+ 
++  @doc """
++  Has the pipeline been halted?
++  """
++  def halted?(%Pipeline{halted: halted}), do: halted
++
+   @doc """
+   Halts the pipeline by preventing further middleware downstream from being invoked.
+ 
+@@ -38,12 +47,18 @@ defmodule Commanded.Middleware.Pipeline do
+     %Pipeline{pipeline | halted: true}
+   end
+ 
++  @doc """
++  Extract the response from the pipeline, if present, or use the given response
++  """
++  def response(%Pipeline{response: response}), do: response
++
+   @doc """
+   Sets the response to be returned to the dispatch caller
+   """
+-  def respond(%Pipeline{} = pipeline, response) do
++  def respond(%Pipeline{response: nil} = pipeline, response) do
+     %Pipeline{pipeline | response: response}
+   end
++  def respond(%Pipeline{} = pipeline, _response), do: pipeline
+ 
+   @doc """
+   Executes the middleware chain
+diff --git a/lib/commanded/process_managers/process_manager.ex b/lib/commanded/process_managers/process_manager.ex
+index 29e9251..05803a2 100644
+--- a/lib/commanded/process_managers/process_manager.ex
++++ b/lib/commanded/process_managers/process_manager.ex
+@@ -3,10 +3,12 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+   Behaviour to define a process manager.
+ 
+   A process manager is responsible for coordinating one or more aggregate roots.
+-  It handles events and dispatches commands in response.
+-  Process managers have state that can be used to track which aggregate roots are being orchestrated.
++  It handles events and dispatches commands in response. Process managers have
++  state that can be used to track which aggregate roots are being orchestrated.
+ 
+-  Use the `Commanded.ProcessManagers.ProcessManager` macro in your process manager module and implement the three callback functions defined in the behaviour:
++  Use the `Commanded.ProcessManagers.ProcessManager` macro in your process
++  manager module and implement the three callback functions defined in the
++  behaviour:
+ 
+   - `c:interested?/1`
+   - `c:handle/2`
+@@ -36,6 +38,34 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+ 
+       {:ok, process_manager} = ExampleProcessManager.start_link()
+ 
++  # Consistency
++
++  For each process manager you can define its consistency, as one of either
++  `:strong` or `:eventual`.
++
++  This setting is used when dispatching commands and specifying the `consistency`
++  option.
++
++  When you dispatch a command using `:strong` consistency, after successful
++  command dispatch the process will block until all process managers configured to
++  use `:strong` consistency have processed the domain events created by the
++  command.
++
++  The default setting is `:eventual` consistency. Command dispatch will return
++  immediately upon confirmation of event persistence, not waiting for any
++  process managers.
++
++  ## Example
++
++      defmodule ExampleProcessManager do
++        use Commanded.ProcessManagers.ProcessManager,
++          name: "ExampleProcessManager",
++          router: BankRouter
++          consistency: :strong
++
++        # ...
++      end
++
+   Please read the [Process managers](process-managers.html) guide for more details.
+   """
+ 
+@@ -43,6 +73,7 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+   @type command :: struct
+   @type process_manager :: struct
+   @type process_uuid :: String.t
++  @type consistency :: :eventual | :strong
+ 
+   @doc """
+   Is the process manager interested in the given command?
+@@ -89,7 +120,7 @@ defmodule Commanded.ProcessManagers.ProcessManager do
+       def start_link(opts \\ []) do
+         opts =
+           @opts
+-          |> Keyword.take([:start_from])
++          |> Keyword.take([:consistency, :start_from])
+           |> Keyword.merge(opts)
+ 
+         Commanded.ProcessManagers.ProcessRouter.start_link(@name, __MODULE__, @router, opts)
+diff --git a/lib/commanded/process_managers/process_router.ex b/lib/commanded/process_managers/process_router.ex
+index 6e2dee7..bfc9b3f 100644
+--- a/lib/commanded/process_managers/process_router.ex
++++ b/lib/commanded/process_managers/process_router.ex
+@@ -10,12 +10,14 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+   }
+   alias Commanded.EventStore
+   alias Commanded.EventStore.RecordedEvent
++  alias Commanded.Subscriptions
+ 
+   defmodule State do
+     defstruct [
++      command_dispatcher: nil,
++      consistency: nil,
+       process_manager_name: nil,
+       process_manager_module: nil,
+-      command_dispatcher: nil,
+       subscribe_from: nil,
+       process_managers: %{},
+       supervisor: nil,
+@@ -30,6 +32,7 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+       process_manager_name: process_manager_name,
+       process_manager_module: process_manager_module,
+       command_dispatcher: command_dispatcher,
++      consistency: opts[:consistency] || :eventual,
+       subscribe_from: opts[:start_from] || :origin,
+     }, [name: process_manager_module])
+   end
+@@ -79,14 +82,8 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+   @doc """
+   Subscribe the process router to all events
+   """
+-  def handle_cast({:subscribe_to_events}, %State{process_manager_name: process_manager_name, subscribe_from: subscribe_from} = state) do
+-    {:ok, subscription} = EventStore.subscribe_to_all_streams(process_manager_name, self(), subscribe_from)
+-
+-    state = %State{state |
+-      subscription: subscription,
+-    }
+-
+-    {:noreply, state}
++  def handle_cast({:subscribe_to_events}, %State{} = state) do
++    {:noreply, subscribe_to_all_streams(state)}
+   end
+ 
+   def handle_cast({:process_pending_events}, %State{pending_events: []} = state), do: {:noreply, state}
+@@ -127,6 +124,15 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+     {:noreply, %State{state | process_managers: remove_process_manager(process_managers, pid)}}
+   end
+ 
++  defp subscribe_to_all_streams(%State{consistency: consistency, process_manager_name: process_manager_name, subscribe_from: subscribe_from} = state) do
++    {:ok, subscription} = EventStore.subscribe_to_all_streams(process_manager_name, self(), subscribe_from)
++
++    # register this event handler as a subscription with the given consistency
++    :ok = Subscriptions.register(process_manager_name, consistency)
++
++    %State{state | subscription: subscription}
++  end
++
+   # ignore already seen event
+   defp event_already_seen?(%RecordedEvent{event_number: event_number}, %State{last_seen_event: last_seen_event}) do
+     not is_nil(last_seen_event) and event_number <= last_seen_event
+@@ -169,10 +175,10 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+   end
+ 
+   # confirm receipt of given event
+-  defp confirm_receipt(%RecordedEvent{event_number: event_number} = event, %State{process_manager_name: process_manager_name, subscription: subscription} = state) do
++  defp confirm_receipt(%RecordedEvent{event_number: event_number} = event, %State{process_manager_name: process_manager_name} = state) do
+     Logger.debug(fn -> "process router \"#{process_manager_name}\" confirming receipt of event: #{inspect event_number}" end)
+ 
+-    EventStore.ack_event(subscription, event)
++    do_ack_event(event, state)
+ 
+     %State{state | last_seen_event: event_number}
+   end
+@@ -206,6 +212,11 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+     end)
+   end
+ 
++  defp do_ack_event(event, %State{consistency: consistency, process_manager_name: name, subscription: subscription}) do
++    EventStore.ack_event(subscription, event)
++    Subscriptions.ack_event(name, consistency, event)
++  end
++
+   defp delegate_event(nil, _event), do: :ok
+   defp delegate_event(process_manager, %RecordedEvent{} = event) do
+     ProcessManagerInstance.process_event(process_manager, event, self())
+diff --git a/lib/commanded/subscriptions/subscriptions.ex b/lib/commanded/subscriptions/subscriptions.ex
+new file mode 100644
+index 0000000..75ea83e
+--- /dev/null
++++ b/lib/commanded/subscriptions/subscriptions.ex
+@@ -0,0 +1,229 @@
++defmodule Commanded.Subscriptions do
++  @moduledoc false
++
++  use GenServer
++
++  alias Commanded.EventStore.RecordedEvent
++  alias Commanded.Subscriptions
++
++  defstruct [
++    subscriptions_table: nil,
++    streams_table: nil,
++    started_at: nil,
++    subscribers: [],
++  ]
++
++  def start_link do
++    GenServer.start_link(__MODULE__, %Subscriptions{}, name: __MODULE__)
++  end
++
++  @doc """
++  Register an event store subscription with the given consistency guarantee
++  """
++  def register(name, consistency)
++  def register(_name, :eventual), do: :ok
++  def register(name, :strong) do
++    GenServer.call(__MODULE__, {:register_subscription, name})
++  end
++
++  @doc """
++  Acknowledge receipt and sucessful processing of the given event by the named handler
++  """
++  def ack_event(name, consistency, event)
++  def ack_event(_name, :eventual, _event), do: :ok
++  def ack_event(name, :strong, %RecordedEvent{stream_id: stream_id, stream_version: stream_version}) do
++    GenServer.cast(__MODULE__, {:ack_event, name, stream_id, stream_version})
++  end
++
++  @doc false
++  def all do
++    GenServer.call(__MODULE__, :all_subscriptions)
++  end
++
++  @doc """
++  Have all the registered handlers processed the given event?
++  """
++  def handled?(stream_uuid, stream_version) do
++    GenServer.call(__MODULE__, {:handled?, stream_uuid, stream_version})
++  end
++
++  @doc """
++  Wait until all strongly consistent event store subscriptions have received
++  and successfully handled the given event, by stream identity and version.
++
++  Returns `:ok` on success, or `{:error, :timeout}` on failure due to timeout.
++  """
++  def wait_for(stream_uuid, stream_version, timeout \\ default_consistency_timeout()) do
++    :ok = GenServer.call(__MODULE__, {:subscribe, stream_uuid, stream_version, self()})
++
++    receive do
++      {:ok, ^stream_uuid, ^stream_version} -> :ok
++    after
++      timeout ->
++        :ok = GenServer.call(__MODULE__, {:unsubscribe, self()})
++        {:error, :timeout}
++    end
++  end
++
++  def init(%Subscriptions{} = state) do
++    schedule_purge_streams()
++
++    state = %Subscriptions{state |
++      subscriptions_table: :ets.new(:subscriptions, [:set, :private]),
++      streams_table: :ets.new(:streams, [:set, :private]),
++      started_at: now(),
++    }
++
++    {:ok, state}
++  end
++
++  def handle_call(:all_subscriptions, _from, %Subscriptions{} = state) do
++    reply = subscriptions(state)
++    {:reply, reply, state}
++  end
++
++  def handle_call({:handled?, stream_uuid, stream_version}, _from, %Subscriptions{} = state) do
++    reply = handled_by_all?(stream_uuid, stream_version, state)
++
++    {:reply, reply, state}
++  end
++
++  def handle_call({:subscribe, stream_uuid, stream_version, pid}, _from, %Subscriptions{subscribers: subscribers} = state) do
++    state =
++      case handled_by_all?(stream_uuid, stream_version, state) do
++        true ->
++          # immediately notify subscriber since all handlers have already processed the requested event
++          notify_subscriber(pid, stream_uuid, stream_version)
++          state
++
++        false ->
++          # subscribe process to be notified when the requested event has been processed by all handlers
++          Process.monitor(pid)
++
++          %Subscriptions{state |
++            subscribers: [{pid, stream_uuid, stream_version} | subscribers]
++          }
++      end
++
++    {:reply, :ok, state}
++  end
++
++  def handle_call({:unsubscribe, pid}, _from, %Subscriptions{subscribers: subscribers} = state) do
++    state = %Subscriptions{state |
++      subscribers: remove_by_pid(subscribers, pid),
++    }
++
++    {:reply, :ok, state}
++  end
++
++  def handle_call({:register_subscription, name}, _from, %Subscriptions{subscriptions_table: subscriptions_table} = state) do
++    :ets.insert(subscriptions_table, {name})
++
++    {:reply, :ok, state}
++  end
++
++  def handle_cast({:ack_event, name, stream_uuid, stream_version}, %Subscriptions{streams_table: streams_table, subscriptions_table: subscriptions_table, started_at: started_at} = state) do
++    # track insert date as ms since the subscripions process was started to support expiry of stale acks
++    inserted_at_epoch = NaiveDateTime.diff(now(), started_at, :second)
++
++    :ets.insert(subscriptions_table, {name})
++    :ets.insert(streams_table, {{name, stream_uuid}, stream_version, inserted_at_epoch})
++
++    state =
++      case handled_by_all?(stream_uuid, stream_version, state) do
++        true -> notify_subscribers(stream_uuid, stream_version, state)
++        false -> state
++      end
++
++    {:noreply, state}
++  end
++
++  @doc """
++  Purge stream acks that are older than the configured ttl (default is one hour).
++  """
++  def handle_info({:purge_expired_streams, ttl}, %Subscriptions{} = state) do
++    purge_expired_streams(ttl, state)
++    schedule_purge_streams(ttl)
++
++    {:noreply, state}
++  end
++
++  def handle_info({:DOWN, _ref, :process, pid, _reason}, %Subscriptions{subscribers: subscribers} = state) do
++    state = %Subscriptions{state |
++      subscribers: remove_by_pid(subscribers, pid),
++    }
++
++    {:noreply, state}
++  end
++
++  # Have all subscriptions handled the event for the given stream and version
++  defp handled_by_all?(stream_uuid, stream_version, %Subscriptions{} = state) do
++    state
++    |> subscriptions()
++    |> Enum.all?(&handled_by?(&1, stream_uuid, stream_version, state))
++  end
++
++  # Has the named subscription handled the event for the given stream and version
++  defp handled_by?(name, stream_uuid, stream_version, %Subscriptions{streams_table: streams_table}) do
++    case :ets.lookup(streams_table, {name, stream_uuid}) do
++      [{{^name, ^stream_uuid}, last_seen, _inserted_at}] when last_seen >= stream_version -> true
++      _ -> false
++    end
++  end
++
++  defp subscriptions(%Subscriptions{subscriptions_table: subscriptions_table}) do
++    subscriptions_table
++    |> :ets.tab2list()
++    |> Enum.map(fn {name} -> name end)
++  end
++
++  defp remove_by_pid(subscribers, pid) do
++    Enum.reduce(subscribers, subscribers, fn
++     ({^pid, _, _} = subscriber, subscribers) -> subscribers -- [subscriber]
++     (_subscriber, subscribers) -> subscribers
++    end)
++  end
++
++  # Notify any subscribers who are waiting for handlers to have processed a given event
++  defp notify_subscribers(_stream_uuid, _stream_version, %Subscriptions{subscribers: []} = state), do: state
++  defp notify_subscribers(stream_uuid, stream_version, %Subscriptions{subscribers: subscribers} = state) do
++    subscribers =
++      Enum.reduce(subscribers, subscribers, fn
++        ({pid, ^stream_uuid, expected_stream_uuid} = subscriber, subscribers) when expected_stream_uuid <= stream_version ->
++          # notify subscriber and remove from subscribers list
++          notify_subscriber(pid, stream_uuid, stream_version)
++          subscribers -- [subscriber]
++
++        (_subscriber, subscribers) -> subscribers
++      end)
++
++    %Subscriptions{state | subscribers: subscribers}
++  end
++
++  defp notify_subscriber(pid, stream_uuid, stream_version), do: send(pid, {:ok, stream_uuid, stream_version})
++
++  # send an info message to the process to purge expired stream ack's
++  defp schedule_purge_streams(ttl \\ default_ttl()) do
++    Process.send_after(self(), {:purge_expired_streams, ttl}, ttl)
++  end
++
++  # delete subscription ack's that are older than the configured ttl
++  defp purge_expired_streams(ttl, %Subscriptions{streams_table: streams_table, started_at: started_at}) do
++    stale_epoch =
++      now()
++      |> NaiveDateTime.add(-ttl, :millisecond)
++      |> NaiveDateTime.diff(started_at, :second)
++
++    streams_table
++    |> :ets.select([{{:"$1", :"$2", :"$3"}, [{:"=<", :"$3", stale_epoch}], [:"$1"]}])
++    |> Enum.each(&:ets.delete(streams_table, &1))
++  end
++
++  defp now, do: DateTime.utc_now() |> DateTime.to_naive()
++
++  # time to live period for ack'd events before they can be safely purged in milliseconds
++  @default_ttl :timer.hours(1)
++
++  defp default_ttl, do: Application.get_env(:commanded, :subscriptions_ttl, @default_ttl)
++  defp default_consistency_timeout, do: Application.get_env(:commanded, :dispatch_consistency_timeout, 5_000)
++end
+diff --git a/lib/commanded/supervisor.ex b/lib/commanded/supervisor.ex
+index e672795..32c2809 100644
+--- a/lib/commanded/supervisor.ex
++++ b/lib/commanded/supervisor.ex
+@@ -12,6 +12,7 @@ defmodule Commanded.Supervisor do
+     children = registry_supervision_tree(registry_provider()) ++ [
+       supervisor(Task.Supervisor, [[name: Commanded.Commands.TaskDispatcher]]),
+       supervisor(Commanded.Aggregates.Supervisor, []),
++      worker(Commanded.Subscriptions, []),
+     ]
+ 
+     supervise(children, strategy: :one_for_one)

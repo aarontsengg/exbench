@@ -1,0 +1,43 @@
+{
+  "reviewed": 25,
+  "decisions": {
+    "control": 9,
+    "otp": 16
+  },
+  "review_adjusted_exact_a": {
+    "review_files": [
+      "tag_audit/reviews.json",
+      "tag_audit/borderline_eight/reviews.json",
+      "tag_audit/remaining_otp/reviews.json"
+    ],
+    "tasks": 299,
+    "tag_counts": {
+      "otp": 38,
+      "borderline": 2,
+      "control": 258,
+      "uncertain": 1
+    },
+    "otp_repositories": 15,
+    "otp_tasks_per_repository": {
+      "plataformatec/broadway": 3,
+      "whitfin/cachex": 6,
+      "elixir-protobuf/protobuf": 1,
+      "general-CbIC/poolex": 5,
+      "phoenixframework/phoenix": 2,
+      "edgurgel/mimic": 1,
+      "quantum-elixir/quantum-core": 1,
+      "newrelic/elixir_agent": 2,
+      "absinthe-graphql/absinthe": 1,
+      "commanded/commanded": 10,
+      "slashdotdash/commanded": 2,
+      "livebook-dev/kino": 1,
+      "fika-lang/fika": 1,
+      "Kraigie/nostrum": 1,
+      "coryodaniel/bonny": 1
+    },
+    "otp_capacity_after_cap": 29,
+    "unreviewed_otp_candidates": 0,
+    "review_method": "Assistant static patch review; not independent human validation"
+  },
+  "validation": "25 IDs, exact-A membership, prior unreviewed set, patch equality/hashes, evidence lines, totals and capped capacity checked"
+}

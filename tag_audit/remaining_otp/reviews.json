@@ -1,0 +1,552 @@
+[
+  {
+    "instance_id": "livebook-dev__kino-310",
+    "repo": "livebook-dev/kino",
+    "automatic_tag": "otp",
+    "patch_file": "livebook-dev__kino-310.patch",
+    "manual_tag": "control",
+    "reason": "Adds Kino.Shorts convenience wrappers and documentation. Process.sleep/Process.info occur in examples; Kino.Process is also a documentation reference. No substantive process coordination or lifecycle behavior changes.",
+    "evidence": [
+      {
+        "patch_line": 100,
+        "text": "-        Process.sleep(50)"
+      },
+      {
+        "patch_line": 110,
+        "text": "-      data = Process.info(self())"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "9b28c77244520dde864c6e105751b60c90a5b91432886b934a90f6124ab1e199",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "general-cbic__poolex-35",
+    "repo": "general-CbIC/poolex",
+    "automatic_tag": "otp",
+    "patch_file": "general-cbic__poolex-35.patch",
+    "manual_tag": "otp",
+    "reason": "Replaces global queue-implementation settings with per-pool settings, introduces a shared ETS settings table, and threads pool identity through busy/idle worker and waiting-caller operations. This changes how concurrent pool instances manage their workers and callers, rather than merely validating an option.",
+    "evidence": [
+      {
+        "patch_line": 171,
+        "text": "+    :ok = Settings.init()"
+      },
+      {
+        "patch_line": 177,
+        "text": "+      busy_workers_state: BusyWorkers.init(pool_id, busy_workers_impl),"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "c1aef640eac17358e2387c8be3e84f27f2b2ebfa35e8e7ac9ae0b5cb6ee35bdd",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "commanded__commanded-334",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-334.patch",
+    "manual_tag": "control",
+    "reason": "Exposes the existing domain process-manager UUID through process-local storage: initialization puts :process_uuid and identity/0 reads it. Registration, routing, acknowledgement and lifecycle behavior stay the same; snapshot_uuid is a rename. Under the existing rule excluding process-local bookkeeping alone, this is control, despite the identity API name.",
+    "evidence": [
+      {
+        "patch_line": 62,
+        "text": "+  def identity, do: Process.get(:process_uuid)"
+      },
+      {
+        "patch_line": 84,
+        "text": "+    Process.put(:process_uuid, process_uuid)"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "eed2e9787c637cac4ef79993f353c6f3f652a71af82d01e715a9fe9fe93c90e0",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "phoenixframework__phoenix-2974",
+    "repo": "phoenixframework/phoenix",
+    "automatic_tag": "otp",
+    "patch_file": "phoenixframework__phoenix-2974.patch",
+    "manual_tag": "otp",
+    "reason": "Mixed patch: beyond the reported generator/fallback issue, it changes endpoint child startup order and socket pool lookup/ownership. Pool startup now uses endpoint-specific configuration and supervisor PIDs rather than the previous globally named lookup. Substantive supervision/identity changes qualify the reference patch, but are not evidence that the main issue itself requires OTP.",
+    "evidence": [
+      {
+        "patch_line": 380,
+        "text": "+      case PoolSupervisor.start_child(socket.endpoint, socket.handler, key, args) do"
+      },
+      {
+        "patch_line": 620,
+        "text": "diff --git a/lib/phoenix/socket/pool_supervisor.ex b/lib/phoenix/socket/pool_supervisor.ex"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "0faf1988ac40befb543e652a40e0c1da0bf9407aafef578ef0dae4fe69c45110",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "phoenixframework__phoenix-2721",
+    "repo": "phoenixframework/phoenix",
+    "automatic_tag": "otp",
+    "patch_file": "phoenixframework__phoenix-2721.patch",
+    "manual_tag": "otp",
+    "reason": "Changes executable application templates to generate modern supervisor child specifications, with a compatibility branch for older Elixir. These templates determine generated application startup; the changes are not just prose mentioning Supervisor.",
+    "evidence": [
+      {
+        "patch_line": 102,
+        "text": "+      supervisor(<%= app_module %>.Repo, []),"
+      },
+      {
+        "patch_line": 80,
+        "text": "+    # See https://hexdocs.pm/elixir/Supervisor.html"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "605919a6797216b6d00e317afed6a16b108fe32cf955e5ef0f8fc14c3653facd",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "newrelic__elixir_agent-67",
+    "repo": "newrelic/elixir_agent",
+    "automatic_tag": "otp",
+    "patch_file": "newrelic__elixir_agent-67.patch",
+    "manual_tag": "control",
+    "reason": "Adds a configurable Logger output backend and a handle_cast branch for the existing log request. The request protocol, reply behavior and lifecycle remain unchanged; the change concerns the destination/format of log output.",
+    "evidence": [
+      {
+        "patch_line": 29,
+        "text": "+    Logger.log(level, \"new_relic_agent - \" <> message)"
+      },
+      {
+        "patch_line": 28,
+        "text": "+  def handle_cast({:log, level, message}, %{io_device: Logger} = state) do"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "792ea4bb49e758bb3feff11e6cf0b9678394e9acb9246f26fac4ec9e30593bf9",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "general-cbic__poolex-54",
+    "repo": "general-CbIC/poolex",
+    "automatic_tag": "otp",
+    "patch_file": "general-cbic__poolex-54.patch",
+    "manual_tag": "otp",
+    "reason": "Changes worker restart policy and pool recovery after worker death, including DOWN handling, waiting callers and replacement workers. This directly changes monitoring, failure recovery and allocation behavior.",
+    "evidence": [
+      {
+        "patch_line": 11,
+        "text": "+      restart: :temporary"
+      },
+      {
+        "patch_line": 58,
+        "text": "+        {:DOWN, monitoring_reference, _process, dead_process_pid, _reason},"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "13d617863cb937e2f1f699d8f6a790c7b10682d82cb3bc1382c1fb4637314ef0",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "newrelic__elixir_agent-37",
+    "repo": "newrelic/elixir_agent",
+    "automatic_tag": "otp",
+    "patch_file": "newrelic__elixir_agent-37.patch",
+    "manual_tag": "otp",
+    "reason": "Conditionally installs or removes the Erlang error_logger report handler during supervisor initialization. This changes event-handler registration/lifecycle based on the feature setting, beyond formatting reported errors.",
+    "evidence": [
+      {
+        "patch_line": 34,
+        "text": "-    :error_logger.add_report_handler(NewRelic.Error.ErrorHandler)"
+      },
+      {
+        "patch_line": 33,
+        "text": "-    :error_logger.delete_report_handler(NewRelic.Error.ErrorHandler)"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "bdc5e15a3535cacc916e714ff7015e933fb687a780b1c293d5fff06a80c165ef",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "commanded__commanded-335",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-335.patch",
+    "manual_tag": "otp",
+    "reason": "Handles an empty interested-process list by acknowledging the event and continuing. Changes process-manager routing and failure/acknowledgement behavior so an empty routing result does not strand processing.",
+    "evidence": [
+      {
+        "patch_line": 217,
+        "text": "+          ack_and_continue(event, state)"
+      },
+      {
+        "patch_line": 216,
+        "text": "+        {:start, []} ->"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "6bce95b28214c52dd376b71934d5e5ce7b33d9a957c7251aefa4a332e73b32f9",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "derekkraan__curl_req-32",
+    "repo": "derekkraan/curl_req",
+    "automatic_tag": "otp",
+    "patch_file": "derekkraan__curl_req-32.patch",
+    "manual_tag": "control",
+    "reason": "Adds HTTP User-Agent handling to curl generation/parsing. Agent refers to an HTTP header, not an Elixir Agent process. The functional change is HTTP command/header construction.",
+    "evidence": [
+      {
+        "patch_line": 15,
+        "text": "+- [BREAKING]: User Agent is encoded in the user agent flag (`--user-agent`/`-A`) instead of a generic header ([#32](https://github.com/derekkraan/curl_req/pull/32))"
+      },
+      {
+        "patch_line": 15,
+        "text": "+- [BREAKING]: User Agent is encoded in the user agent flag (`--user-agent`/`-A`) instead of a generic header ([#32](https://github.com/derekkraan/curl_req/pull/32))"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "6e41f389280b60fa382be54a98153ea810fc0047e772536bd94281356783ae1a",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "livebook-dev__kino-208",
+    "repo": "livebook-dev/kino",
+    "automatic_tag": "otp",
+    "patch_file": "livebook-dev__kino-208.patch",
+    "manual_tag": "control",
+    "reason": "Mixed UI/source-data patch: adds nested tree rendering and source chunks. The SmartCell init_ack tuple gains a chunks field and its receiver is updated, while update messages carry the same extra metadata. Acknowledgement timing, process startup/failure paths and message destination are unchanged. Treats a payload-only extension as data handling, not an OTP coordination change.",
+    "evidence": [
+      {
+        "patch_line": 340,
+        "text": "-    :proc_lib.init_ack({:ok, self(), source, init_opts})"
+      },
+      {
+        "patch_line": 356,
+        "text": "+       %{chunks: chunks, reevaluate: state.reevaluate_on_change}}"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "e5ec1776428891e280458bdf60919056dbba8f20dc4e1270a05b56d0df5a766d",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "newrelic__elixir_agent-503",
+    "repo": "newrelic/elixir_agent",
+    "automatic_tag": "otp",
+    "patch_file": "newrelic__elixir_agent-503.patch",
+    "manual_tag": "control",
+    "reason": "Generalizes distributed-tracing context/header handling beyond HTTP. The changed arguments carry trace metadata through existing transaction paths; no new monitoring, supervision or process-lifecycle protocol is introduced.",
+    "evidence": [
+      {
+        "patch_line": 1,
+        "text": "diff --git a/lib/new_relic.ex b/lib/new_relic.ex"
+      },
+      {
+        "patch_line": 55,
+        "text": "-  If multiple transactions are started in the same Process, you must"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "18ecd6bbf3d0db6574855d3f5ff8786321319d14ee2b91a2ff41becddb380f8d",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "whitfin__cachex-360",
+    "repo": "whitfin/cachex",
+    "automatic_tag": "otp",
+    "patch_file": "whitfin__cachex-360.patch",
+    "manual_tag": "control",
+    "reason": "Refactors cache entry fields and query/match specifications. The Janitor message is consistently renamed from :ttl_check to :purge at send and receive sites; its scheduling behavior is unchanged. A callback/message rename alone does not establish an OTP semantic change.",
+    "evidence": [
+      {
+        "patch_line": 730,
+        "text": "-  def handle_info(:ttl_check, {cache(name: name), _last}) do"
+      },
+      {
+        "patch_line": 210,
+        "text": "-        false -> Cachex.del(cache, key, const(:purge_override))"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "e8da8f27bf2164458f9c083115e6a1ec2814df2eca2610c522349b791727df3a",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "commanded__commanded-121",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-121.patch",
+    "manual_tag": "otp",
+    "reason": "Introduces aggregate snapshot restoration and snapshot requests within the GenServer lifecycle, with timeout handling and explicit stopping. State recovery and asynchronous snapshot handling are substantive process behavior.",
+    "evidence": [
+      {
+        "patch_line": 9,
+        "text": "+- Aggregate state snapshots ([#121](https://github.com/commanded/commanded/pull/121))."
+      },
+      {
+        "patch_line": 346,
+        "text": "+    GenServer.stop(via_name(aggregate_module, aggregate_uuid))"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "918129db299ee7105b1f6d8707046d41f08c1fbda4e8ff56482277d129132cf2",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "slashdotdash__commanded-102",
+    "repo": "slashdotdash/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "slashdotdash__commanded-102.patch",
+    "manual_tag": "otp",
+    "reason": "Applies aggregate identity prefixes early enough for dispatch/registration and strong-consistency waiting to use the same identity. Changes process addressing and acknowledgement coordination, fixing consistency timeouts.",
+    "evidence": [
+      {
+        "patch_line": 11,
+        "text": "+- Adding a prefix to the aggregate in the router breaks the strong consistency of command dispatch ([#101](https://github.com/slashdotdash/commanded/issues/101))."
+      },
+      {
+        "patch_line": 11,
+        "text": "+- Adding a prefix to the aggregate in the router breaks the strong consistency of command dispatch ([#101](https://github.com/slashdotdash/commanded/issues/101))."
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "7c646482e18f6e4414e6a095dcc51b100648b0bb1bf863f76cfe844a0b17b3e4",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "newrelic__elixir_agent-483",
+    "repo": "newrelic/elixir_agent",
+    "automatic_tag": "otp",
+    "patch_file": "newrelic__elixir_agent-483.patch",
+    "manual_tag": "control",
+    "reason": "Fixes tracing timestamp/attribute data and guards missing Finch tracing context. Process dictionary access supplies instrumentation metadata; no new process monitoring, scheduling, supervision or cross-process failure protocol is added. Sleep examples do not establish OTP behavior.",
+    "evidence": [
+      {
+        "patch_line": 9,
+        "text": "-    Process.sleep(:rand.uniform(50))"
+      },
+      {
+        "patch_line": 36,
+        "text": "+        %{system_time: start_time},"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "7b15ae480f67cf69471487074384bc85e60af9c42c549a5c8c62c81aec25fca7",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "whitfin__cachex-294",
+    "repo": "whitfin/cachex",
+    "automatic_tag": "otp",
+    "patch_file": "whitfin__cachex-294.patch",
+    "manual_tag": "otp",
+    "reason": "Adds asynchronous warming at initialization: an option queues :cachex_warmer to self instead of running the warming callback inline. This changes startup blocking and when the worker performs work.",
+    "evidence": [
+      {
+        "patch_line": 90,
+        "text": "+          send(self(), :cachex_warmer)"
+      },
+      {
+        "patch_line": 47,
+        "text": "+            async: boolean"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "87f06e1ff9ef4c2c44c7c8c8933f748c09de70509b874a7f9c054ce180f038e2",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "kraigie__nostrum-369",
+    "repo": "Kraigie/nostrum",
+    "automatic_tag": "otp",
+    "patch_file": "kraigie__nostrum-369.patch",
+    "manual_tag": "otp",
+    "reason": "Mixed patch: the user cache becomes a supervised component and ETS creation moves into supervisor initialization. That changes table ownership/lifetime and application startup, independently of other message-component edits.",
+    "evidence": [
+      {
+        "patch_line": 77,
+        "text": "+  ## Supervisor callbacks"
+      },
+      {
+        "patch_line": 9,
+        "text": "-    :ets.new(:users, [:set, :public, :named_table])"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "00d8a2138f04265248c558ee03595278c62ef588f8384dfeb8245a66d2d701dd",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "commanded__commanded-139",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-139.patch",
+    "manual_tag": "otp",
+    "reason": "Changes aggregate after-event lifecycle handling, including stop/hibernate/timeout decisions and snapshot interactions. The new stop branch returns an OTP stop tuple and affects whether the aggregate process remains alive.",
+    "evidence": [
+      {
+        "patch_line": 147,
+        "text": "+        {:stop, :normal, reply, state}"
+      },
+      {
+        "patch_line": 9,
+        "text": "+- Replace aggregate lifespan `after_command/1` callback with `after_event/1` ([#139](https://github.com/commanded/commanded/issues/139))."
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "8ab4fc0424312125bf9a3cdbb9509f5c484a65d1d658bf0960d9a15bdbaa8465",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "coryodaniel__bonny-156",
+    "repo": "coryodaniel/bonny",
+    "automatic_tag": "otp",
+    "patch_file": "coryodaniel__bonny-156.patch",
+    "manual_tag": "otp",
+    "reason": "Adds a named Agent-backed event recorder as a supervised child. Agent.get/update maintain the event cache across calls; this introduces a new process, state ownership and supervised lifecycle to support Kubernetes events.",
+    "evidence": [
+      {
+        "patch_line": 857,
+        "text": "+    Agent.start_link(fn -> %{conn: conn} end, name: name)"
+      },
+      {
+        "patch_line": 673,
+        "text": "+          {Bonny.EventRecorder, name: __MODULE__.EventRecorder, conn: conn()}"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "0041c9eaef350465f6d5d03bf447b96e21625f9958c9bc749c1e9ed71461775d",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "general-cbic__poolex-59",
+    "repo": "general-CbIC/poolex",
+    "automatic_tag": "otp",
+    "patch_file": "general-cbic__poolex-59.patch",
+    "manual_tag": "otp",
+    "reason": "Separates worker checkout timeout from execution timeout and adds reference-based checkout cancellation. Changes pending-caller removal, monitor cleanup and worker allocation to avoid leaked busy workers after a timeout.",
+    "evidence": [
+      {
+        "patch_line": 201,
+        "text": "+    caller_reference = make_ref()"
+      },
+      {
+        "patch_line": 239,
+        "text": "+    {:noreply, WaitingCallers.remove_by_reference(state, caller_reference)}"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "f5b50bc7c4f076c2a4c039089a61900c4655bc35c7830f9b2615cf4b74286e94",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "commanded__commanded-393",
+    "repo": "commanded/commanded",
+    "automatic_tag": "otp",
+    "patch_file": "commanded__commanded-393.patch",
+    "manual_tag": "otp",
+    "reason": "Adds runtime initialization callbacks that determine handler/router names and child specifications before startup. Also changes subscription registry entries and strong-consistency filtering so runtime instances can be addressed correctly. This affects process identity, supervision and acknowledgement coordination.",
+    "evidence": [
+      {
+        "patch_line": 166,
+        "text": "+          start: {Handler, :start_link, [application, name, __MODULE__, config]},"
+      },
+      {
+        "patch_line": 501,
+        "text": "+          Enum.member?(consistency, module) or Enum.member?(consistency, name)"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "b6adb3bb504fc5f0b9cf19add7974a52d9cc11b74131e16b1216ab166c4dbf07",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "general-cbic__poolex-145",
+    "repo": "general-CbIC/poolex",
+    "automatic_tag": "otp",
+    "patch_file": "general-cbic__poolex-145.patch",
+    "manual_tag": "control",
+    "reason": "Moves the debug-info API into a private helper module while retaining the same GenServer.call and server behavior. The changed callback/module references are an API relocation, not changed concurrency semantics.",
+    "evidence": [
+      {
+        "patch_line": 54,
+        "text": "-    GenServer.call(pool_id, :get_debug_info)"
+      },
+      {
+        "patch_line": 11,
+        "text": "+- Function `get_debug_info/1` moved from `Poolex` to `Poolex.Private.DebugInfo` (according to the [issue](https://github.com/general-CbIC/poolex/issues/140))."
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "b916b35485d5f0a20ed3d110cc03269eb33abd3be2038309eff3b8820219f380",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "whitfin__cachex-292",
+    "repo": "whitfin/cachex",
+    "automatic_tag": "otp",
+    "patch_file": "whitfin__cachex-292.patch",
+    "manual_tag": "otp",
+    "reason": "Captures the caller stack before dispatch, transports it to the asynchronous worker, combines it with the rescued worker stack and reraises an ExecutionError at the caller. This changes cross-process exception propagation/context rather than merely adding an unrelated Process keyword.",
+    "evidence": [
+      {
+        "patch_line": 42,
+        "text": "+    do: service_call(cache, :courier, { :dispatch, key, task, local_stack() })"
+      },
+      {
+        "patch_line": 10,
+        "text": "+    do: reraise e, stack"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "3711a0ede6e46ec38b2027ca48be42d277cff892aceb010cc3e462bc1465ee74",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  },
+  {
+    "instance_id": "newrelic__elixir_agent-84",
+    "repo": "newrelic/elixir_agent",
+    "automatic_tag": "otp",
+    "patch_file": "newrelic__elixir_agent-84.patch",
+    "manual_tag": "otp",
+    "reason": "Completes and cleans up traced transactions when the monitored process sends DOWN. It also untracks the transaction before launching the completion task, rather than inside it. These are substantive process-exit cleanup and ordering changes supporting non-web transactions.",
+    "evidence": [
+      {
+        "patch_line": 949,
+        "text": "+    Transaction.Reporter.complete(pid)"
+      },
+      {
+        "patch_line": 1026,
+        "text": "+      AttrStore.untrack(__MODULE__, pid)"
+      }
+    ],
+    "review_provenance": "assistant_patch_review",
+    "reviewed_on": "2026-09-21",
+    "patch_sha256": "4363cde5786f32de317aa0ee3e9a6ac4efb23d62b41f2595eb0a493f3308aa72",
+    "basis": "Reference patch and problem statement from pinned dataset; static review, no task execution."
+  }
+]

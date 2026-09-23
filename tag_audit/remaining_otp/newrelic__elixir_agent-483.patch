@@ -1,0 +1,559 @@
+diff --git a/examples/apps/oban_example/lib/oban_example/worker.ex b/examples/apps/oban_example/lib/oban_example/worker.ex
+index da356c7..8a5cad4 100644
+--- a/examples/apps/oban_example/lib/oban_example/worker.ex
++++ b/examples/apps/oban_example/lib/oban_example/worker.ex
+@@ -7,7 +7,7 @@ defmodule ObanExample.Worker do
+   end
+ 
+   def perform(%Oban.Job{args: _args}) do
+-    Process.sleep(:rand.uniform(50))
++    Process.sleep(15 + :rand.uniform(50))
+     :ok
+   end
+ end
+diff --git a/lib/new_relic.ex b/lib/new_relic.ex
+index 91d75eb..54de7e8 100644
+--- a/lib/new_relic.ex
++++ b/lib/new_relic.ex
+@@ -258,7 +258,7 @@ defmodule NewRelic do
+   defmacro span(name, attributes \\ [], do: block) do
+     quote do
+       id = make_ref()
+-      NewRelic.Tracer.Direct.start_span(id, name: unquote(name), attributes: unquote(attributes))
++      NewRelic.Tracer.Direct.start_span(id, unquote(name), attributes: unquote(attributes))
+       res = unquote(block)
+       NewRelic.Tracer.Direct.stop_span(id)
+       res
+diff --git a/lib/new_relic/telemetry/finch.ex b/lib/new_relic/telemetry/finch.ex
+index 7c65259..57d274a 100644
+--- a/lib/new_relic/telemetry/finch.ex
++++ b/lib/new_relic/telemetry/finch.ex
+@@ -56,7 +56,7 @@ defmodule NewRelic.Telemetry.Finch do
+ 
+   def handle_event(
+         @finch_request_start,
+-        %{monotonic_time: monotonic_time, system_time: system_time},
++        %{system_time: start_time},
+         %{request: request},
+         config
+       ) do
+@@ -70,8 +70,7 @@ defmodule NewRelic.Telemetry.Finch do
+       Process.put(
+         config.handler_id,
+         %{
+-          start_time_mono: monotonic_time,
+-          system_time: system_time,
++          start_time: start_time,
+           span: span,
+           previous_span: previous_span,
+           previous_span_attrs: previous_span_attrs
+@@ -82,85 +81,83 @@ defmodule NewRelic.Telemetry.Finch do
+ 
+   def handle_event(
+         @finch_request_stop,
+-        %{monotonic_time: end_time_mono, duration: duration},
++        %{duration: duration},
+         %{name: finch_pool, request: request, result: result},
+         config
+       ) do
+     if instrument?() do
+-      %{
+-        start_time_mono: start_time_mono,
+-        system_time: start_time,
+-        span: span,
+-        previous_span: previous_span,
+-        previous_span_attrs: previous_span_attrs
+-      } = Process.delete(config.handler_id)
+-
+-      metric_name = "External/#{request.host}/Finch/#{request.method}"
+-      secondary_name = "#{request.host} - Finch/#{request.method}"
+-
+-      duration_ms = System.convert_time_unit(duration, :native, :millisecond)
+-      duration_s = duration_ms / 1000
+-
+-      id = span
+-      parent_id = previous_span || :root
+-
+-      url =
+-        URI.to_string(%URI{scheme: "#{request.scheme}", host: request.host, path: request.path})
+-
+-      result_attrs =
+-        case result do
+-          {:ok, %{__struct__: Finch.Response} = response} -> %{"response.status": response.status}
+-          {:ok, _acc} -> %{}
+-          {:error, exception} -> %{error: true, "error.message": Exception.message(exception)}
+-        end
+-
+-      NewRelic.Transaction.Reporter.add_trace_segment(%{
+-        primary_name: metric_name,
+-        secondary_name: secondary_name,
+-        attributes: %{},
+-        pid: self(),
+-        id: span,
+-        parent_id: parent_id,
+-        start_time: start_time,
+-        start_time_mono: start_time_mono,
+-        end_time_mono: end_time_mono
+-      })
+-
+-      NewRelic.report_span(
+-        timestamp_ms: System.convert_time_unit(start_time, :native, :millisecond),
+-        duration_s: duration_s,
+-        name: metric_name,
+-        edge: [span: id, parent: parent_id],
+-        category: "http",
+-        attributes:
+-          %{
+-            "request.url": url,
+-            "request.method": request.method,
+-            "request.client": "Finch",
+-            "finch.pool": finch_pool
+-          }
+-          |> Map.merge(result_attrs)
+-      )
++      with %{
++             start_time: start_time,
++             span: span,
++             previous_span: previous_span,
++             previous_span_attrs: previous_span_attrs
++           } <- Process.delete(config.handler_id) do
++        metric_name = "External/#{request.host}/Finch/#{request.method}"
++        secondary_name = "#{request.host} - Finch/#{request.method}"
++
++        duration_ms = System.convert_time_unit(duration, :native, :millisecond)
++        duration_s = duration_ms / 1000
++
++        id = span
++        parent_id = previous_span || :root
++
++        url =
++          URI.to_string(%URI{scheme: "#{request.scheme}", host: request.host, path: request.path})
++
++        result_attrs =
++          case result do
++            {:ok, %{__struct__: Finch.Response} = response} -> %{"response.status": response.status}
++            {:ok, _acc} -> %{}
++            {:error, exception} -> %{error: true, "error.message": Exception.message(exception)}
++          end
++
++        NewRelic.Transaction.Reporter.add_trace_segment(%{
++          primary_name: metric_name,
++          secondary_name: secondary_name,
++          attributes: %{},
++          pid: self(),
++          id: span,
++          parent_id: parent_id,
++          start_time: start_time,
++          duration: duration
++        })
++
++        NewRelic.report_span(
++          timestamp_ms: System.convert_time_unit(start_time, :native, :millisecond),
++          duration_s: duration_s,
++          name: metric_name,
++          edge: [span: id, parent: parent_id],
++          category: "http",
++          attributes:
++            %{
++              "request.url": url,
++              "request.method": request.method,
++              "request.client": "Finch",
++              "finch.pool": finch_pool
++            }
++            |> Map.merge(result_attrs)
++        )
+ 
+-      NewRelic.incr_attributes(
+-        "external.#{request.host}.call_count": 1,
+-        "external.#{request.host}.duration_ms": duration_ms
+-      )
++        NewRelic.incr_attributes(
++          "external.#{request.host}.call_count": 1,
++          "external.#{request.host}.duration_ms": duration_ms
++        )
+ 
+-      NewRelic.report_metric(
+-        {:external, url, "Finch", request.method},
+-        duration_s: duration_s
+-      )
++        NewRelic.report_metric(
++          {:external, url, "Finch", request.method},
++          duration_s: duration_s
++        )
+ 
+-      NewRelic.Transaction.Reporter.track_metric({
+-        {:external, url, "Finch", request.method},
+-        duration_s: duration_s
+-      })
++        NewRelic.Transaction.Reporter.track_metric({
++          {:external, url, "Finch", request.method},
++          duration_s: duration_s
++        })
+ 
+-      NewRelic.DistributedTrace.reset_span(
+-        previous_span: previous_span,
+-        previous_span_attrs: previous_span_attrs
+-      )
++        NewRelic.DistributedTrace.reset_span(
++          previous_span: previous_span,
++          previous_span_attrs: previous_span_attrs
++        )
++      end
+     end
+   end
+ 
+@@ -171,46 +168,45 @@ defmodule NewRelic.Telemetry.Finch do
+         config
+       ) do
+     if instrument?() do
+-      %{
+-        system_time: start_time,
+-        span: span,
+-        previous_span: previous_span,
+-        previous_span_attrs: previous_span_attrs
+-      } = Process.delete(config.handler_id)
+-
+-      metric_name = "External/#{request.host}/Finch/#{request.method}"
+-
+-      duration_ms = System.convert_time_unit(duration, :native, :millisecond)
+-      duration_s = duration_ms / 1000
+-
+-      id = span
+-      parent_id = previous_span || :root
+-
+-      url =
+-        URI.to_string(%URI{scheme: "#{request.scheme}", host: request.host, path: request.path})
+-
+-      error_message = NewRelic.Util.Error.format_reason(kind, reason)
+-
+-      NewRelic.report_span(
+-        timestamp_ms: System.convert_time_unit(start_time, :native, :millisecond),
+-        duration_s: duration_s,
+-        name: metric_name,
+-        edge: [span: id, parent: parent_id],
+-        category: "http",
+-        attributes: %{
+-          error: true,
+-          "error.message": error_message,
+-          "request.url": url,
+-          "request.method": request.method,
+-          "request.client": "Finch",
+-          "finch.pool": finch_pool
+-        }
+-      )
++      with %{
++             start_time: start_time,
++             span: span,
++             previous_span: previous_span,
++             previous_span_attrs: previous_span_attrs
++           } <- Process.delete(config.handler_id) do
++        metric_name = "External/#{request.host}/Finch/#{request.method}"
++
++        duration_ms = System.convert_time_unit(duration, :native, :millisecond)
++        duration_s = duration_ms / 1000
++
++        id = span
++        parent_id = previous_span || :root
++
++        url = URI.to_string(%URI{scheme: "#{request.scheme}", host: request.host, path: request.path})
++
++        error_message = NewRelic.Util.Error.format_reason(kind, reason)
++
++        NewRelic.report_span(
++          timestamp_ms: System.convert_time_unit(start_time, :native, :millisecond),
++          duration_s: duration_s,
++          name: metric_name,
++          edge: [span: id, parent: parent_id],
++          category: "http",
++          attributes: %{
++            error: true,
++            "error.message": error_message,
++            "request.url": url,
++            "request.method": request.method,
++            "request.client": "Finch",
++            "finch.pool": finch_pool
++          }
++        )
+ 
+-      NewRelic.DistributedTrace.reset_span(
+-        previous_span: previous_span,
+-        previous_span_attrs: previous_span_attrs
+-      )
++        NewRelic.DistributedTrace.reset_span(
++          previous_span: previous_span,
++          previous_span_attrs: previous_span_attrs
++        )
++      end
+     end
+   end
+ 
+diff --git a/lib/new_relic/telemetry/oban.ex b/lib/new_relic/telemetry/oban.ex
+index 41196d0..77136a8 100644
+--- a/lib/new_relic/telemetry/oban.ex
++++ b/lib/new_relic/telemetry/oban.ex
+@@ -61,14 +61,14 @@ defmodule NewRelic.Telemetry.Oban do
+   @doc false
+   def handle_event(
+         @oban_start,
+-        %{system_time: system_time},
++        %{system_time: start_time},
+         meta,
+         _config
+       ) do
+     Transaction.Reporter.start_transaction(:other)
+     NewRelic.DistributedTrace.start(:other)
+ 
+-    add_start_attrs(meta, system_time)
++    add_start_attrs(meta, start_time)
+   end
+ 
+   def handle_event(
+@@ -99,10 +99,10 @@ defmodule NewRelic.Telemetry.Oban do
+     :ignore
+   end
+ 
+-  defp add_start_attrs(meta, system_time) do
++  defp add_start_attrs(meta, start_time) do
+     [
+       pid: inspect(self()),
+-      system_time: system_time,
++      start_time: start_time,
+       other_transaction_name: "Oban/#{meta.queue}/#{meta.worker}/perform",
+       "oban.worker": meta.worker,
+       "oban.queue": meta.queue,
+diff --git a/lib/new_relic/telemetry/plug.ex b/lib/new_relic/telemetry/plug.ex
+index 562e5c2..2eaf315 100644
+--- a/lib/new_relic/telemetry/plug.ex
++++ b/lib/new_relic/telemetry/plug.ex
+@@ -140,7 +140,7 @@ defmodule NewRelic.Telemetry.Plug do
+   defp add_start_attrs(meta, meas, headers, :cowboy) do
+     [
+       pid: inspect(self()),
+-      system_time: meas[:system_time],
++      start_time: meas[:system_time],
+       host: meta.req.host,
+       path: meta.req.path,
+       remote_ip: meta.req.peer |> elem(0) |> :inet_parse.ntoa() |> to_string(),
+@@ -152,17 +152,25 @@ defmodule NewRelic.Telemetry.Plug do
+     |> NewRelic.add_attributes()
+   end
+ 
+-  defp add_start_attrs(meta, meas, headers, :bandit) do
++  defp add_start_attrs(%{conn: conn}, meas, headers, :bandit) do
+     [
+       pid: inspect(self()),
+-      system_time: meas[:system_time],
+-      host: meta.conn.host,
+-      path: meta.conn.request_path,
+-      remote_ip: meta.conn.remote_ip |> :inet_parse.ntoa() |> to_string(),
++      start_time: meas[:system_time],
++      host: conn.host,
++      path: conn.request_path,
++      remote_ip: conn.remote_ip |> :inet_parse.ntoa() |> to_string(),
+       referer: headers["referer"],
+       user_agent: headers["user-agent"],
+       content_type: headers["content-type"],
+-      request_method: meta.conn.method
++      request_method: conn.method
++    ]
++    |> NewRelic.add_attributes()
++  end
++
++  defp add_start_attrs(_meta, meas, _headers, :bandit) do
++    [
++      pid: inspect(self()),
++      start_time: meas[:system_time]
+     ]
+     |> NewRelic.add_attributes()
+   end
+@@ -277,6 +285,8 @@ defmodule NewRelic.Telemetry.Plug do
+     status
+   end
+ 
++  defp status_code(_), do: nil
++
+   defp plug_name(conn, match_path) do
+     "/Plug/#{conn.method}/#{match_path}"
+     |> String.replace("/*glob", "")
+diff --git a/lib/new_relic/tracer/direct.ex b/lib/new_relic/tracer/direct.ex
+index 4b22d68..02e1ee9 100644
+--- a/lib/new_relic/tracer/direct.ex
++++ b/lib/new_relic/tracer/direct.ex
+@@ -3,7 +3,7 @@ defmodule NewRelic.Tracer.Direct do
+ 
+   @max_open_span_count Application.compile_env(:new_relic, :max_open_span_count, 20)
+ 
+-  def start_span(id, name, options) do
++  def start_span(id, name, options \\ []) do
+     case Process.get(:nr_open_span_count, 0) do
+       over when over >= @max_open_span_count ->
+         Process.put(:nr_open_span_count, over + 1)
+@@ -30,7 +30,7 @@ defmodule NewRelic.Tracer.Direct do
+     :ok
+   end
+ 
+-  def stop_span(id, options) do
++  def stop_span(id, options \\ []) do
+     case Process.get({:nr_span, id}) do
+       nil ->
+         :no_such_span
+@@ -66,7 +66,7 @@ defmodule NewRelic.Tracer.Direct do
+           pid: self(),
+           id: span,
+           parent_id: previous_span || :root,
+-          system_time: start_time,
++          start_time: start_time,
+           duration: duration
+         })
+ 
+diff --git a/lib/new_relic/tracer/report.ex b/lib/new_relic/tracer/report.ex
+index 657b835..4b3618e 100644
+--- a/lib/new_relic/tracer/report.ex
++++ b/lib/new_relic/tracer/report.ex
+@@ -37,7 +37,7 @@ defmodule NewRelic.Tracer.Report do
+          name,
+          pid,
+          {id, parent_id},
+-         {start_time, start_time_mono, end_time_mono, _child_duration_ms, reductions}
++         {system_time, start_time_mono, end_time_mono, _child_duration_ms, reductions}
+        ) do
+     duration_ms = duration_ms(start_time_mono, end_time_mono)
+     duration_s = duration_ms / 1000
+@@ -62,13 +62,13 @@ defmodule NewRelic.Tracer.Report do
+           pid: pid,
+           id: id,
+           parent_id: parent_id,
+-          start_time: start_time,
++          system_time: system_time,
+           start_time_mono: start_time_mono,
+           end_time_mono: end_time_mono
+         })
+ 
+         NewRelic.report_span(
+-          timestamp_ms: System.convert_time_unit(start_time, :native, :millisecond),
++          timestamp_ms: System.convert_time_unit(system_time, :native, :millisecond),
+           duration_s: duration_s,
+           name: metric_name,
+           edge: [span: id, parent: parent_id],
+@@ -105,13 +105,13 @@ defmodule NewRelic.Tracer.Report do
+           pid: pid,
+           id: id,
+           parent_id: parent_id,
+-          start_time: start_time,
++          system_time: system_time,
+           start_time_mono: start_time_mono,
+           end_time_mono: end_time_mono
+         })
+ 
+         NewRelic.report_span(
+-          timestamp_ms: System.convert_time_unit(start_time, :native, :millisecond),
++          timestamp_ms: System.convert_time_unit(system_time, :native, :millisecond),
+           duration_s: duration_s,
+           name: function_arity_name,
+           edge: [span: id, parent: parent_id],
+@@ -155,7 +155,7 @@ defmodule NewRelic.Tracer.Report do
+          name,
+          pid,
+          {id, parent_id},
+-         {start_time, start_time_mono, end_time_mono, child_duration_ms, reductions}
++         {system_time, start_time_mono, end_time_mono, child_duration_ms, reductions}
+        ) do
+     duration_ms = duration_ms(start_time_mono, end_time_mono)
+     duration_s = duration_ms / 1000
+@@ -174,13 +174,13 @@ defmodule NewRelic.Tracer.Report do
+       pid: pid,
+       id: id,
+       parent_id: parent_id,
+-      start_time: start_time,
++      system_time: system_time,
+       start_time_mono: start_time_mono,
+       end_time_mono: end_time_mono
+     })
+ 
+     NewRelic.report_span(
+-      timestamp_ms: System.convert_time_unit(start_time, :native, :millisecond),
++      timestamp_ms: System.convert_time_unit(system_time, :native, :millisecond),
+       duration_s: duration_s,
+       name: function_name,
+       edge: [span: id, parent: parent_id],
+diff --git a/lib/new_relic/transaction/complete.ex b/lib/new_relic/transaction/complete.ex
+index 3967e00..a52840f 100644
+--- a/lib/new_relic/transaction/complete.ex
++++ b/lib/new_relic/transaction/complete.ex
+@@ -41,14 +41,15 @@ defmodule NewRelic.Transaction.Complete do
+   defp identify_transaction_type(tx),
+     do: Map.put(tx, :transactionType, :Web)
+ 
+-  defp transform_time_attrs(%{system_time: system_time, duration: duration} = tx) do
+-    start_time_ms = System.convert_time_unit(system_time, :native, :millisecond)
++  # instrumentation reports time via start_time :: native and duration :: native
++  defp transform_time_attrs(%{start_time: start_time, duration: duration} = tx) do
++    start_time_ms = System.convert_time_unit(start_time, :native, :millisecond)
+     duration_us = System.convert_time_unit(duration, :native, :microsecond)
+     duration_ms = duration_us / 1000
+     duration_s = duration_ms / 1000
+ 
+     tx
+-    |> Map.drop([:system_time, :duration, :end_time_mono])
++    |> Map.drop([:system_time, :duration, :start_time_mono, :end_time_mono])
+     |> Map.merge(%{
+       start_time: start_time_ms,
+       end_time: start_time_ms + duration_ms,
+@@ -58,17 +59,17 @@ defmodule NewRelic.Transaction.Complete do
+     })
+   end
+ 
++  # sidecar reports time via system_time :: native, start_time_mono :: native, end_time_mono :: native
+   defp transform_time_attrs(
+-         %{start_time: start_time, end_time_mono: end_time_mono, start_time_mono: start_time_mono} =
+-           tx
++         %{system_time: system_time, end_time_mono: end_time_mono, start_time_mono: start_time_mono} = tx
+        ) do
+-    start_time_ms = System.convert_time_unit(start_time, :native, :millisecond)
++    start_time_ms = System.convert_time_unit(system_time, :native, :millisecond)
+     duration_us = System.convert_time_unit(end_time_mono - start_time_mono, :native, :microsecond)
+     duration_ms = duration_us / 1000
+     duration_s = duration_ms / 1000
+ 
+     tx
+-    |> Map.drop([:start_time_mono, :end_time_mono])
++    |> Map.drop([:system_time, :duration, :start_time_mono, :end_time_mono])
+     |> Map.merge(%{
+       start_time: start_time_ms,
+       end_time: start_time_ms + duration_ms,
+diff --git a/lib/new_relic/transaction/reporter.ex b/lib/new_relic/transaction/reporter.ex
+index 79e2a35..264f1c1 100644
+--- a/lib/new_relic/transaction/reporter.ex
++++ b/lib/new_relic/transaction/reporter.ex
+@@ -27,24 +27,31 @@ defmodule NewRelic.Transaction.Reporter do
+   end
+ 
+   def start_transaction(:web, path) do
++    {system_time, start_time_mono} = {System.system_time(), System.monotonic_time()}
++
+     if NewRelic.Util.path_match?(path, NewRelic.Config.ignore_paths()) do
+       ignore_transaction()
+       :ignore
+     else
+       Transaction.ErlangTrace.trace()
+       Transaction.Sidecar.track(:web)
++      Transaction.Sidecar.add(system_time: system_time, start_time_mono: start_time_mono)
+       :collect
+     end
+   end
+ 
+   def start_transaction(:other) do
++    {system_time, start_time_mono} = {System.system_time(), System.monotonic_time()}
++
+     unless Transaction.Sidecar.tracking?() do
+       Transaction.ErlangTrace.trace()
+       Transaction.Sidecar.track(:other)
++      Transaction.Sidecar.add(system_time: system_time, start_time_mono: start_time_mono)
+     end
+   end
+ 
+   def stop_transaction(:web) do
++    Transaction.Sidecar.add(end_time_mono: System.monotonic_time())
+     Transaction.Sidecar.complete()
+   end
+ 

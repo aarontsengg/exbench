@@ -1,0 +1,149 @@
+diff --git a/lib/broadway.ex b/lib/broadway.ex
+index 6cb1268..d570868 100644
+--- a/lib/broadway.ex
++++ b/lib/broadway.ex
+@@ -297,7 +297,7 @@ defmodule Broadway do
+   currently fetched messages are processed and published (consumer).
+   """
+ 
+-  alias Broadway.{BatchInfo, Message, Options, Server}
++  alias Broadway.{BatchInfo, Message, Options, Server, Producer}
+ 
+   @doc """
+   Invoked to handle/process indiviual messages sent from a producer.
+@@ -473,6 +473,18 @@ defmodule Broadway do
+     end
+   end
+ 
++  @doc """
++  Sends a list of messages using one of the configured producers.
++
++  The producer is randomly chosen among all sets of producers/stages.
++  """
++  @spec push_messages(GenServer.server(), messages :: [Message.t()]) :: :ok
++  def push_messages(server, messages) do
++    server
++    |> Server.get_random_producer()
++    |> Producer.push_messages(messages)
++  end
++
+   defp configuration_spec() do
+     [
+       name: [required: true, type: :atom],
+diff --git a/lib/broadway/consumer.ex b/lib/broadway/consumer.ex
+index 08344e7..76e2fa6 100644
+--- a/lib/broadway/consumer.ex
++++ b/lib/broadway/consumer.ex
+@@ -3,6 +3,8 @@ defmodule Broadway.Consumer do
+   use GenStage
+   use Broadway.Subscriber
+ 
++  require Logger
++
+   alias Broadway.{Acknowledger, Message}
+   @subscription_options [max_demand: 1, min_demand: 0]
+ 
+@@ -32,9 +34,14 @@ defmodule Broadway.Consumer do
+ 
+     {successful_messages, failed_messages} =
+       handle_batch(batcher_key, messages, batch_info, state)
+-      |> Enum.split_with(&(&1.status == :ok))
+ 
+-    Acknowledger.ack_messages(successful_messages, failed_messages)
++    try do
++      Acknowledger.ack_messages(successful_messages, failed_messages)
++    catch
++      kind, reason ->
++        Logger.error(Exception.format(kind, reason, System.stacktrace()))
++    end
++
+     {:noreply, [], state}
+   end
+ 
+@@ -43,10 +50,12 @@ defmodule Broadway.Consumer do
+ 
+     try do
+       module.handle_batch(batcher_key, messages, batch_info, context)
+-    rescue
+-      e ->
+-        error_message = Exception.message(e)
+-        Enum.map(messages, &Message.failed(&1, error_message))
++      |> Enum.split_with(fn %Message{status: status} -> status == :ok end)
++    catch
++      kind, reason ->
++        Logger.error(Exception.format(kind, reason, System.stacktrace()))
++        failed = "due to an unhandled #{kind}"
++        {[], Enum.map(messages, &Message.failed(&1, failed))}
+     end
+   end
+ end
+diff --git a/lib/broadway/server.ex b/lib/broadway/server.ex
+index d8db94d..9573335 100644
+--- a/lib/broadway/server.ex
++++ b/lib/broadway/server.ex
+@@ -13,7 +13,14 @@ defmodule Broadway.Server do
+     Process.flag(:trap_exit, true)
+     config = init_config(module, opts)
+     {:ok, supervisor_pid} = start_supervisor(config)
+-    {:ok, %{supervisor_pid: supervisor_pid, terminator: config.terminator}}
++
++    {:ok,
++     %{
++       supervisor_pid: supervisor_pid,
++       terminator: config.terminator,
++       name: opts[:name],
++       producers_names: producers_names(opts[:name], config.producers_config)
++     }}
+   end
+ 
+   @impl true
+@@ -25,6 +32,12 @@ defmodule Broadway.Server do
+     {:noreply, state}
+   end
+ 
++  @impl true
++  def handle_call(:get_random_producer, _from, state) do
++    producer = Enum.random(state.producers_names)
++    {:reply, producer, state}
++  end
++
+   @impl true
+   def terminate(reason, %{supervisor_pid: supervisor_pid, terminator: terminator}) do
+     Broadway.Terminator.trap_exit(terminator)
+@@ -36,6 +49,10 @@ defmodule Broadway.Server do
+     end
+   end
+ 
++  def get_random_producer(server) do
++    GenServer.call(server, :get_random_producer)
++  end
++
+   defp reason_to_signal(:killed), do: :kill
+   defp reason_to_signal(other), do: other
+ 
+@@ -95,7 +112,7 @@ defmodule Broadway.Server do
+ 
+     names =
+       for index <- 1..n_producers do
+-        process_name(broadway_name, "Producer_#{key}", index)
++        producer_name(broadway_name, key, index)
+       end
+ 
+     specs =
+@@ -271,6 +288,16 @@ defmodule Broadway.Server do
+     :"#{prefix}.#{type}_#{key}"
+   end
+ 
++  defp producer_name(broadway_name, key, index) do
++    process_name(broadway_name, "Producer_#{key}", index)
++  end
++
++  defp producers_names(broadway_name, producers_config) do
++    for {key, config} <- producers_config, index <- 1..config[:stages] do
++      producer_name(broadway_name, key, index)
++    end
++  end
++
+   defp build_producer_supervisor_spec(config, children) do
+     name = :"#{config.name}.ProducerSupervisor"
+     children_count = length(children)

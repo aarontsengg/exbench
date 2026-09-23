@@ -1,0 +1,1056 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0ae450e..c3040bd 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -4,29 +4,30 @@
+ 
+ ### Enhancements
+ 
+-- Process manager command dispatch error handling ([#93](https://github.com/slashdotdash/commanded/issues/93)).
++- Process manager command dispatch error handling ([#93](https://github.com/commanded/commanded/issues/93)).
+ - Event handlers may define an `init/0` callback function to start any related processes. It must return `:ok`, otherwise the handler process will be stopped.
+-- Add `include_execution_result` option to command dispatch ([#96](https://github.com/slashdotdash/commanded/pull/96)).
+-- Add `Commanded.Aggregate.Multi` ([#98](https://github.com/slashdotdash/commanded/pull/98)).
++- Add `include_execution_result` option to command dispatch ([#96](https://github.com/commanded/commanded/pull/96)).
++- Add `Commanded.Aggregate.Multi` ([#98](https://github.com/commanded/commanded/pull/98)) as a way to return multiple events from a command dispatch that require aggregate state to be updated after each event.
++- Correlation and causation ids ([#105](https://github.com/commanded/commanded/pull/105)).
+ 
+ ### Bug fixes
+ 
+-- Adding a prefix to the aggregate in the router breaks the strong consistency of command dispatch ([#101](https://github.com/slashdotdash/commanded/issues/101)).
++- Adding a prefix to the aggregate in the router breaks the strong consistency of command dispatch ([#101](https://github.com/commanded/commanded/issues/101)).
+ 
+ ## v0.14.0
+ 
+ ### Enhancements
+ 
+-- Dispatch command with `:eventual` or `:strong` consistency guarantee ([#82](https://github.com/slashdotdash/commanded/issues/82)).
+-- Additional stream prefix per aggregate ([#77](https://github.com/slashdotdash/commanded/issues/77)).
+-- Include custom metadata during command dispatch ([#61](https://github.com/slashdotdash/commanded/issues/61)).
+-- Validate command dispatch registration in router ([59](https://github.com/slashdotdash/commanded/issues/59)).
++- Dispatch command with `:eventual` or `:strong` consistency guarantee ([#82](https://github.com/commanded/commanded/issues/82)).
++- Additional stream prefix per aggregate ([#77](https://github.com/commanded/commanded/issues/77)).
++- Include custom metadata during command dispatch ([#61](https://github.com/commanded/commanded/issues/61)).
++- Validate command dispatch registration in router ([59](https://github.com/commanded/commanded/issues/59)).
+ 
+ ### Upgrading
+ 
+ Please ensure you upgrade the following event store dependencies.
+ 
+-Using the Elixir [EventStore](https://github.com/slashdotdash/eventstore):
++Using the Elixir [EventStore](https://github.com/commanded/eventstore):
+ 
+ - `eventstore` to [v0.11.0](https://hex.pm/packages/eventstore)
+ - `commanded_eventstore_adapter` to [v0.2.0](https://hex.pm/packages/commanded_eventstore_adapter)
+@@ -51,7 +52,7 @@ Using Greg's [Event Store](https://eventstore.org/):
+ 
+ ### Enhancements
+ 
+-- Shutdown idle aggregate processes ([#43](https://github.com/slashdotdash/commanded/issues/43)).
++- Shutdown idle aggregate processes ([#43](https://github.com/commanded/commanded/issues/43)).
+ 
+ ## v0.10.0
+ 
+@@ -61,9 +62,9 @@ Using Greg's [Event Store](https://eventstore.org/):
+ 
+   By default, a `GenServer` in-memory event store adapter is used. This should **only be used for testing** as there is no persistence.
+ 
+-  The existing PostgreSQL-based [eventstore](https://github.com/slashdotdash/eventstore) integration has been extracted as a separate package ([commanded_eventstore_adapter](https://github.com/slashdotdash/commanded-eventstore-adapter)). There is also a new adapter for Greg Young's Event Store using the Extreme library ([commanded_extreme_adapter](https://github.com/slashdotdash/commanded-extreme-adapter)).
++  The existing PostgreSQL-based [eventstore](https://github.com/commanded/eventstore) integration has been extracted as a separate package ([commanded_eventstore_adapter](https://github.com/commanded/commanded-eventstore-adapter)). There is also a new adapter for Greg Young's Event Store using the Extreme library ([commanded_extreme_adapter](https://github.com/commanded/commanded-extreme-adapter)).
+ 
+-  You must install the required event store adapter package and update your environment configuration to specify the `:event_store_adapter` module. See the [README](https://github.com/slashdotdash/commanded/blob/master/README.md) for details.
++  You must install the required event store adapter package and update your environment configuration to specify the `:event_store_adapter` module. See the [README](https://github.com/commanded/commanded/blob/master/README.md) for details.
+ 
+ ## v0.9.0
+ 
+@@ -81,8 +82,8 @@ Using Greg's [Event Store](https://eventstore.org/):
+ 
+ ### Enhancements
+ 
+-- Event handler and process manager subscriptions should be created from a given stream position ([#14](https://github.com/slashdotdash/commanded/issues/14)).
+-- Stop process manager instance after reaching its final state ([#24](https://github.com/slashdotdash/commanded/issues/24)).
++- Event handler and process manager subscriptions should be created from a given stream position ([#14](https://github.com/commanded/commanded/issues/14)).
++- Stop process manager instance after reaching its final state ([#24](https://github.com/commanded/commanded/issues/24)).
+ 
+ ## v0.8.3
+ 
+@@ -94,19 +95,19 @@ Using Greg's [Event Store](https://eventstore.org/):
+ 
+ ### Bug fixes
+ 
+-- JsonSerializer should ensure event type atom exists when deserializing ([#28](https://github.com/slashdotdash/commanded/issues/28)).
++- JsonSerializer should ensure event type atom exists when deserializing ([#28](https://github.com/commanded/commanded/issues/28)).
+ 
+ ## v0.8.1
+ 
+ ### Enhancements
+ 
+-- Command handlers should be optional by default ([#30](https://github.com/slashdotdash/commanded/issues/30)).
++- Command handlers should be optional by default ([#30](https://github.com/commanded/commanded/issues/30)).
+ 
+ ## v0.8.0
+ 
+ ### Enhancements
+ 
+-- Simplify aggregate roots and process managers ([#31](https://github.com/slashdotdash/commanded/issues/31)).
++- Simplify aggregate roots and process managers ([#31](https://github.com/commanded/commanded/issues/31)).
+ 
+ ## v0.7.1
+ 
+@@ -118,7 +119,7 @@ Using Greg's [Event Store](https://eventstore.org/):
+ 
+ ### Enhancements
+ 
+-- Command handling middleware allows a command router to define middleware modules that are executed before, and after success or failure of each command dispatch ([#12](https://github.com/slashdotdash/commanded/issues/12)).
++- Command handling middleware allows a command router to define middleware modules that are executed before, and after success or failure of each command dispatch ([#12](https://github.com/commanded/commanded/issues/12)).
+ 
+ ## v0.6.3
+ 
+@@ -134,7 +135,7 @@ Using Greg's [Event Store](https://eventstore.org/):
+ 
+ ### Bug fixes
+ 
+-- Fix pending aggregates restarts: supervisor restarts aggregate process but it cannot accept commands ([#22](https://github.com/slashdotdash/commanded/pull/22)).
++- Fix pending aggregates restarts: supervisor restarts aggregate process but it cannot accept commands ([#22](https://github.com/commanded/commanded/pull/22)).
+ 
+ ## v0.6.1
+ 
+@@ -146,10 +147,10 @@ Using Greg's [Event Store](https://eventstore.org/):
+ 
+ ### Enhancements
+ 
+-- Confirm receipt of events in event handler and process manager router ([#19](https://github.com/slashdotdash/commanded/pull/19)).
++- Confirm receipt of events in event handler and process manager router ([#19](https://github.com/commanded/commanded/pull/19)).
+ - Convert keys to atoms when decoding JSON using Poison decoder.
+ - Prefix process manager instance snapshot uuid with process manager name.
+-- Multi command dispatch registration in router ([#16](https://github.com/slashdotdash/commanded/issues/16)).
++- Multi command dispatch registration in router ([#16](https://github.com/commanded/commanded/issues/16)).
+ 
+ ## v0.5.0
+ 
+@@ -161,20 +162,20 @@ Using Greg's [Event Store](https://eventstore.org/):
+ 
+ ### Enhancements
+ 
+-- Macro to assist with building process managers ([README](https://github.com/slashdotdash/commanded/tree/feature/process-manager-macro#process-managers)).
++- Macro to assist with building process managers ([README](https://github.com/commanded/commanded/tree/feature/process-manager-macro#process-managers)).
+ 
+ ## v0.3.1
+ 
+ ### Enhancements
+ 
+-- Include unit test event assertion function: `assert_receive_event/2` ([#13](https://github.com/slashdotdash/commanded/pull/13)).
++- Include unit test event assertion function: `assert_receive_event/2` ([#13](https://github.com/commanded/commanded/pull/13)).
+ - Include top level application in mix config.
+ 
+ ## v0.3.0
+ 
+ ### Enhancements
+ 
+-- Don't persist an aggregate's pending events when executing a command returns an error ([#10](https://github.com/slashdotdash/commanded/pull/10)).
++- Don't persist an aggregate's pending events when executing a command returns an error ([#10](https://github.com/commanded/commanded/pull/10)).
+ 
+ ### Bug fixes
+ 
+@@ -184,4 +185,4 @@ Using Greg's [Event Store](https://eventstore.org/):
+ 
+ ### Enhancements
+ 
+-- Support integer, atom or strings as an aggregate root UUID ([#7](https://github.com/slashdotdash/commanded/pull/7)).
++- Support integer, atom or strings as an aggregate root UUID ([#7](https://github.com/commanded/commanded/pull/7)).
+diff --git a/README.md b/README.md
+index 7ca1170..7d9f095 100644
+--- a/README.md
++++ b/README.md
+@@ -11,7 +11,7 @@ Provides support for:
+ 
+ You can use Commanded with one of the following event stores for persistence:
+ 
+-- [EventStore](https://github.com/slashdotdash/eventstore) Elixir library, using PostgreSQL for persistence
++- [EventStore](https://github.com/commanded/eventstore) Elixir library, using PostgreSQL for persistence
+ - Greg Young's [Event Store](https://geteventstore.com/).
+ 
+ Please refer to the [CHANGELOG](CHANGELOG.md) for features, bug fixes, and any upgrade advice included for each release.
+@@ -19,13 +19,13 @@ Please refer to the [CHANGELOG](CHANGELOG.md) for features, bug fixes, and any u
+ ---
+ 
+ - [Changelog](CHANGELOG.md)
+-- [Wiki](https://github.com/slashdotdash/commanded/wiki)
+-- [Frequently asked questions](https://github.com/slashdotdash/commanded/wiki/FAQ)
+-- [Getting help](https://github.com/slashdotdash/commanded/wiki/Getting-help)
++- [Wiki](https://github.com/commanded/commanded/wiki)
++- [Frequently asked questions](https://github.com/commanded/commanded/wiki/FAQ)
++- [Getting help](https://github.com/commanded/commanded/wiki/Getting-help)
+ 
+ MIT License
+ 
+-[![Build Status](https://travis-ci.org/slashdotdash/commanded.svg?branch=master)](https://travis-ci.org/slashdotdash/commanded) [![Join the chat at https://gitter.im/commanded/Lobby](https://badges.gitter.im/commanded/Lobby.svg)](https://gitter.im/commanded/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
++[![Build Status](https://travis-ci.org/commanded/commanded.svg?branch=master)](https://travis-ci.org/commanded/commanded) [![Join the chat at https://gitter.im/commanded/Lobby](https://badges.gitter.im/commanded/Lobby.svg)](https://gitter.im/commanded/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+ 
+ ---
+ 
+@@ -80,7 +80,7 @@ Yes, Commanded is being used in production.
+ 
+ ## Limitations
+ 
+-Commanded is currently limited to running on a single node. Support for running on a cluster of nodes ([#39](https://github.com/slashdotdash/commanded/issues/39)) is under active development.
++Commanded is currently limited to running on a single node. Support for running on a cluster of nodes ([#39](https://github.com/commanded/commanded/issues/39)) is under active development.
+ 
+ ## Contributing
+ 
+@@ -93,21 +93,22 @@ You should include unit tests to cover any changes. Run `mix test` to execute th
+ ### Contributors
+ 
+ - [Andrey Akulov](https://github.com/astery)
++- [Andrzej Sliwa](https://github.com/andrzejsliwa)
++- [Ben Smith](https://github.com/slashdotdash)
+ - [Brenton Annan](https://github.com/brentonannan)
+-- [Olafur Arason](https://github.com/olafura)
+ - [Chris Brodt](https://github.com/uberbrodt)
+ - [David Carlin](https://github.com/davich)
+-- [Patrick Detlefsen](https://github.com/patrickdet)
+ - [Florian Ebeling](https://github.com/febeling)
+-- [Leif Gensert](https://github.com/leifg)
+ - [Henry Hazan](https://github.com/henry-hz)
+-- [Raphaël Lustin](https://github.com/rlustin)
+-- [Kok J Sam](https://github.com/sammkj)
+-- [Andrzej Sliwa](https://github.com/andrzejsliwa)
+ - [Joan Zapata](https://github.com/JoanZapata)
++- [Kok J Sam](https://github.com/sammkj)
++- [Leif Gensert](https://github.com/leifg)
++- [Olafur Arason](https://github.com/olafura)
++- [Patrick Detlefsen](https://github.com/patrickdet)
++- [Raphaël Lustin](https://github.com/rlustin)
+ 
+ ## Need help?
+ 
+-Please [open an issue](https://github.com/slashdotdash/commanded/issues) if you encounter a problem, or need assistance. You can also seek help in the [Gitter chat room](https://gitter.im/commanded/Lobby) for Commanded.
++Please [open an issue](https://github.com/commanded/commanded/issues) if you encounter a problem, or need assistance. You can also seek help in the [Gitter chat room](https://gitter.im/commanded/Lobby) for Commanded.
+ 
+ For commercial support, and consultancy, please contact [Ben Smith](mailto:ben@10consulting.com).
+diff --git a/guides/Choosing an Event Store.md b/guides/Choosing an Event Store.md
+index 8a5e89d..8369dc7 100644
+--- a/guides/Choosing an Event Store.md
++++ b/guides/Choosing an Event Store.md
+@@ -2,11 +2,11 @@
+ 
+ You must decide which event store to use with Commanded. You have a choice between two existing event store adapters:
+ 
+-- PostgreSQL-based Elixir [EventStore](https://github.com/slashdotdash/eventstore).
++- PostgreSQL-based Elixir [EventStore](https://github.com/commanded/eventstore).
+ 
+ - Greg Young's [Event Store](https://geteventstore.com/).
+ 
+-There is also an [in-memory event store adapter](https://github.com/slashdotdash/commanded/wiki/In-memory-event-store) for *test use only*.
++There is also an [in-memory event store adapter](https://github.com/commanded/commanded/wiki/In-memory-event-store) for *test use only*.
+ 
+ Want to use a different event store? Then you will need to [write your own event store provider](#writing-your-own-event-store-provider).
+ 
+@@ -14,7 +14,7 @@ Want to use a different event store? Then you will need to [write your own event
+ 
+ ## PostgreSQL-based Elixir EventStore
+ 
+-[EventStore](https://github.com/slashdotdash/eventstore) is an open-source event store using PostgreSQL for persistence, implemented in Elixir.
++[EventStore](https://github.com/commanded/eventstore) is an open-source event store using PostgreSQL for persistence, implemented in Elixir.
+ 
+ 1. Add `commanded_eventstore_adapter` to your list of dependencies in `mix.exs`:
+ 
+@@ -123,4 +123,4 @@ Use the `--run-projections=all --start-standard-projections=true` flags when run
+ 
+ To use an alternative event store with Commanded you will need to implement the `Commanded.EventStore` behaviour. This defines the contract to be implemented by an adapter module to allow an event store to be used with Commanded. Tests to verify an adapter conforms to the behaviour are provided in `test/event_store_adapter`.
+ 
+-You can use one of the existing adapters ([commanded_eventstore_adapter](https://github.com/slashdotdash/commanded-eventstore-adapter) or [commanded_extreme_adapter](https://github.com/slashdotdash/commanded-extreme-adapter)) to understand what is required.
++You can use one of the existing adapters ([commanded_eventstore_adapter](https://github.com/commanded/commanded-eventstore-adapter) or [commanded_extreme_adapter](https://github.com/commanded/commanded-extreme-adapter)) to understand what is required.
+diff --git a/guides/Commands.md b/guides/Commands.md
+index c5711e1..09fba2d 100644
+--- a/guides/Commands.md
++++ b/guides/Commands.md
+@@ -55,7 +55,7 @@ defmodule OpenAccountHandler do
+ end
+ ```
+ 
+-Command handlers execute in the context of the dispatch call, as such they are limited to the timeout period specified. The default time is five seconds, the same as a `GenServer` call. You can increase the timeout value for individual commands as required - see the section on [Timeouts](#timeouts) below.
++Command handlers execute in the context of the dispatch call, as such they are limited to the timeout period specified. The default timeout is five seconds, the same as a `GenServer` call. You can increase the timeout value for individual commands as required - see the section on [Timeouts](#timeouts) below.
+ 
+ ### Dispatch directly to aggregate
+ 
+@@ -219,6 +219,38 @@ You can optionally choose to include the aggregate's version as part of the disp
+ 
+ This is useful when you need to wait for an event handler, such as a read model projection, to be up-to-date before continuing execution or querying its data.
+ 
++### Correlation and causation ids
++
++To assist with monitoring and debugging your deployed application it is useful to track the causation and correlation ids for your commands and events.
++
++- `causation_id` - the UUID of the command causing an event, or the event causing a command dispatch.
++- `correlation_id` - a UUID used to correlate related commands/events.
++
++You can set causation and correlation ids when dispatching a command:
++
++```elixir
++:ok = ExampleRouter.dispatch(command, causation_id: UUID.uuid4(), correlation_id: UUID.uuid4())
++```
++
++When dispatching a command in an event handler, you should copying these values from the event your are processing:
++
++```elixir
++defmodule ExampleHandler do
++  use Commanded.Event.Handler, name: "ExampleHandler"
++
++  def handle(%AnEvent{..}, %{event_id: causation_id, correlation_id: correlation_id}) do
++    ExampleRouter.dispatch(%ExampleCommand{..},
++      causation_id: causation_id,
++      correlation_id: correlation_id,
++    )
++  end
++end
++```
++
++Commands dispatched by a process manager will be automatically assigned the appropriate causation and correlation ids from the source domain event.
++
++You can use [Commanded audit middleware](https://github.com/commanded/commanded-audit-middleware) to record every dispatched command. This allows you to follow the chain of commands and events by using the causation id. The correlation id can be used to find all related commands and events.
++
+ ### Aggregate lifespan
+ 
+ By default an aggregate instance process will run indefinitely once started. You can control this by implementing the `Commanded.Aggregates.AggregateLifespan` behaviour in a module.
+@@ -239,8 +271,7 @@ defmodule BankRouter do
+   use Commanded.Commands.Router
+ 
+   dispatch [OpenAccount,CloseAccount],
+-    to: BankAccountHandler,
+-    aggregate: BankAccount,
++    to: BankAccount,
+     lifespan: BankAccountLifespan,
+     identity: :account_number
+ end
+diff --git a/guides/Read Model Projections.md b/guides/Read Model Projections.md
+index 2b58150..7f8dea9 100644
+--- a/guides/Read Model Projections.md
++++ b/guides/Read Model Projections.md
+@@ -4,7 +4,7 @@ Your read model can be built using a Commanded event handler and whichever stora
+ 
+ ## Ecto projections
+ 
+-You can use the [Commanded Ecto projections](https://github.com/slashdotdash/commanded-ecto-projections) library to build a read model using one of the databases supported by Ecto (PostgreSQL, MySQL, et al).
++You can use the [Commanded Ecto projections](https://github.com/commanded/commanded-ecto-projections) library to build a read model using one of the databases supported by Ecto (PostgreSQL, MySQL, et al).
+ 
+ ### Example
+ 
+diff --git a/lib/commanded/aggregates/aggregate.ex b/lib/commanded/aggregates/aggregate.ex
+index edefb54..be74fef 100644
+--- a/lib/commanded/aggregates/aggregate.ex
++++ b/lib/commanded/aggregates/aggregate.ex
+@@ -169,7 +169,7 @@ defmodule Commanded.Aggregates.Aggregate do
+   end
+ 
+   defp execute_command(
+-    %ExecutionContext{handler: handler, function: function, command: command, metadata: metadata},
++    %ExecutionContext{handler: handler, function: function, command: command} = context,
+     %Aggregate{aggregate_module: aggregate_module, aggregate_version: expected_version, aggregate_state: aggregate_state} = state)
+   do
+     case Kernel.apply(handler, function, [aggregate_state, command]) do
+@@ -185,14 +185,14 @@ defmodule Commanded.Aggregates.Aggregate do
+             {reply, state}
+ 
+           {aggregate_state, pending_events} ->
+-            persist_events(pending_events, aggregate_state, metadata, state)
++            persist_events(pending_events, aggregate_state, context, state)
+         end
+ 
+       events ->
+         pending_events = List.wrap(events)
+         aggregate_state = apply_events(aggregate_module, aggregate_state, pending_events)
+ 
+-        persist_events(pending_events, aggregate_state, metadata, state)
++        persist_events(pending_events, aggregate_state, context, state)
+     end
+   end
+ 
+@@ -200,8 +200,8 @@ defmodule Commanded.Aggregates.Aggregate do
+     Enum.reduce(events, aggregate_state, &aggregate_module.apply(&2, &1))
+   end
+ 
+-  defp persist_events(pending_events, aggregate_state, metadata, %Aggregate{aggregate_uuid: aggregate_uuid, aggregate_version: expected_version} = state) do
+-    with {:ok, stream_version} <- append_to_stream(pending_events, aggregate_uuid, expected_version, metadata) do
++  defp persist_events(pending_events, aggregate_state, context, %Aggregate{aggregate_uuid: aggregate_uuid, aggregate_version: expected_version} = state) do
++    with {:ok, stream_version} <- append_to_stream(pending_events, aggregate_uuid, expected_version, context) do
+       state = %Aggregate{state |
+         aggregate_state: aggregate_state,
+         aggregate_version: stream_version,
+@@ -213,10 +213,9 @@ defmodule Commanded.Aggregates.Aggregate do
+     end
+   end
+ 
+-  defp append_to_stream([], _stream_uuid, expected_version, _metadata), do: {:ok, expected_version}
+-  defp append_to_stream(pending_events, stream_uuid, expected_version, metadata) do
+-    correlation_id = UUID.uuid4()
+-    event_data = Mapper.map_to_event_data(pending_events, correlation_id, nil, metadata)
++  defp append_to_stream([], _stream_uuid, expected_version, _context), do: {:ok, expected_version}
++  defp append_to_stream(pending_events, stream_uuid, expected_version, %ExecutionContext{causation_id: causation_id, correlation_id: correlation_id, metadata: metadata}) do
++    event_data = Mapper.map_to_event_data(pending_events, causation_id, correlation_id, metadata)
+ 
+     EventStore.append_to_stream(stream_uuid, expected_version, event_data)
+   end
+diff --git a/lib/commanded/aggregates/execution_context.ex b/lib/commanded/aggregates/execution_context.ex
+index 1301165..6d3be4a 100644
+--- a/lib/commanded/aggregates/execution_context.ex
++++ b/lib/commanded/aggregates/execution_context.ex
+@@ -7,6 +7,10 @@ defmodule Commanded.Aggregates.ExecutionContext do
+     - `command` - the command to execute, typically a struct
+       (e.g. `%OpenBankAccount{...}`).
+ 
++    - `causation_id` - the UUID assigned to the dispatched command.
++
++    - `correlation_id` - a UUID used to correlate related commands/events.
++
+     - `metadata` - a map of key/value pairs containing the metadata to be
+       associated with all events created by the command.
+ 
+@@ -29,6 +33,8 @@ defmodule Commanded.Aggregates.ExecutionContext do
+ 
+   defstruct [
+     command: nil,
++    causation_id: nil,
++    correlation_id: nil,
+     metadata: %{},
+     handler: nil,
+     function: nil,
+diff --git a/lib/commanded/commands/dispatcher.ex b/lib/commanded/commands/dispatcher.ex
+index 971771a..495e66a 100644
+--- a/lib/commanded/commands/dispatcher.ex
++++ b/lib/commanded/commands/dispatcher.ex
+@@ -12,6 +12,9 @@ defmodule Commanded.Commands.Dispatcher do
+     @moduledoc false
+     defstruct [
+       command: nil,
++      command_uuid: nil,
++      causation_id: nil,
++      correlation_id: nil,
+       consistency: nil,
+       handler_module: nil,
+       handler_function: nil,
+@@ -51,15 +54,8 @@ defmodule Commanded.Commands.Dispatcher do
+     end
+   end
+ 
+-  defp to_pipeline(%Payload{command: command, consistency: consistency, identity: identity, identity_prefix: identity_prefix, metadata: metadata}) do
+-    %Pipeline{
+-      command: command,
+-      consistency: consistency,
+-      identity: identity,
+-      identity_prefix: identity_prefix,
+-      metadata: metadata
+-    }
+-  end
++  defp to_pipeline(%Payload{} = payload),
++    do: struct(Pipeline, Map.from_struct(payload))
+ 
+   defp execute(
+     %Pipeline{assigns: %{aggregate_uuid: aggregate_uuid}} = pipeline,
+@@ -101,11 +97,13 @@ defmodule Commanded.Commands.Dispatcher do
+   end
+ 
+   defp to_execution_context(
+-    %Pipeline{command: command, metadata: metadata},
+-    %Payload{handler_module: handler_module, handler_function: handler_function, lifespan: lifespan})
++    %Pipeline{command: command, command_uuid: command_uuid, metadata: metadata},
++    %Payload{correlation_id: correlation_id, handler_module: handler_module, handler_function: handler_function, lifespan: lifespan})
+   do
+     %ExecutionContext{
+       command: command,
++      causation_id: command_uuid,
++      correlation_id: correlation_id,
+       metadata: metadata,
+       handler: handler_module,
+       function: handler_function,
+diff --git a/lib/commanded/commands/router.ex b/lib/commanded/commands/router.ex
+index ba9a823..50b4799 100644
+--- a/lib/commanded/commands/router.ex
++++ b/lib/commanded/commands/router.ex
+@@ -62,7 +62,7 @@ defmodule Commanded.Commands.Router do
+   to share the same identity. In this scenario you should specify a `prefix`
+   for each aggregate (e.g. "user-" and "user-preference-").
+ 
+-  The prefix is used as the stream identity when appending, and reading, the
++  The prefix is used as the stream identity when appending and reading the
+   aggregate's events: "<identity_prefix><aggregate_uuid>".
+ 
+   ## Consistency
+@@ -229,9 +229,9 @@ defmodule Commanded.Commands.Router do
+       @registered_commands [unquote(command_module) | @registered_commands]
+ 
+       @doc """
+-      Dispatch the given command to the registered handler
++      Dispatch the given command to the registered handler.
+ 
+-      Returns `:ok` on success.
++      Returns `:ok` on success, or `{:error, reason}` on failure.
+       """
+       @spec dispatch(command :: struct) :: :ok | {:error, reason :: term}
+       def dispatch(command)
+@@ -240,45 +240,66 @@ defmodule Commanded.Commands.Router do
+       @doc """
+       Dispatch the given command to the registered handler providing a timeout.
+ 
+-      - `timeout_or_opts` is either an integer timeout or a keyword list of options.
+-        The timeout must be an integer greater than zero which specifies how
+-        many milliseconds to allow the command to be handled, or the atom
+-        `:infinity` to wait indefinitely. The default timeout value is 5000.
++      - `timeout_or_opts` is either an integer timeout or a keyword list of
++        options. The timeout must be an integer greater than zero which
++        specifies how many milliseconds to allow the command to be handled, or
++        the atom `:infinity` to wait indefinitely. The default timeout value is
++        five seconds.
+ 
+-        Alternatively, an options keyword list can be provided, it supports:
++        Alternatively, an options keyword list can be provided, it supports the
++        following options.
+ 
+         Options:
+ 
+-          - `:consistency` as one of `:eventual` (default) or `:strong`
+-            By setting the consistency to `:strong` a successful command
+-            dispatch will block until all strongly consistent event handlers and
+-            process managers have handled all events created by the command.
++          - `causation_id` - an optional UUID used to identify the cause of the
++            command being dispatched.
+ 
+-          - `:timeout` as described above.
++          - `correlation_id` - an optional UUID used to correlate related
++            commands/events together.
+ 
+-          - `:include_aggregate_version` set to true to include the aggregate
++          - `consistency` - one of `:eventual` (default) or `:strong`. By
++            setting the consistency to `:strong` a successful command dispatch
++            will block until all strongly consistent event handlers and process
++            managers have handled all events created by the command.
++
++          - `timeout` - as described above.
++
++          - `include_aggregate_version` - set to true to include the aggregate
+             stream version in the success response: `{:ok, aggregate_version}`
+             The default is false, to return just `:ok`.
+ 
+-          - `:include_execution_result` set to true to include more information
+-            about the dispatch, like the aggregate name, uuid, and the produced
+-            events. Overrides `include_aggregate_version`. The default is false,
+-            to return just `:ok`. See `Commanded.Commands.Dispatcher.ExecutionResult`.
++          - `include_execution_result` - set to true to include more
++            information about the dispatch, like the aggregate name, uuid, and
++            the produced events. Overrides `include_aggregate_version`. The
++            default is false to return `:ok`. See
++            `Commanded.Commands.Dispatcher.ExecutionResult`.
+ 
+-          - `:metadata` - An optional map containing key/value pairs comprising
+-            the metadata to be associated with all events created by the command.
++          - `metadata` - an optional map containing key/value pairs comprising
++            the metadata to be associated with all events created by the
++            command.
+ 
+       Returns `:ok` on success, unless `:include_aggregate_version` or
+       `:include_execution_result` is enabled, where it respectively returns
+-      `{:ok, aggregate_version}` or `{:ok, execution_result}`.
++      `{:ok, aggregate_version}` or `{:ok, %ExecutionResult{..}}`. Returns
++      `{:error, reason}` on failure.
+       """
+-      @spec dispatch(command :: struct, timeout_or_opts :: integer | :infinity | keyword()) :: :ok | {:error, :consistency_timeout} | {:error, reason :: term}
++      @spec dispatch(command :: struct, timeout_or_opts :: integer | :infinity | keyword()) :: :ok
++        | {:error, :consistency_timeout}
++        | {:error, reason :: term}
+       def dispatch(command, timeout_or_opts)
+-      def dispatch(%unquote(command_module){} = command, :infinity), do: do_dispatch(command, timeout: :infinity)
+-      def dispatch(%unquote(command_module){} = command, timeout) when is_integer(timeout), do: do_dispatch(command, timeout: timeout)
+-      def dispatch(%unquote(command_module){} = command, opts), do: do_dispatch(command, opts)
++
++      def dispatch(%unquote(command_module){} = command, :infinity),
++        do: do_dispatch(command, timeout: :infinity)
++
++      def dispatch(%unquote(command_module){} = command, timeout) when is_integer(timeout),
++        do: do_dispatch(command, timeout: timeout)
++
++      def dispatch(%unquote(command_module){} = command, opts),
++        do: do_dispatch(command, opts)
+ 
+       defp do_dispatch(%unquote(command_module){} = command, opts) do
++        causation_id = Keyword.get(opts, :causation_id)
++        correlation_id = Keyword.get(opts, :correlation_id) || UUID.uuid4()
+         consistency = Keyword.get(opts, :consistency) || unquote(consistency) || @default_consistency
+         metadata = Keyword.get(opts, :metadata) || @default_metadata
+         timeout = Keyword.get(opts, :timeout) || unquote(timeout) || @default_dispatch_timeout
+@@ -303,6 +324,9 @@ defmodule Commanded.Commands.Router do
+ 
+         Commanded.Commands.Dispatcher.dispatch(%Commanded.Commands.Dispatcher.Payload{
+           command: command,
++          command_uuid: UUID.uuid4(),
++          causation_id: causation_id,
++          correlation_id: correlation_id,
+           consistency: consistency,
+           handler_module: unquote(handler),
+           handler_function: unquote(function),
+diff --git a/lib/commanded/event/handler.ex b/lib/commanded/event/handler.ex
+index f09c098..004f23c 100644
+--- a/lib/commanded/event/handler.ex
++++ b/lib/commanded/event/handler.ex
+@@ -251,16 +251,27 @@ defmodule Commanded.Event.Handler do
+   end
+ 
+   defp ack_event(event, %Handler{consistency: consistency, handler_name: handler_name, subscription: subscription}) do
+-    EventStore.ack_event(subscription, event)
+-    Subscriptions.ack_event(handler_name, consistency, event)
++    :ok = EventStore.ack_event(subscription, event)
++    :ok = Subscriptions.ack_event(handler_name, consistency, event)
+   end
+ 
++  @enrich_metadata_fields [
++    :event_id,
++    :event_number,
++    :stream_id,
++    :stream_version,
++    :correlation_id,
++    :causation_id,
++    :created_at,
++  ]
++
+   defp enrich_metadata(%RecordedEvent{metadata: metadata} = event) do
+     event
+     |> Map.from_struct()
+-    |> Map.take([:event_number, :stream_id, :stream_version, :created_at])
++    |> Map.take(@enrich_metadata_fields)
+     |> Map.merge(metadata || %{})
+   end
+ 
+-  defp describe(%Handler{handler_module: handler_module}), do: inspect(handler_module)
++  defp describe(%Handler{handler_module: handler_module}),
++    do: inspect(handler_module)
+ end
+diff --git a/lib/commanded/event/mapper.ex b/lib/commanded/event/mapper.ex
+index 5503257..8954f5c 100644
+--- a/lib/commanded/event/mapper.ex
++++ b/lib/commanded/event/mapper.ex
+@@ -1,30 +1,31 @@
+ defmodule Commanded.Event.Mapper do
+   @moduledoc false
+-  alias Commanded.EventStore.TypeProvider
+-  alias Commanded.EventStore.{
+-    EventData,
+-    RecordedEvent,
+-  }
+ 
+-  def map_to_event_data(event, correlation_id \\ nil, causation_id \\ nil, metadata \\ %{})
++  alias Commanded.EventStore.TypeProvider
++  alias Commanded.EventStore.{EventData,RecordedEvent}
+ 
+-  def map_to_event_data(events, correlation_id, causation_id, metadata) when is_list(events) do
+-    Enum.map(events, &map_to_event_data(&1, correlation_id, causation_id, metadata))
++  def map_to_event_data(events, causation_id, correlation_id, metadata)
++    when is_list(events)
++  do
++    Enum.map(events, &map_to_event_data(&1, causation_id, correlation_id, metadata))
+   end
+ 
+-  def map_to_event_data(event, correlation_id, causation_id, metadata) do
++  def map_to_event_data(event, causation_id, correlation_id, metadata) do
+     %EventData{
+-      correlation_id: correlation_id,
+       causation_id: causation_id,
++      correlation_id: correlation_id,
+       event_type: TypeProvider.to_string(event),
+       data: event,
+       metadata: metadata,
+     }
+   end
+ 
+-  def map_from_recorded_events(recorded_events) when is_list(recorded_events) do
++  def map_from_recorded_events(recorded_events)
++    when is_list(recorded_events)
++  do
+     Enum.map(recorded_events, &map_from_recorded_event/1)
+   end
+ 
+-  def map_from_recorded_event(%RecordedEvent{data: data}), do: data
++  def map_from_recorded_event(%RecordedEvent{data: data}),
++    do: data
+ end
+diff --git a/lib/commanded/event_store/adapters/in_memory.ex b/lib/commanded/event_store/adapters/in_memory.ex
+index d43d715..b4ee715 100644
+--- a/lib/commanded/event_store/adapters/in_memory.ex
++++ b/lib/commanded/event_store/adapters/in_memory.ex
+@@ -225,6 +225,7 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     %EventData{causation_id: causation_id, correlation_id: correlation_id, event_type: event_type, data: data, metadata: metadata})
+   do
+     %RecordedEvent{
++      event_id: UUID.uuid4(),
+       event_number: event_number,
+       stream_id: stream_uuid,
+       stream_version: stream_version,
+diff --git a/lib/commanded/event_store/event_data.ex b/lib/commanded/event_store/event_data.ex
+index 6815bf9..1c343f1 100644
+--- a/lib/commanded/event_store/event_data.ex
++++ b/lib/commanded/event_store/event_data.ex
+@@ -1,21 +1,24 @@
+ defmodule Commanded.EventStore.EventData do
+   @moduledoc """
+-  EventData contains the data for a single event before being persisted to storage
++  EventData contains the data for a single event before being persisted to
++  storage.
+   """
+ 
++  @type uuid :: String.t
++
+   @type t :: %Commanded.EventStore.EventData{
+-    correlation_id: String.t,
+-    causation_id: String.t,
++    causation_id: uuid(),
++    correlation_id: uuid(),
+     event_type: String.t,
+-    data: binary,
+-    metadata: binary,
++    data: binary(),
++    metadata: binary(),
+   }
+ 
+   defstruct [
+-    correlation_id: nil,
+-    causation_id: nil,
+-    event_type: nil ,
+-    data: nil,
+-    metadata: nil,
++    :causation_id,
++    :correlation_id,
++    :event_type ,
++    :data,
++    :metadata,
+   ]
+ end
+diff --git a/lib/commanded/event_store/event_store.ex b/lib/commanded/event_store/event_store.ex
+index 863092b..14da3af 100644
+--- a/lib/commanded/event_store/event_store.ex
++++ b/lib/commanded/event_store/event_store.ex
+@@ -23,7 +23,8 @@ defmodule Commanded.EventStore do
+   @callback append_to_stream(stream_uuid, expected_version :: non_neg_integer, events :: list(EventData.t)) :: {:ok, stream_version} | {:error, reason}
+ 
+   @doc """
+-  Streams events from the given stream, in the order in which they were originally written.
++  Streams events from the given stream, in the order in which they were
++  originally written.
+   """
+   @callback stream_forward(stream_uuid, start_version :: non_neg_integer, read_batch_size :: non_neg_integer) :: Enumerable.t | {:error, :stream_not_found} | {:error, reason}
+ 
+@@ -46,9 +47,10 @@ defmodule Commanded.EventStore do
+     | {:error, reason}
+ 
+   @doc """
+-  Acknowledge receipt and successful processing of the given event received from a subscription to an event stream.
++  Acknowledge receipt and successful processing of the given event received from
++  a subscription to an event stream.
+   """
+-  @callback ack_event(pid, RecordedEvent.t) :: any()
++  @callback ack_event(pid, RecordedEvent.t) :: :ok
+ 
+   @doc """
+   Unsubscribe an existing subscriber from all event notifications.
+@@ -92,7 +94,7 @@ defmodule Commanded.EventStore do
+   end
+ 
+   @doc false
+-  @spec ack_event(pid, RecordedEvent.t) :: any()
++  @spec ack_event(pid, RecordedEvent.t) :: :ok
+   def ack_event(pid, event) do
+     event_store_adapter().ack_event(pid, event)
+   end
+@@ -125,6 +127,7 @@ defmodule Commanded.EventStore do
+   Get the configured event store adapter
+   """
+   def event_store_adapter do
+-    Application.get_env(:commanded, :event_store_adapter) || raise ArgumentError, "Commanded expects `:event_store_adapter` to be configured in environment"
++    Application.get_env(:commanded, :event_store_adapter) ||
++      raise ArgumentError, "Commanded expects `:event_store_adapter` to be configured in environment"
+   end
+ end
+diff --git a/lib/commanded/event_store/recorded_event.ex b/lib/commanded/event_store/recorded_event.ex
+index eec37ad..8494665 100644
+--- a/lib/commanded/event_store/recorded_event.ex
++++ b/lib/commanded/event_store/recorded_event.ex
+@@ -3,29 +3,58 @@ defmodule Commanded.EventStore.RecordedEvent do
+   Contains the persisted stream identity, type, data, and metadata for a single event.
+ 
+   Events are immutable once recorded.
++
++  ## Recorded event fields
++
++    - `event_id` - a globally unique UUID to identify the event.
++
++    - `event_number` - a globally unique, monotonically incrementing and gapless
++      integer used to order the event amongst all events.
++
++    - `stream_id` - the stream identity for the event.
++
++    - `stream_version` - the version of the stream for the event.
++
++    - `causation_id` - an optional UUID identifier used to identify which
++      message you are responding to.
++
++    - `correlation_id` - an optional UUID identifier used to correlate related
++      messages.
++
++    - `data` - the serialized event as binary data.
++
++    - `metadata` - the serialized event metadata as binary data.
++
++    - `created_at` - the date/time, in UTC, indicating when the event was
++      created.
++
+   """
+ 
++  @type uuid :: String.t
++
+   @type t :: %Commanded.EventStore.RecordedEvent{
+-    event_number: non_neg_integer,
++    event_id: uuid(),
++    event_number: non_neg_integer(),
+     stream_id: String.t,
+-    stream_version: non_neg_integer,
+-    correlation_id: String.t,
+-    causation_id: String.t,
++    stream_version: non_neg_integer(),
++    causation_id: uuid(),
++    correlation_id: uuid(),
+     event_type: String.t,
+-    data: binary,
+-    metadata: binary,
++    data: binary(),
++    metadata: binary(),
+     created_at: NaiveDateTime.t,
+   }
+ 
+   defstruct [
+-    event_number: nil,
+-    stream_id: nil,
+-    stream_version: nil,
+-    correlation_id: nil,
+-    causation_id: nil,
+-    event_type: nil ,
+-    data: nil,
+-    metadata: nil,
+-    created_at: nil,
++    :event_id,
++    :event_number,
++    :stream_id,
++    :stream_version,
++    :causation_id,
++    :correlation_id,
++    :event_type,
++    :data,
++    :metadata,
++    :created_at,
+   ]
+ end
+diff --git a/lib/commanded/middleware/pipeline.ex b/lib/commanded/middleware/pipeline.ex
+index 7f4e8c6..0f91944 100644
+--- a/lib/commanded/middleware/pipeline.ex
++++ b/lib/commanded/middleware/pipeline.ex
+@@ -8,28 +8,46 @@ defmodule Commanded.Middleware.Pipeline do
+ 
+   ## Pipeline fields
+ 
+-    * `assigns` - Shared user data as a map.
+-    * `command` - Command struct being dispatched.
+-    * `consistency` - Requested dispatch consistency, either: `:eventual`
+-       (default) or `:strong`
+-    * `identity` - An atom specifying a field in the command containing the
+-       aggregate's identity or a one-arity function that returns
+-       an identity from the command being dispatched.
+-    * `metadata` - the metadata map to be persisted along with the events.
+-    * `identity_prefix` - An optional prefix to the aggregate's identity.
+-    * `halted` - Boolean status on whether the pipeline was halted
+-    * `response` - Set the response to send back to the caller
++    - `assigns` - shared user data as a map.
++
++    - `causation_id` - an optional UUID used to identify the cause of the
++       command being dispatched.
++
++    - `correlation_id` - an optional UUID used to correlate related
++       commands/events together.
++
++    - `command` - command struct being dispatched.
++
++    - `command_uuid` - UUID assigned to the command being dispatched.
++
++    - `consistency` - requested dispatch consistency, either: `:eventual`
++       (default) or `:strong`.
++
++    - `halted` - flag indicating whether the pipeline was halted.
++
++    - `identity` - an atom specifying a field in the command containing the
++       aggregate's identity or a one-arity function that returns an identity
++       from the command being dispatched.
++
++    - `identity_prefix` - an optional prefix to the aggregate's identity.
++
++    - `metadata` - the metadata map to be persisted along with the events.
++
++    - `response` - sets the response to send back to the caller.
+ 
+   """
+ 
+   defstruct [
+     assigns: %{},
++    causation_id: nil,
++    correlation_id: nil,
+     command: nil,
++    command_uuid: nil,
+     consistency: nil,
++    halted: false,
+     identity: nil,
+     identity_prefix: nil,
+     metadata: nil,
+-    halted: false,
+     response: nil,
+   ]
+ 
+@@ -47,7 +65,7 @@ defmodule Commanded.Middleware.Pipeline do
+   @doc """
+   Puts the `key` with value equal to `value` into `metadata` map
+   """
+-  def assign_metadata(%Pipeline{metadata: metadata, response: response} = pipeline, key, value) when is_atom(key) do
++  def assign_metadata(%Pipeline{metadata: metadata} = pipeline, key, value) when is_atom(key) do
+     %Pipeline{pipeline | metadata: Map.put(metadata, key, value)}
+   end
+ 
+diff --git a/lib/commanded/process_managers/process_manager_instance.ex b/lib/commanded/process_managers/process_manager_instance.ex
+index 3aadb11..535aec7 100644
+--- a/lib/commanded/process_managers/process_manager_instance.ex
++++ b/lib/commanded/process_managers/process_manager_instance.ex
+@@ -115,7 +115,7 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+     {:noreply, state}
+   end
+ 
+-  defp process_unseen_event(%RecordedEvent{event_number: event_number} = event, process_router, %ProcessManagerInstance{} = state) do
++  defp process_unseen_event(%RecordedEvent{correlation_id: correlation_id, event_id: event_id, event_number: event_number} = event, process_router, %ProcessManagerInstance{} = state) do
+     case handle_event(event, state) do
+       {:error, reason} ->
+         Logger.error(fn -> describe(state) <> " failed to handle event #{inspect event_number} due to: #{inspect reason}" end)
+@@ -123,7 +123,10 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+ 	      {:stop, reason, state}
+ 
+       commands ->
+-        with :ok <- commands |> List.wrap() |> dispatch_commands(state) do
++        # copy event id, as causation id, and correlation id from handled event
++        opts = [causation_id: event_id, correlation_id: correlation_id]
++
++        with :ok <- commands |> List.wrap() |> dispatch_commands(opts, state) do
+           process_state = mutate_state(event, state)
+ 
+           state = %ProcessManagerInstance{state |
+@@ -152,43 +155,43 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+     process_manager_module.apply(process_state, data)
+   end
+ 
+-  defp dispatch_commands(commands, state, context \\ %{})
+-  defp dispatch_commands([], _state, _context), do: :ok
+-  defp dispatch_commands([command | pending_commands], %ProcessManagerInstance{command_dispatcher: command_dispatcher} = state, context) do
++  defp dispatch_commands(commands, opts, state, context \\ %{})
++  defp dispatch_commands([], _opts, _state, _context), do: :ok
++  defp dispatch_commands([command | pending_commands], opts, %ProcessManagerInstance{command_dispatcher: command_dispatcher} = state, context) do
+     Logger.debug(fn -> describe(state) <> " attempting to dispatch command: #{inspect command}" end)
+ 
+-    case command_dispatcher.dispatch(command) do
++    case command_dispatcher.dispatch(command, opts) do
+       :ok ->
+-        dispatch_commands(pending_commands, state)
++        dispatch_commands(pending_commands, opts, state)
+ 
+       error ->
+         Logger.warn(fn -> describe(state) <> " failed to dispatch command #{inspect command} due to: #{inspect error}" end)
+ 
+-        dispatch_failure(error, command, pending_commands, context, state)
++        dispatch_failure(error, command, pending_commands, opts, state, context)
+     end
+   end
+ 
+-  defp dispatch_failure(error, failed_command, pending_commands, context, %ProcessManagerInstance{process_manager_module: process_manager_module} = state) do
++  defp dispatch_failure(error, failed_command, pending_commands, opts, %ProcessManagerInstance{process_manager_module: process_manager_module} = state, context) do
+     case process_manager_module.error(error, failed_command, pending_commands, context) do
+-      {:continue, commands, context} ->
++      {:continue, commands, context} when is_list(commands) ->
+         # continue dispatching the given commands
+         Logger.info(fn -> describe(state) <> " is continuing with modified command(s)" end)
+ 
+-        dispatch_commands(commands, state, context)
++        dispatch_commands(commands, opts, state, context)
+ 
+       {:retry, context} ->
+         # retry the failed command immediately
+         Logger.info(fn -> describe(state) <> " is retrying failed command" end)
+ 
+-        dispatch_commands([failed_command | pending_commands], state, context)
++        dispatch_commands([failed_command | pending_commands], opts, state, context)
+ 
+-      {:retry, delay, context} ->
++      {:retry, delay, context} when is_integer(delay) ->
+         # retry the failed command after waiting for the given delay, in milliseconds
+         Logger.info(fn -> describe(state) <> " is retrying failed command after #{inspect delay}ms" end)
+ 
+         :timer.sleep(delay)
+ 
+-        dispatch_commands([failed_command | pending_commands], state, context)
++        dispatch_commands([failed_command | pending_commands], opts, state, context)
+ 
+       {:skip, :discard_pending} ->
+         # skip the failed command and discard any pending commands
+@@ -200,7 +203,7 @@ defmodule Commanded.ProcessManagers.ProcessManagerInstance do
+         # skip the failed command, but continue dispatching any pending commands
+         Logger.info(fn -> describe(state) <> " is ignoring error dispatching command" end)
+ 
+-        dispatch_commands(pending_commands, state)
++        dispatch_commands(pending_commands, opts, state)
+ 
+       {:stop, reason} = reply ->
+         # stop process manager
+diff --git a/lib/commanded/process_managers/process_router.ex b/lib/commanded/process_managers/process_router.ex
+index 5ae7fcf..907c092 100644
+--- a/lib/commanded/process_managers/process_router.ex
++++ b/lib/commanded/process_managers/process_router.ex
+@@ -223,8 +223,8 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+   end
+ 
+   defp do_ack_event(event, %State{consistency: consistency, process_manager_name: name, subscription: subscription}) do
+-    EventStore.ack_event(subscription, event)
+-    Subscriptions.ack_event(name, consistency, event)
++    :ok = EventStore.ack_event(subscription, event)
++    :ok = Subscriptions.ack_event(name, consistency, event)
+   end
+ 
+   defp delegate_event(nil, _event), do: :ok
+@@ -232,7 +232,6 @@ defmodule Commanded.ProcessManagers.ProcessRouter do
+     ProcessManagerInstance.process_event(process_manager, event, self())
+   end
+ 
+-  defp describe(%State{process_manager_module: process_manager_module}) do
+-    inspect(process_manager_module)
+-  end
++  defp describe(%State{process_manager_module: process_manager_module}),
++    do: inspect(process_manager_module)
+ end
+diff --git a/mix.exs b/mix.exs
+index 8a17be6..2921efb 100644
+--- a/mix.exs
++++ b/mix.exs
+@@ -17,7 +17,7 @@ defmodule Commanded.Mixfile do
+       start_permanent: Mix.env == :prod,
+       consolidate_protocols: Mix.env == :prod,
+       name: "Commanded",
+-      source_url: "https://github.com/slashdotdash/commanded",
++      source_url: "https://github.com/commanded/commanded",
+     ]
+   end
+ 
+@@ -80,7 +80,7 @@ Use Commanded to build your own Elixir applications following the CQRS/ES patter
+       ],
+       maintainers: ["Ben Smith"],
+       licenses: ["MIT"],
+-      links: %{"GitHub" => "https://github.com/slashdotdash/commanded",
++      links: %{"GitHub" => "https://github.com/commanded/commanded",
+                "Docs" => "https://hexdocs.pm/commanded/"}
+     ]
+   end

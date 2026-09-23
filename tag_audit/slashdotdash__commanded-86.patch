@@ -1,0 +1,75 @@
+diff --git a/.travis.yml b/.travis.yml
+index 01959fd..82faecc 100644
+--- a/.travis.yml
++++ b/.travis.yml
+@@ -1,7 +1,7 @@
+ language: elixir
+ 
+ elixir:
+-  - 1.5.0
++  - 1.5.1
+ 
+ otp_release:
+   - 20.0
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index fbf4c31..374ad1a 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,9 +1,12 @@
+ # Changelog
+ 
+-## v0.14.0 (unreleased)
++## v0.14.0
++
++### Enhancements
+ 
+ - Dispatch command with `:eventual` or `:strong` consistency guarantee ([#82](https://github.com/slashdotdash/commanded/issues/82)).
+ - Include custom metadata during command dispatch ([#61](https://github.com/slashdotdash/commanded/issues/61)).
++- Validate command dispatch registration in router ([59](https://github.com/slashdotdash/commanded/issues/59)).
+ 
+ ## v0.13.0
+ 
+diff --git a/lib/commanded/commands/router.ex b/lib/commanded/commands/router.ex
+index 70af52a..5bcac50 100644
+--- a/lib/commanded/commands/router.ex
++++ b/lib/commanded/commands/router.ex
+@@ -71,6 +71,7 @@ defmodule Commanded.Commands.Router do
+       :ok = BankRouter.dispatch(command, metadata: %{"ip_address" => "127.0.0.1"})
+ 
+   """
++
+   defmacro __using__(_) do
+     quote do
+       require Logger
+@@ -136,11 +137,16 @@ defmodule Commanded.Commands.Router do
+ 
+   @doc false
+   defmacro register(command_module, to: handler, function: function, aggregate: aggregate, identity: identity, timeout: timeout, lifespan: lifespan, consistency: consistency) do
+-    quote do
++    quote location: :keep do
+       if Enum.member?(@registered_commands, unquote(command_module)) do
+         raise "duplicate command registration for: #{inspect unquote(command_module)}"
+       end
+ 
++      # sanity check the configured modules exist
++      ensure_module_exists(unquote(command_module))
++      ensure_module_exists(unquote(handler))
++      ensure_module_exists(unquote(aggregate))
++
+       handler_functions = unquote(handler).__info__(:functions)
+       unless Keyword.get(handler_functions, unquote(function)) == 2 do
+         raise "command handler #{inspect unquote(handler)} does not define a function: #{unquote(function)}/2"
+@@ -230,6 +236,13 @@ defmodule Commanded.Commands.Router do
+     end
+   end
+ 
++  @doc false
++  def ensure_module_exists(module) do
++    unless Code.ensure_compiled?(module) do
++      raise "module `#{inspect module}` does not exist, perhaps you forgot to `alias` the namespace"
++    end
++  end
++
+   defp parse_opts([{:to, aggregate_or_handler} | opts], result) do
+     case Keyword.pop(opts, :aggregate) do
+       {nil, opts} ->

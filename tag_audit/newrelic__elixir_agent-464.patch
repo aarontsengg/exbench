@@ -1,0 +1,73 @@
+diff --git a/lib/new_relic/config.ex b/lib/new_relic/config.ex
+index a60e57a..575b5d3 100644
+--- a/lib/new_relic/config.ex
++++ b/lib/new_relic/config.ex
+@@ -30,9 +30,17 @@ defmodule NewRelic.Config do
+   def license_key,
+     do: get(:license_key)
+ 
+-  @doc false
+-  def host,
+-    do: get(:host)
++  @doc """
++  Configure the Agent host display name.
++
++  This can help connecting data from the Infrastructure Agent to the APM application.
++
++  Host display name can be configured in two ways:
++  * Environment variable: `NEW_RELIC_HOST_DISPLAY_NAME=my-host-name`
++  * Application config: `config :new_relic_agent, host_display_name: "my-host-name"`
++  """
++  def host_display_name,
++    do: get(:host_display_name)
+ 
+   @doc """
+   Configure the Agent logging mechanism.
+diff --git a/lib/new_relic/harvest/collector/connect.ex b/lib/new_relic/harvest/collector/connect.ex
+index dd4cc47..72d5e30 100644
+--- a/lib/new_relic/harvest/collector/connect.ex
++++ b/lib/new_relic/harvest/collector/connect.ex
+@@ -7,6 +7,7 @@ defmodule NewRelic.Harvest.Collector.Connect do
+         language: "elixir",
+         pid: NewRelic.Util.pid(),
+         host: NewRelic.Util.hostname(),
++        display_host: NewRelic.Config.host_display_name(),
+         app_name: NewRelic.Config.app_name(),
+         labels:
+           Enum.map(NewRelic.Config.labels(), fn [key, value] ->
+diff --git a/lib/new_relic/init.ex b/lib/new_relic/init.ex
+index 6f1a618..638030e 100644
+--- a/lib/new_relic/init.ex
++++ b/lib/new_relic/init.ex
+@@ -30,6 +30,7 @@ defmodule NewRelic.Init do
+     NewRelic.Config.put(%{
+       log: determine_config(:log),
+       host: host,
++      display_host: determine_config(:display_host),
+       port: determine_config(:port, 443) |> parse_port,
+       scheme: determine_config(:scheme, "https"),
+       app_name: determine_config(:app_name) |> parse_app_names,
+diff --git a/lib/new_relic/transaction/complete.ex b/lib/new_relic/transaction/complete.ex
+index 2f51cd8..76182a3 100644
+--- a/lib/new_relic/transaction/complete.ex
++++ b/lib/new_relic/transaction/complete.ex
+@@ -13,6 +13,7 @@ defmodule NewRelic.Transaction.Complete do
+       |> transform_time_attrs
+       |> identify_transaction_type
+       |> transform_queue_duration
++      |> add_host_display_name(NewRelic.Config.host_display_name())
+       |> extract_transaction_info(pid)
+ 
+     report_transaction_event(tx_attrs)
+@@ -92,6 +93,11 @@ defmodule NewRelic.Transaction.Complete do
+ 
+   defp transform_queue_duration(tx), do: tx
+ 
++  defp add_host_display_name(tx, nil), do: tx
++
++  defp add_host_display_name(tx, host_display_name),
++    do: Map.put(tx, :"host.displayName", host_display_name)
++
+   defp extract_transaction_info(tx_attrs, pid) do
+     {function_segments, tx_attrs} = Map.pop(tx_attrs, :function_segments, [])
+     {process_spawns, tx_attrs} = Map.pop(tx_attrs, :process_spawns, [])

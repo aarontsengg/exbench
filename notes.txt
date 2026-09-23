@@ -1,0 +1,6 @@
+Task: tallarium__reverse_proxy_plug-186
+Upstream quality: B4
+Review: Interface text explicitly specifies ArgumentError for streaming
+with an adapter lacking stream_response/1. The ambiguity concern depends
+on what information the evaluation harness supplies to the agent.
+Eligibility override: none.

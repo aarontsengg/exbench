@@ -1,0 +1,121 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 900b6df..6e14540 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
+ 
+ ## [Unreleased]
+ 
++### Changed
++
++- Function `get_debug_info/1` moved from `Poolex` to `Poolex.Private.DebugInfo` (according to the [issue](https://github.com/general-CbIC/poolex/issues/140)).
++
+ ## [1.3.0] - 2025-04-26
+ 
+ ### Added
+diff --git a/lib/poolex.ex b/lib/poolex.ex
+index 1fd42db..58ae043 100644
+--- a/lib/poolex.ex
++++ b/lib/poolex.ex
+@@ -215,39 +215,6 @@ defmodule Poolex do
+     :sys.get_state(name)
+   end
+ 
+-  @doc """
+-  Returns detailed information about started pool.
+-
+-  Primarily needed to help with debugging. **Avoid using this function in production.**
+-
+-  ## Fields
+-
+-      * `busy_workers_count` - how many workers are busy right now.
+-      * `busy_workers_pids` - list of busy workers.
+-      * `failed_to_start_workers_count` - how many workers failed to start.
+-      * `idle_workers_count` - how many workers are ready to work.
+-      * `idle_workers_pids` - list of idle workers.
+-      * `max_overflow` - how many workers can be created over the limit.
+-      * `overflow` - current count of workers launched over limit.
+-      * `waiting_caller_pids` - list of callers processes.
+-      * `worker_args` - what parameters are used to start the worker.
+-      * `worker_module` - name of a module that describes a worker.
+-      * `worker_start_fun` - what function is used to start the worker.
+-
+-  ## Examples
+-
+-      iex> Poolex.start(pool_id: :my_pool_3, worker_module: Agent, worker_args: [fn -> 0 end], workers_count: 5)
+-      iex> debug_info = %Poolex.Private.DebugInfo{} = Poolex.get_debug_info(:my_pool_3)
+-      iex> debug_info.busy_workers_count
+-      0
+-      iex> debug_info.idle_workers_count
+-      5
+-  """
+-  @spec get_debug_info(pool_id()) :: DebugInfo.t()
+-  def get_debug_info(pool_id) do
+-    GenServer.call(pool_id, :get_debug_info)
+-  end
+-
+   @doc """
+   Adds some idle workers to existing pool.
+   """
+diff --git a/lib/poolex/private/debug_info.ex b/lib/poolex/private/debug_info.ex
+index 4fb6f2c..98da582 100644
+--- a/lib/poolex/private/debug_info.ex
++++ b/lib/poolex/private/debug_info.ex
+@@ -36,4 +36,37 @@ defmodule Poolex.Private.DebugInfo do
+           worker_module: module(),
+           worker_start_fun: atom()
+         }
++
++  @doc """
++  Returns detailed information about started pool.
++
++  Primarily needed to help with debugging. **Avoid using this function in production.**
++
++  ## Fields
++
++      * `busy_workers_count` - how many workers are busy right now.
++      * `busy_workers_pids` - list of busy workers.
++      * `failed_to_start_workers_count` - how many workers failed to start.
++      * `idle_workers_count` - how many workers are ready to work.
++      * `idle_workers_pids` - list of idle workers.
++      * `max_overflow` - how many workers can be created over the limit.
++      * `overflow` - current count of workers launched over limit.
++      * `waiting_caller_pids` - list of callers processes.
++      * `worker_args` - what parameters are used to start the worker.
++      * `worker_module` - name of a module that describes a worker.
++      * `worker_start_fun` - what function is used to start the worker.
++
++  ## Examples
++
++      iex> Poolex.start(pool_id: :my_pool_3, worker_module: Agent, worker_args: [fn -> 0 end], workers_count: 5)
++      iex> debug_info = %Poolex.Private.DebugInfo{} = Poolex.Private.DebugInfo.get_debug_info(:my_pool_3)
++      iex> debug_info.busy_workers_count
++      0
++      iex> debug_info.idle_workers_count
++      5
++  """
++  @spec get_debug_info(Poolex.pool_id()) :: t()
++  def get_debug_info(pool_id) do
++    GenServer.call(pool_id, :get_debug_info)
++  end
+ end
+diff --git a/lib/poolex/private/metrics.ex b/lib/poolex/private/metrics.ex
+index 0db840b..2512817 100644
+--- a/lib/poolex/private/metrics.ex
++++ b/lib/poolex/private/metrics.ex
+@@ -3,12 +3,14 @@ defmodule Poolex.Private.Metrics do
+   Functions for dispatching metrics.
+   """
+ 
++  alias Poolex.Private.DebugInfo
++
+   @doc """
+   Dispatches metrics with current count of idle workers.
+   """
+   @spec dispatch_pool_size_metrics(Poolex.pool_id()) :: :ok
+   def dispatch_pool_size_metrics(pool_id) do
+-    debug_info = Poolex.get_debug_info(pool_id)
++    debug_info = DebugInfo.get_debug_info(pool_id)
+ 
+     :telemetry.execute(
+       [:poolex, :metrics, :pool_size],

@@ -1,0 +1,764 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 0bd2835..14be325 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -3,6 +3,7 @@
+ ## Next release
+ 
+ - Support composite command routers ([#111](https://github.com/commanded/commanded/pull/111)).
++- Aggregate state snapshots ([#121](https://github.com/commanded/commanded/pull/121)).
+ 
+ ## v0.15.1
+ 
+diff --git a/README.md b/README.md
+index 720f577..e820251 100644
+--- a/README.md
++++ b/README.md
+@@ -39,6 +39,7 @@ MIT License
+   - [Aggregates](guides/Aggregates.md)
+     - [Example aggregate](guides/Aggregates.md#example-aggregate)
+     - [`Commanded.Aggregate.Multi`](guides/Aggregates.md#using-commandedaggregatemulti-to-return-multiple-events)
++    - [Aggregate state snapshots](guides/Aggregates.md#aggregate-state-snapshots)
+   - [Commands](guides/Commands.md)
+     - [Command handlers](guides/Commands.md#command-handlers)
+     - [Command dispatch and routing](guides/Commands.md#command-dispatch-and-routing)
+diff --git a/guides/Aggregates.md b/guides/Aggregates.md
+index 0908dfb..605dc04 100644
+--- a/guides/Aggregates.md
++++ b/guides/Aggregates.md
+@@ -4,23 +4,52 @@ Build your aggregates using standard Elixir modules and functions, with structs
+ 
+ An aggregate is comprised of its state, public command functions, and state mutators.
+ 
++## Aggregate state
++
++Use the `defstruct` keyword to define the aggregate state and fields.
++
++```elixir
++defmodule ExampleAggregate do
++  defstruct [:uuid, :name]
++end
++```
++
+ ## Command functions
+ 
+-A command function receives the aggregate's state and the command to execute. It must return the resultant domain events. This may be none, one, or multiple events.
++A command function receives the aggregate's state and the command to execute. It must return the resultant domain events. This may be none, one, or many events.
+ 
+ For business rule violations and errors you may return an `{:error, reason}` tagged tuple or raise an exception.
+ 
++Name your public command functions `execute/2` to dispatch commands directly to the aggregate without requiring an intermediate command handler.
++
++```elixir
++defmodule ExampleAggregate do
++  def execute(%ExampleAggregate{uuid: nil}, %Create{uuid: uuid, name: name}) do
++    %Created{uuid: uuid, name: name}
++  end
++
++  def execute(%ExampleAggregate{}, %Create{}),
++    do: {:error, :already_created}
++end
++```
++
+ ## State mutators
+ 
+-The state of an aggregate can only be mutated by applying a raised domain event to its state. This is achieved by an `apply/2` function that receives the state and the domain event. It returns the modified state.
++The state of an aggregate can only be mutated by applying a domain event to its state. This is achieved by an `apply/2` function that receives the state and the domain event. It returns the modified state.
+ 
+-Pattern matching is used to invoke the respective `apply/2` function for an event. These functions *must never fail* as they are used when rebuilding the aggregate state from its history of raised domain events. You cannot reject the event once it has occurred.
++Pattern matching is used to invoke the respective `apply/2` function for an event. These functions *must never fail* as they are used when rebuilding the aggregate state from its history of domain events. You cannot reject the event once it has occurred.
+ 
+-## Example aggregate
++```elixir
++defmodule ExampleAggregate do
++  def apply(%ExampleAggregate{}, %Created{uuid: uuid, name: name}) do
++    %ExampleAggregate{uuid: uuid, name: name}
++  end
++end
++```
+ 
+-You can write your aggregate with public API functions using the language of your domain.
++## Example aggregate
+ 
+-In this bank account example, the public function to open a new account is `open_account/3`:
++You can define your aggregate with public API functions using the language of your domain. In this bank account example, the public function to open a new account is `open_account/3`:
+ 
+ ```elixir
+ defmodule BankAccount do
+@@ -40,7 +69,7 @@ defmodule BankAccount do
+     {:error, :initial_balance_must_be_above_zero}
+   end
+ 
+-  def open_account(%BankAccount{account_number: account_number}, account_number, _initial_balance) do
++  def open_account(%BankAccount{}, _account_number, _initial_balance) do
+     {:error, :account_already_opened}
+   end
+ 
+@@ -55,9 +84,24 @@ defmodule BankAccount do
+ end
+ ```
+ 
+-An alternative approach is to expose one or more public command functions, `execute/2`, and use pattern matching on the command argument. With this approach you can route your commands directly to the aggregate, without requiring a command handler module.
++With this approach you must dispatch the command to a command handler:
++
++```elixir
++defmodule Commanded.ExampleDomain.OpenAccountHandler do
++  alias BankAccount
++  alias Commands.OpenAccount
++
++  @behaviour Commanded.Commands.Handler
++
++  def handle(%BankAccount{} = aggregate, %OpenAccount{account_number: account_number, initial_balance: initial_balance}) do
++    BankAccount.open_account(aggregate, account_number, initial_balance)
++  end
++end
++```
++
++An alternative approach is to expose one or more public command functions, `execute/2`, and use pattern matching on the command argument. With this approach you can route your commands directly to the aggregate.
+ 
+-In this case the example function matches on the `OpenAccount` command module:
++In this example the `execute/2` function pattern matches on the `OpenAccount` command module:
+ 
+ ```elixir
+ defmodule BankAccount do
+@@ -77,7 +121,7 @@ defmodule BankAccount do
+     {:error, :initial_balance_must_be_above_zero}
+   end
+ 
+-  def execute(%BankAccount{account_number: account_number}, %OpenAccount{account_number: account_number}) do
++  def execute(%BankAccount{}, %OpenAccount{}) do
+     {:error, :account_already_opened}
+   end
+ 
+@@ -114,7 +158,7 @@ defmodule BankAccount do
+ 
+   # public command API
+ 
+-  def withdraw(
++  def execute(
+     %BankAccount{state: :active} = account,
+     %WithdrawMoney{amount: amount})
+     when is_number(amount) and amount > 0
+@@ -125,6 +169,14 @@ defmodule BankAccount do
+     |> Multi.execute(&check_balance/1)
+   end
+ 
++  # state mutatators
++
++  def apply(%BankAccount{} = state, %MoneyWithdrawn{balance: balance}),
++    do: %BankAccount{state | balance: balance}
++
++  def apply(%BankAccount{} = state, %AccountOverdrawn{}),
++    do: %BankAccount{state | state: :overdrawn}
++
+   # private helpers
+ 
+   defp withdraw_money(%BankAccount{account_number: account_number, balance: balance}, amount) do
+@@ -143,3 +195,56 @@ defmodule BankAccount do
+   defp check_balance(%BankAccount{}), do: []
+ end
+ ```
++
++## Aggregate state snapshots
++
++A snapshot represents the aggregate state when all events to that point in time have been replayed. You can optionally configure state snapshotting for individual aggregates in your app configuration. Instead of loading every event for an aggregate when rebuilding its state, only the snapshot and any events appended since its creation are read. By default snapshotting is disabled for all aggregates.
++
++As an example, assume a snapshot was taken after persisting an event for the aggregate at version 100. When the aggregate process is restarted we load and deserialize the snapshot data as the aggregate's initial state. Then we fetch and replay the aggregate's events after version 100.
++
++This is a performance optimisation for aggregates that have a long lifetime or raise a large number of events. It limits the worst case scenario when rebuilding the aggregate state: it will need to read the snapshot and at most this many events from storage.
++
++Use the following options to configure snapshots for an aggregate:
++
++  - `snapshot_every` - snapshot aggregate state every so many events. Use
++    `nil` to disable snapshotting, or exclude the configuration entirely.
++
++  - `snapshot_version` - a non-negative integer indicating the version of
++    the aggregate state snapshot. Incrementing this version forces any
++    earlier recorded snapshots to be ignored when rebuilding aggregate
++    state.
++
++### Example
++
++In `config/config.exs` enable snapshots for `ExampleAggregate` after every ten events:
++
++```elixir
++config :commanded, ExampleAggregate
++  snapshot_every: 10,
++  snapshot_version: 1
++```
++
++### Snapshot serialization
++
++Aggregate state will be serialized using the configured event store serializer, by default this stores the data as JSON. You can use the `Commanded.Serialization.JsonDecoder` protocol to decode the parsed JSON data into the expected types.
++
++```elixir
++defmodule ExampleAggregate do
++  defstruct [:name, :date]
++end
++
++defimpl Commanded.Serialization.JsonDecoder, for: ExampleAggregate do
++  @doc """
++  Parse the date included in the aggregate state
++  """
++  def decode(%ExampleAggregate{date: date} = state) do
++    %ExampleAggregate{state |
++      date: NaiveDateTime.from_iso8601!(date)
++    }
++  end
++end
++```
++
++### Rebuilding an aggregate snapshot
++
++Whenever you change the structure of an aggregate's state you *must* increment the `snapshot_version` number. The aggregate state will be rebuilt from its events, ignoring any existing snapshots. They will be overwritten when the next snapshot is taken.
+diff --git a/lib/commanded/aggregates/aggregate.ex b/lib/commanded/aggregates/aggregate.ex
+index 22adca9..478303c 100644
+--- a/lib/commanded/aggregates/aggregate.ex
++++ b/lib/commanded/aggregates/aggregate.ex
+@@ -1,17 +1,40 @@
+ defmodule Commanded.Aggregates.Aggregate do
+   @moduledoc """
+   Aggregate is a `GenServer` process used to provide access to an
+-  instance of an event sourced aggregate. It allows execution of commands
+-  against an aggregate instance, and handles persistence of created events to
+-  the configured event store.
++  instance of an event sourced aggregate.
+ 
+-  Concurrent commands sent to an aggregate instance are serialized and executed
+-  in the order received.
++  It allows execution of commands against an aggregate instance, and handles
++  persistence of created events to the configured event store. Concurrent
++  commands sent to an aggregate instance are serialized and executed in the
++  order received.
+ 
+   The `Commanded.Commands.Router` module will locate, or start, an aggregate
+   instance when a command is dispatched. By default, an aggregate process will
+   run indefinitely once started. Its lifespan may be controlled by using the
+   `Commanded.Aggregates.AggregateLifespan` behaviour.
++
++  ## Snapshotting
++
++  You can configure state snapshots for an aggregate in config. By default
++  snapshots are *not* taken for an aggregate. The following options are
++  available to enable snapshots:
++
++    - `snapshot_every` - snapshot aggregate state every so many events. Use
++      `nil` to disable snapshotting, or exclude the configuration entirely.
++
++    - `snapshot_version` - a non-negative integer indicating the version of
++      the aggregate state snapshot. Incrementing this version forces any
++      earlier recorded snapshots to be ignored when rebuilding aggregate
++      state.
++
++  ### Example
++
++  In `config/config.exs` enable snapshots for `ExampleAggregate` after every ten
++  events:
++
++      config :commanded, ExampleAggregate
++        snapshot_every: 10,
++        snapshot_version: 1
+   """
+ 
+   use GenServer
+@@ -22,6 +45,7 @@ defmodule Commanded.Aggregates.Aggregate do
+   alias Commanded.Aggregates.{Aggregate,ExecutionContext}
+   alias Commanded.Event.Mapper
+   alias Commanded.EventStore
++  alias Commanded.EventStore.SnapshotData
+ 
+   @read_event_batch_size 100
+ 
+@@ -30,23 +54,32 @@ defmodule Commanded.Aggregates.Aggregate do
+     aggregate_uuid: nil,
+     aggregate_state: nil,
+     aggregate_version: 0,
++    snapshot_every: nil,
++    snapshot_module_version: 1,
++    snapshot_version: 0,
+   ]
+ 
+   def start_link(aggregate_module, aggregate_uuid, opts \\ []) do
++    snapshot_options = snapshot_options(aggregate_module)
++
+     aggregate = %Aggregate{
+       aggregate_module: aggregate_module,
+       aggregate_uuid: aggregate_uuid,
++      snapshot_every: Keyword.get(snapshot_options, :snapshot_every),
++      snapshot_module_version: Keyword.get(snapshot_options, :snapshot_version, 1),
+     }
+ 
+     GenServer.start_link(__MODULE__, aggregate, opts)
+   end
+ 
++
+   @doc false
+   def name(aggregate_module, aggregate_uuid),
+     do: {aggregate_module, aggregate_uuid}
+ 
+   def init(%Aggregate{} = state) do
+-    # initial aggregate state is populated by loading events from event store
++    # initial aggregate state is populated by loading state snapshot and/or
++    # events from event store
+     GenServer.cast(self(), :populate_aggregate_state)
+ 
+     {:ok, state}
+@@ -55,13 +88,13 @@ defmodule Commanded.Aggregates.Aggregate do
+   @doc """
+   Execute the given command against the aggregate.
+ 
+-  - `aggregate_module` - the aggregate's module (e.g. `BankAccount`).
+-  - `aggregate_uuid` - uniquely identifies an instance of the aggregate.
+-  - `context` - includes command execution arguments
+-    (see `Commanded.Aggregates.ExecutionContext` for details).
+-  - `timeout` - an integer greater than zero which specifies how many
+-    milliseconds to wait for a reply, or the atom :infinity to wait
+-    indefinitely. The default value is five seconds (5,000ms).
++    - `aggregate_module` - the aggregate's module (e.g. `BankAccount`).
++    - `aggregate_uuid` - uniquely identifies an instance of the aggregate.
++    - `context` - includes command execution arguments
++      (see `Commanded.Aggregates.ExecutionContext` for details).
++    - `timeout` - an integer greater than zero which specifies how many
++      milliseconds to wait for a reply, or the atom :infinity to wait
++      indefinitely. The default value is five seconds (5,000ms).
+ 
+   ## Return values
+ 
+@@ -78,11 +111,7 @@ defmodule Commanded.Aggregates.Aggregate do
+   end
+ 
+   @doc false
+-  def aggregate_state(aggregate_module, aggregate_uuid) do
+-    GenServer.call(via_name(aggregate_module, aggregate_uuid), :aggregate_state)
+-  end
+-
+-  @doc false
++  def aggregate_state(aggregate_module, aggregate_uuid, timeout \\ 5_000)
+   def aggregate_state(aggregate_module, aggregate_uuid, timeout) do
+     GenServer.call(via_name(aggregate_module, aggregate_uuid), :aggregate_state, timeout)
+   end
+@@ -92,16 +121,31 @@ defmodule Commanded.Aggregates.Aggregate do
+     GenServer.call(via_name(aggregate_module, aggregate_uuid), :aggregate_version)
+   end
+ 
++  @doc false
++  def shutdown(aggregate_module, aggregate_uuid) do
++    GenServer.stop(via_name(aggregate_module, aggregate_uuid))
++  end
++
+   @doc false
+   def handle_cast(:populate_aggregate_state, %Aggregate{} = state) do
+     {:noreply, populate_aggregate_state(state)}
+   end
+ 
++  def handle_cast({:snapshot_state, lifespan}, %Aggregate{} = state) do
++    {:noreply, do_snapshot(state), lifespan}
++  end
++
+   @doc false
+-  def handle_call({:execute_command, %ExecutionContext{command: command, lifespan: lifespan} = context}, _from, %Aggregate{} = state) do
++  def handle_call({:execute_command, %ExecutionContext{} = context}, _from, %Aggregate{} = state) do
+     {reply, state} = execute_command(context, state)
+ 
+-    {:reply, reply, state, lifespan.after_command(command)}
++    timeout = aggregate_lifespan_timeout(context)
++
++    if snapshotting_enabled?(state) && snapshot_required?(state) do
++      GenServer.cast(self(), {:snapshot_state, timeout})
++    end
++
++    {:reply, reply, state, timeout}
+   end
+ 
+   @doc false
+@@ -119,29 +163,44 @@ defmodule Commanded.Aggregates.Aggregate do
+     {:stop, :normal, state}
+   end
+ 
+-  # Load any existing events for the aggregate from storage and repopulate the
+-  # state using those events
+-  defp populate_aggregate_state(%Aggregate{aggregate_module: aggregate_module} = state) do
+-    aggregate = %Aggregate{state |
+-      aggregate_version: 0,
+-      aggregate_state: struct(aggregate_module)
+-    }
++  # Attempt to fetch a snapshot for the aggregate to use as its initial state.
++  # If the snapshot exists, fetch any subsequent events to rebuild its state.
++  # Otherwise start with the aggregate struct and stream all existing events for
++  # the aggregate from the event store to rebuild its state from those events.
++  defp populate_aggregate_state(%Aggregate{aggregate_module: aggregate_module, aggregate_uuid: aggregate_uuid} = state) do
++    aggregate =
++      with true <- snapshotting_enabled?(state),
++           {:ok, snapshot} <- EventStore.read_snapshot(aggregate_uuid),
++           true <- snapshot_valid?(snapshot, state) do
++        # populate initial state from snapshot
++        %Aggregate{state |
++          aggregate_version: snapshot.source_version,
++          aggregate_state: snapshot.data
++        }
++      else
++        _ ->
++          # no snapshot (or outdated), use intial empty state
++          %Aggregate{state |
++            aggregate_version: 0,
++            aggregate_state: struct(aggregate_module)
++          }
++      end
+ 
+     rebuild_from_events(aggregate)
+   end
+ 
+   # Load events from the event store, in batches, to rebuild the aggregate state
+-  defp rebuild_from_events(%Aggregate{aggregate_module: aggregate_module, aggregate_uuid: aggregate_uuid} = state) do
+-    case EventStore.stream_forward(aggregate_uuid, 0, @read_event_batch_size) do
++  defp rebuild_from_events(%Aggregate{aggregate_module: aggregate_module, aggregate_uuid: aggregate_uuid, aggregate_version: aggregate_version} = state) do
++    case EventStore.stream_forward(aggregate_uuid, aggregate_version + 1, @read_event_batch_size) do
+       {:error, :stream_not_found} ->
+-        # aggregate does not exist so return empty state
++        # aggregate does not exist so return initial state
+         state
+ 
+       event_stream ->
+         # rebuild aggregate state from event stream
+         event_stream
+         |> Stream.map(fn event ->
+-          {Mapper.map_from_recorded_event(event), event.stream_version}
++          {event.data, event.stream_version}
+         end)
+         |> Stream.transform(state, fn ({event, stream_version}, state) ->
+           case event do
+@@ -164,6 +223,57 @@ defmodule Commanded.Aggregates.Aggregate do
+     end
+   end
+ 
++  defp aggregate_lifespan_timeout(%ExecutionContext{command: command, lifespan: lifespan}) do
++    case lifespan.after_command(command) do
++      :infinity -> :infinity
++      :hibernate -> :hibernate
++      timeout when is_integer(timeout) and timeout >= 0 -> timeout
++      invalid ->
++        Logger.warn(fn -> "Invalid timeout for aggregate lifespan #{inspect lifespan}, expected a non-negative integer, `:infinity`, or `:hibernate` but got: #{inspect invalid}" end)
++        :infinity
++    end
++  end
++
++  # is snapshotting configured for the aggregate?
++  defp snapshotting_enabled?(%Aggregate{snapshot_every: snapshot_every}),
++    do: is_number(snapshot_every) && snapshot_every > 0
++
++  # was the snapshot taken at the current version?
++  defp snapshot_valid?(%SnapshotData{metadata: metadata}, %Aggregate{snapshot_module_version: expected_version}) do
++    Map.get(metadata, "snapshot_version", 1) == expected_version
++  end
++
++  # do snapshot aggregate state
++  defp snapshot_required?(%Aggregate{aggregate_version: aggregate_version, snapshot_every: snapshot_every, snapshot_version: snapshot_version})
++    when aggregate_version - snapshot_version >= snapshot_every, do: true
++
++  # not yet enough events to snapshot
++  defp snapshot_required?(_state), do: false
++
++  # snapshot aggregate state
++  defp do_snapshot(%Aggregate{} = state) do
++    %Aggregate{
++      aggregate_module: aggregate_module,
++      aggregate_uuid: aggregate_uuid,
++      aggregate_version: aggregate_version,
++      aggregate_state: aggregate_state,
++    } = state
++
++    snapshot = %SnapshotData{
++      source_uuid: aggregate_uuid,
++      source_version: aggregate_version,
++      source_type: Atom.to_string(aggregate_module),
++      data: aggregate_state,
++      metadata: %{"snapshot_version" => aggregate_version}
++    }
++
++    Logger.debug(fn -> "Recording snapshot of aggregate state for: #{inspect aggregate_uuid}@#{aggregate_version} (#{inspect aggregate_module})" end)
++
++    :ok = EventStore.record_snapshot(snapshot)
++
++    %Aggregate{state | snapshot_version: aggregate_version}
++  end
++
+   defp execute_command(
+     %ExecutionContext{handler: handler, function: function, command: command} = context,
+     %Aggregate{aggregate_module: aggregate_module, aggregate_version: expected_version, aggregate_state: aggregate_state} = state)
+@@ -216,6 +326,10 @@ defmodule Commanded.Aggregates.Aggregate do
+     EventStore.append_to_stream(stream_uuid, expected_version, event_data)
+   end
+ 
++  # get the snapshot options for the aggregate defined in environment config.
++  defp snapshot_options(aggregate_module),
++    do: Application.get_env(:commanded, aggregate_module, [])
++
+   defp via_name(aggregate_module, aggregate_uuid),
+     do: name(aggregate_module, aggregate_uuid) |> via_tuple()
+ end
+diff --git a/lib/commanded/aggregates/default_lifespan.ex b/lib/commanded/aggregates/default_lifespan.ex
+index b455ed4..1f3af52 100644
+--- a/lib/commanded/aggregates/default_lifespan.ex
++++ b/lib/commanded/aggregates/default_lifespan.ex
+@@ -10,5 +10,5 @@ defmodule Commanded.Aggregates.DefaultLifespan do
+   @doc """
+   Aggregate will run indefinitely once started
+   """
+-  def after_command(_), do: :infinity
++  def after_command(_command), do: :infinity
+ end
+diff --git a/lib/commanded/aggregates/execution_context.ex b/lib/commanded/aggregates/execution_context.ex
+index 6d3be4a..7341fcb 100644
+--- a/lib/commanded/aggregates/execution_context.ex
++++ b/lib/commanded/aggregates/execution_context.ex
+@@ -32,12 +32,12 @@ defmodule Commanded.Aggregates.ExecutionContext do
+   alias Commanded.Aggregates.DefaultLifespan
+ 
+   defstruct [
+-    command: nil,
+-    causation_id: nil,
+-    correlation_id: nil,
+-    metadata: %{},
+-    handler: nil,
+-    function: nil,
++    :command,
++    :causation_id,
++    :correlation_id,
++    :function,
++    :handler,
+     lifespan: DefaultLifespan,
++    metadata: %{},
+   ]
+ end
+diff --git a/lib/commanded/commands/router.ex b/lib/commanded/commands/router.ex
+index c0edfd8..0d492a8 100644
+--- a/lib/commanded/commands/router.ex
++++ b/lib/commanded/commands/router.ex
+@@ -168,6 +168,17 @@ defmodule Commanded.Commands.Router do
+   You can define the identity field for an aggregate using the `identify` macro.
+   The configured identity will be used for all commands registered to the
+   aggregate, unless overridden by a command registration.
++
++  ## Example
++
++      defmodule BankRouter do
++        use Commanded.Commands.Router
++
++        identify BankAccount,
++          by: :account_number,
++          prefix: "bank-account-"
++      end
++
+   """
+   defmacro identify(aggregate_module, opts) do
+     quote location: :keep do
+diff --git a/lib/commanded/event_store/adapters/in_memory.ex b/lib/commanded/event_store/adapters/in_memory.ex
+index b4ee715..39528e8 100644
+--- a/lib/commanded/event_store/adapters/in_memory.ex
++++ b/lib/commanded/event_store/adapters/in_memory.ex
+@@ -10,6 +10,7 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   defmodule State do
+     @moduledoc false
+     defstruct [
++      serializer: nil,
+       persisted_events: [],
+       streams: %{},
+       transient_subscribers: [],
+@@ -39,8 +40,13 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     SnapshotData,
+   }
+ 
+-  def start_link do
+-    GenServer.start_link(__MODULE__, %State{}, name: __MODULE__)
++  def start_link(opts \\ [])
++  def start_link(opts) do
++    state = %State{
++      serializer: Keyword.get(opts, :serializer),
++    }
++
++    GenServer.start_link(__MODULE__, state, name: __MODULE__)
+   end
+ 
+   def init(%State{} = state) do
+@@ -110,7 +116,10 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   def handle_call({:stream_forward, stream_uuid, start_version}, _from, %State{streams: streams} = state) do
+     reply = case Map.get(streams, stream_uuid) do
+       nil -> {:error, :stream_not_found}
+-      events -> Stream.drop(events, max(0, start_version - 1))
++      events ->
++        events
++        |> Stream.drop(max(0, start_version - 1))
++        |> Stream.map(&deserialize(&1, state))
+     end
+ 
+     {:reply, reply, state}
+@@ -155,7 +164,7 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   def handle_call({:read_snapshot, source_uuid}, _from, %State{snapshots: snapshots} = state) do
+     reply = case Map.get(snapshots, source_uuid, nil) do
+       nil -> {:error, :snapshot_not_found}
+-      snapshot -> {:ok, snapshot}
++      snapshot -> {:ok, deserialize(snapshot, state)}
+     end
+ 
+     {:reply, reply, state}
+@@ -163,7 +172,7 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+ 
+   def handle_call({:record_snapshot, %SnapshotData{source_uuid: source_uuid} = snapshot}, _from, %State{snapshots: snapshots} = state) do
+     state = %State{state |
+-      snapshots: Map.put(snapshots, source_uuid, snapshot),
++      snapshots: Map.put(snapshots, source_uuid, serialize(snapshot, state)),
+     }
+ 
+     {:reply, :ok, state}
+@@ -196,14 +205,18 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+ 
+   defp persist_events(stream_uuid, existing_events, new_events, %State{persisted_events: persisted_events, streams: streams, next_event_number: next_event_number} = state) do
+     initial_stream_version = length(existing_events) + 1
+-    now = DateTime.utc_now() |> DateTime.to_naive()
++    now = NaiveDateTime.utc_now()
+ 
+     new_events =
+       new_events
+       |> Enum.with_index(0)
+       |> Enum.map(fn {recorded_event, index} ->
+-        map_to_recorded_event(next_event_number + index, stream_uuid, initial_stream_version + index, now, recorded_event)
++        event_number = next_event_number + index
++        stream_version = initial_stream_version + index
++
++        map_to_recorded_event(event_number, stream_uuid, stream_version, now, recorded_event)
+       end)
++      |> Enum.map(&serialize(&1, state))
+ 
+     stream_events = Enum.concat(existing_events, new_events)
+     next_event_number = List.last(new_events).event_number + 1
+@@ -214,16 +227,23 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+       next_event_number: next_event_number,
+     }
+ 
+-    publish_to_transient_subscribers(stream_uuid, new_events, state)
+-    publish_to_persistent_subscriptions(new_events, state)
++    publish_events = Enum.map(new_events, &deserialize(&1, state))
++
++    publish_to_transient_subscribers(stream_uuid, publish_events, state)
++    publish_to_persistent_subscriptions(publish_events, state)
+ 
+     {{:ok, length(stream_events)}, state}
+   end
+ 
+-  defp map_to_recorded_event(
+-    event_number, stream_uuid, stream_version, now,
+-    %EventData{causation_id: causation_id, correlation_id: correlation_id, event_type: event_type, data: data, metadata: metadata})
+-  do
++  defp map_to_recorded_event(event_number, stream_uuid, stream_version, now, %EventData{} = event) do
++    %EventData{
++      causation_id: causation_id,
++      correlation_id: correlation_id,
++      event_type: event_type,
++      data: data,
++      metadata: metadata
++    } = event
++
+     %RecordedEvent{
+       event_id: UUID.uuid4(),
+       event_number: event_number,
+@@ -241,7 +261,7 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+   defp subscribe(%Subscription{name: subscription_name, subscriber: subscriber} = subscription, %State{persistent_subscriptions: subscriptions, persisted_events: persisted_events} = state) do
+     Process.monitor(subscriber)
+ 
+-    catch_up(subscription, persisted_events)
++    catch_up(subscription, persisted_events, state)
+ 
+     %State{state |
+       persistent_subscriptions: Map.put(subscriptions, subscription_name, subscription),
+@@ -262,15 +282,16 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+     end)
+   end
+ 
+-  defp catch_up(%Subscription{subscriber: nil}, _persisted_events), do: :ok
+-  defp catch_up(%Subscription{start_from: :current}, _persisted_events), do: :ok
+-  defp catch_up(%Subscription{subscriber: subscriber, start_from: :origin, last_seen_event_number: last_seen_event_number}, persisted_events) do
++  defp catch_up(%Subscription{subscriber: nil}, _persisted_events, _state), do: :ok
++  defp catch_up(%Subscription{start_from: :current}, _persisted_events, _state), do: :ok
++  defp catch_up(%Subscription{subscriber: subscriber, start_from: :origin, last_seen_event_number: last_seen_event_number}, persisted_events, %State{} = state) do
+     unseen_events =
+       persisted_events
+       |> Enum.reverse()
+       |> Enum.drop(last_seen_event_number)
+ 
+-    for events <- unseen_events, do: send(subscriber, {:events, events})
++    for events <- unseen_events,
++      do: send(subscriber, {:events, Enum.map(events, &deserialize(&1, state))})
+   end
+ 
+   defp publish_to_transient_subscribers(stream_uuid, events, %State{transient_subscribers: subscribers}) do
+@@ -287,6 +308,35 @@ defmodule Commanded.EventStore.Adapters.InMemory do
+       |> Enum.map(&(&1.subscriber))
+       |> Enum.filter(&is_pid/1)
+ 
+-    for subscriber <- subscribers, do: send(subscriber, {:events, events})
++    for subscriber <- subscribers,
++      do: send(subscriber, {:events, events})
++  end
++
++  defp serialize(data, %State{serializer: nil}), do: data
++  defp serialize(%RecordedEvent{data: data, metadata: metadata} = recorded_event, %State{serializer: serializer}) do
++    %RecordedEvent{recorded_event |
++      data: serializer.serialize(data),
++      metadata: serializer.serialize(metadata),
++    }
++  end
++  defp serialize(%SnapshotData{data: data, metadata: metadata} = snapshot, %State{serializer: serializer}) do
++    %SnapshotData{snapshot |
++      data: serializer.serialize(data),
++      metadata: serializer.serialize(metadata),
++    }
++  end
++
++  def deserialize(data, %State{serializer: nil}), do: data
++  def deserialize(%RecordedEvent{data: data, metadata: metadata, event_type: event_type} = recorded_event, %State{serializer: serializer}) do
++    %RecordedEvent{recorded_event |
++      data: serializer.deserialize(data, type: event_type),
++      metadata: serializer.deserialize(metadata)
++    }
++  end
++  def deserialize(%SnapshotData{data: data, metadata: metadata, source_type: source_type} = snapshot, %State{serializer: serializer}) do
++    %SnapshotData{snapshot |
++      data: serializer.deserialize(data, type: source_type),
++      metadata: serializer.deserialize(metadata)
++    }
+   end
+ end
+diff --git a/lib/commanded/event_store/snapshot_data.ex b/lib/commanded/event_store/snapshot_data.ex
+index a1e7b7f..4027d19 100644
+--- a/lib/commanded/event_store/snapshot_data.ex
++++ b/lib/commanded/event_store/snapshot_data.ex
+@@ -13,11 +13,11 @@ defmodule Commanded.EventStore.SnapshotData do
+   }
+ 
+   defstruct [
+-    source_uuid: nil,
+-    source_version: nil,
+-    source_type: nil,
+-    data: nil,
+-    metadata: nil,
+-    created_at: nil,
++    :source_uuid,
++    :source_version,
++    :source_type,
++    :data,
++    :metadata,
++    :created_at,
+   ]
+ end
+diff --git a/lib/commanded/serialization/json_serializer.ex b/lib/commanded/serialization/json_serializer.ex
+index 3e707d7..a0de3eb 100644
+--- a/lib/commanded/serialization/json_serializer.ex
++++ b/lib/commanded/serialization/json_serializer.ex
+@@ -16,6 +16,7 @@ defmodule Commanded.Serialization.JsonSerializer do
+   @doc """
+   Deserialize given JSON binary data to the expected type.
+   """
++  def deserialize(binary, config \\ [])
+   def deserialize(binary, config) do
+     type = case Keyword.get(config, :type) do
+       nil -> nil

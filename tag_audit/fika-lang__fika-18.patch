@@ -1,0 +1,833 @@
+diff --git a/.formatter.exs b/.formatter.exs
+new file mode 100644
+index 0000000..5617558
+--- /dev/null
++++ b/.formatter.exs
+@@ -0,0 +1,4 @@
++[
++  inputs: ["{mix,.formatter}.exs", "{config,lib,test}/**/*.{ex,exs}"],
++  import_deps: [:nimble_parsec]
++]
+diff --git a/.tool-versions b/.tool-versions
+new file mode 100644
+index 0000000..1c63df1
+--- /dev/null
++++ b/.tool-versions
+@@ -0,0 +1,2 @@
++elixir 1.10.4
++erlang 22.2.8
+diff --git a/README.md b/README.md
+index 17840f9..fd106ee 100644
+--- a/README.md
++++ b/README.md
+@@ -95,6 +95,9 @@ x = true
+ # Type: List(Int)
+ list_of_ints = [1, 2, 3]
+ 
++# Type: {String,Bool}
++tuple = {"tuple", true}
++
+ # Type: {foo: Int}
+ record = {foo: 123}
+ ```
+diff --git a/example.fi b/example.fi
+index f41b84e..eea252a 100644
+--- a/example.fi
++++ b/example.fi
+@@ -33,3 +33,7 @@ fn simple_if : String do
+     "you can't see me \m/"
+   end
+ end
++
++fn tuple : {Int,Bool} do
++  {1, true}
++end
+diff --git a/lib/fika.ex b/lib/fika.ex
+index eaaf289..1cbd6de 100644
+--- a/lib/fika.ex
++++ b/lib/fika.ex
+@@ -1,7 +1,7 @@
+ defmodule Fika do
+   def start(path \\ nil) do
+     if path do
+-      File.cd! path
++      File.cd!(path)
+     end
+ 
+     if File.exists?("router.fi") do
+@@ -9,7 +9,7 @@ defmodule Fika do
+       start_webserver()
+       :ok
+     else
+-      IO.puts "Cannot start webserver: file router.fi not found."
++      IO.puts("Cannot start webserver: file router.fi not found.")
+       :error
+     end
+   end
+@@ -19,8 +19,11 @@ defmodule Fika do
+   end
+ 
+   def start_webserver(port \\ 6060) do
+-    {:ok, _pid} = Supervisor.start_child(Fika.Supervisor,
+-      {Plug.Cowboy, scheme: :http, plug: Fika.Router, options: [port: port, ip: {127, 0, 0, 1}]})
++    {:ok, _pid} =
++      Supervisor.start_child(
++        Fika.Supervisor,
++        {Plug.Cowboy, scheme: :http, plug: Fika.Router, options: [port: port, ip: {127, 0, 0, 1}]}
++      )
+ 
+     IO.puts("Web server is running on http://localhost:#{port}\nPress Ctrl+C to exit")
+   end
+diff --git a/lib/fika/cli.ex b/lib/fika/cli.ex
+index 63db87c..1abc424 100644
+--- a/lib/fika/cli.ex
++++ b/lib/fika/cli.ex
+@@ -17,13 +17,14 @@ defmodule Fika.Cli do
+     function = opts[:function] || "main.start()"
+ 
+     {:module, module} = Fika.Code.load_file(main_file)
+-    Logger.debug "Calling :#{module}.#{function}"
++    Logger.debug("Calling :#{module}.#{function}")
+     {result, _binding} = Code.eval_string(":\"#{module}\".#{function}")
+-    IO.inspect result
++    IO.inspect(result)
+   end
+ 
+   defp parse_args(["start" | rest]) do
+     path = List.first(rest)
++
+     case Fika.start(path) do
+       :ok -> :timer.sleep(:infinity)
+       :error -> :error
+diff --git a/lib/fika/code.ex b/lib/fika/code.ex
+index bd3715b..e965221 100644
+--- a/lib/fika/code.ex
++++ b/lib/fika/code.ex
+@@ -13,7 +13,8 @@ defmodule Fika.Code do
+       {:ok, str} ->
+         load_string(str, file)
+ 
+-      {:error, error} -> IO.puts("Cannot read file: #{inspect error}")
++      {:error, error} ->
++        IO.puts("Cannot read file: #{inspect(error)}")
+     end
+   end
+ 
+@@ -24,7 +25,7 @@ defmodule Fika.Code do
+       {:ok, _env} = TypeChecker.check_module(ast, Env.init())
+       forms = ErlTranslate.translate(ast, file)
+       {:module, module} = result = load_forms(forms, file)
+-      Logger.debug "Loaded module #{module}"
++      Logger.debug("Loaded module #{module}")
+       result
+     else
+       {:error, "Invalid filename. Make sure it's something like foo/bar/baz.fi"}
+diff --git a/lib/fika/env.ex b/lib/fika/env.ex
+index 0200b97..00a130e 100644
+--- a/lib/fika/env.ex
++++ b/lib/fika/env.ex
+@@ -14,21 +14,18 @@ defmodule Fika.Env do
+         "kernel.+(Int,Float)" => "Float",
+         "kernel.+(Float,Int)" => "Float",
+         "kernel.+(Float,Float)" => "Float",
+-
+         "kernel.-(Int,Int)" => "Int",
+         "kernel.-(Int,Float)" => "Float",
+         "kernel.-(Float,Int)" => "Float",
+         "kernel.-(Float,Float)" => "Float",
+-
+         "kernel.*(Int,Int)" => "Int",
+         "kernel.*(Int,Float)" => "Float",
+         "kernel.*(Float,Int)" => "Float",
+         "kernel.*(Float,Float)" => "Float",
+-
+         "kernel./(Int,Int)" => "Float",
+         "kernel./(Int,Float)" => "Float",
+         "kernel./(Float,Int)" => "Float",
+-        "kernel./(Float,Float)" => "Float",
++        "kernel./(Float,Float)" => "Float"
+       }
+     }
+   end
+@@ -70,7 +67,7 @@ defmodule Fika.Env do
+   end
+ 
+   defp add_known_function(env, signature) do
+-    update_in(env, [:module_env, :known_functions], & [signature | &1])
++    update_in(env, [:module_env, :known_functions], &[signature | &1])
+   end
+ 
+   def ast_functions(env) do
+diff --git a/lib/fika/erl_translate.ex b/lib/fika/erl_translate.ex
+index 0a8a773..d72d1f2 100644
+--- a/lib/fika/erl_translate.ex
++++ b/lib/fika/erl_translate.ex
+@@ -2,10 +2,12 @@ defmodule Fika.ErlTranslate do
+   def translate({:module, module_name, functions}, file) do
+     line = 1
+     file = String.to_charlist(file)
++
+     module = [
+       {:attribute, line, :file, {file, line}},
+       {:attribute, line, :module, String.to_atom(module_name)}
+     ]
++
+     {exports, function_declaration} = to_forms(functions)
+ 
+     module ++ exports ++ function_declaration
+@@ -33,7 +35,8 @@ defmodule Fika.ErlTranslate do
+     Enum.map(exps, &translate_exp/1)
+   end
+ 
+-  defp translate_exp({:call, {bin_op, {line, _, _}}, [arg1, arg2], _module}) when bin_op in [:+, :-, :*, :/] do
++  defp translate_exp({:call, {bin_op, {line, _, _}}, [arg1, arg2], _module})
++       when bin_op in [:+, :-, :*, :/] do
+     {:op, line, bin_op, translate_exp(arg1), translate_exp(arg2)}
+   end
+ 
+@@ -62,7 +65,7 @@ defmodule Fika.ErlTranslate do
+   defp translate_exp({:atom, {line, _, _}, value}) do
+     {:atom, line, value}
+   end
+-  
++
+   defp translate_exp({{:=, {line, _, _}}, pattern, exp}) do
+     {:match, line, translate_exp(pattern), translate_exp(exp)}
+   end
+@@ -83,10 +86,16 @@ defmodule Fika.ErlTranslate do
+     do_translate_list(value, line)
+   end
+ 
++  defp translate_exp({:tuple, {line, _, _}, value}) do
++    {:tuple, line, translate_exps(value)}
++  end
++
+   defp translate_exp({:record, {line, _, _}, name, k_vs}) do
+-    k_vs = Enum.map(k_vs, fn {{:identifier, {l, _, _}, k}, v} ->
+-      {:map_field_assoc, l, {:atom, l, k}, translate_exp(v)}
+-    end)
++    k_vs =
++      Enum.map(k_vs, fn {{:identifier, {l, _, _}, k}, v} ->
++        {:map_field_assoc, l, {:atom, l, k}, translate_exp(v)}
++      end)
++
+     k_vs = add_record_meta(k_vs, name, line)
+ 
+     {:map, line, k_vs}
+@@ -94,12 +103,14 @@ defmodule Fika.ErlTranslate do
+ 
+   defp translate_exp({:function_ref, {line, _, _}, {module, function, arg_types}}) do
+     arity = length(arg_types)
++
+     f =
+       if module do
+         {:function, {:atom, line, module}, {:atom, line, function}, {:integer, line, arity}}
+       else
+         {:function, function, arity}
+       end
++
+     {:fun, line, f}
+   end
+ 
+@@ -118,7 +129,7 @@ defmodule Fika.ErlTranslate do
+   defp add_record_meta(k_vs, name, line) do
+     name =
+       if name do
+-         {:atom, 0, String.to_atom(name)}
++        {:atom, 0, String.to_atom(name)}
+       else
+         {nil, 0}
+       end
+diff --git a/lib/fika/parser.ex b/lib/fika/parser.ex
+index 04e71d1..d8ae27f 100644
+--- a/lib/fika/parser.ex
++++ b/lib/fika/parser.ex
+@@ -11,7 +11,7 @@ defmodule Fika.Parser do
+ 
+   comment =
+     string("#")
+-    |> repeat(utf8_char([not: ?\n]))
++    |> repeat(utf8_char(not: ?\n))
+     |> string("\n")
+ 
+   vertical_space =
+@@ -82,7 +82,7 @@ defmodule Fika.Parser do
+ 
+   string_exp =
+     ignore(string("\""))
+-    |> repeat(choice([string("\\\""), utf8_char([not: ?"])]))
++    |> repeat(choice([string("\\\""), utf8_char(not: ?")]))
+     |> ignore(string("\""))
+     |> Helper.to_ast(:string)
+ 
+@@ -127,6 +127,14 @@ defmodule Fika.Parser do
+     |> ignore(string("]"))
+     |> Helper.to_ast(:exp_list)
+ 
++  tuple =
++    ignore(string("{"))
++    |> concat(allow_space)
++    |> concat(list_content)
++    |> concat(allow_space)
++    |> ignore(string("}"))
++    |> Helper.to_ast(:tuple)
++
+   exp_paren =
+     ignore(string("("))
+     |> parsec(:exp)
+@@ -230,6 +238,7 @@ defmodule Fika.Parser do
+       boolean,
+       string_exp,
+       exp_list,
++      tuple,
+       record,
+       function_ref,
+       atom,
+@@ -260,8 +269,7 @@ defmodule Fika.Parser do
+       |> parsec(:term)
+     )
+ 
+-  exp_mult_op =
+-    Helper.to_ast(term, :exp_bin_op)
++  exp_mult_op = Helper.to_ast(term, :exp_bin_op)
+ 
+   exp_bin_op =
+     exp_mult_op
+@@ -272,8 +280,7 @@ defmodule Fika.Parser do
+       |> parsec(:exp_bin_op)
+     )
+ 
+-  exp_add_op =
+-    Helper.to_ast(exp_bin_op, :exp_bin_op)
++  exp_add_op = Helper.to_ast(exp_bin_op, :exp_bin_op)
+ 
+   exp =
+     choice([
+@@ -306,6 +313,29 @@ defmodule Fika.Parser do
+     |> concat(allow_space)
+     |> string(")")
+ 
++  # To parse functions with tuple return type
++  type_tuple_element =
++    allow_space
++    |> parsec(:type)
++    |> label("tuple element")
++
++  type_tuple_elements =
++    type_tuple_element
++    |> repeat(
++      allow_space
++      |> ignore(string(","))
++      |> concat(allow_space)
++      |> concat(type_tuple_element)
++    )
++    |> reduce({Enum, :join, [","]})
++
++  tuple_type =
++    string("{")
++    |> concat(type_tuple_elements)
++    |> string("}")
++    |> reduce({Enum, :join, []})
++    |> label("tuple type")
++
+   type_key_value =
+     allow_space
+     |> concat(identifier_str)
+@@ -349,7 +379,9 @@ defmodule Fika.Parser do
+       simple_type
+       |> optional(type_parens),
+       record_type,
+-      atom
++      atom,
++      record_type,
++      tuple_type
+     ])
+ 
+   parse_type =
+diff --git a/lib/fika/parser_helper.ex b/lib/fika/parser_helper.ex
+index 51b6765..7c3a86d 100644
+--- a/lib/fika/parser_helper.ex
++++ b/lib/fika/parser_helper.ex
+@@ -9,7 +9,6 @@ defmodule Fika.ParserHelper do
+     |> map({Fika.ParserHelper, :do_to_ast, [kind]})
+   end
+ 
+-
+   def put_line_offset({[{result, {line, line_start_offset}}], string_offset}) do
+     {result, {line, line_start_offset, string_offset}}
+   end
+@@ -26,7 +25,8 @@ defmodule Fika.ParserHelper do
+     {{:if, line}, condition, true_block, false_block}
+   end
+ 
+-  def do_to_ast({[left, bin_op, right | rest], line}, :exp_bin_op) when bin_op in ["+", "-", "*", "/"] do
++  def do_to_ast({[left, bin_op, right | rest], line}, :exp_bin_op)
++      when bin_op in ["+", "-", "*", "/"] do
+     new_left = {:call, {String.to_atom(bin_op), line}, [left, right], :kernel}
+     do_to_ast({[new_left | rest], line}, :exp_bin_op)
+   end
+@@ -88,6 +88,7 @@ defmodule Fika.ParserHelper do
+     case val do
+       [exp, args] ->
+         {:call, {exp, line}, args}
++
+       [val] ->
+         val
+     end
+@@ -105,6 +106,10 @@ defmodule Fika.ParserHelper do
+     {:list, line, result}
+   end
+ 
++  def do_to_ast({result, line}, :tuple) do
++    {:tuple, line, result}
++  end
++
+   def do_to_ast({[k, v], _line}, :key_value) do
+     {k, v}
+   end
+@@ -123,15 +128,17 @@ defmodule Fika.ParserHelper do
+     case ast do
+       [[], function, arg_types] ->
+         {:function_ref, line, {nil, value_from_identifier(function), arg_types}}
++
+       [[module], function, arg_types] ->
+-        {:function_ref, line, {value_from_identifier(module), value_from_identifier(function), arg_types}}
++        {:function_ref, line,
++         {value_from_identifier(module), value_from_identifier(function), arg_types}}
+     end
+   end
+ 
+   def do_to_ast({[{:identifier, line, value}], line}, :atom) do
+     {:atom, line, value}
+   end
+-  
++
+   defp value_from_identifier({:identifier, _line, value}) do
+     value
+   end
+diff --git a/lib/fika/route_store.ex b/lib/fika/route_store.ex
+index 76773b5..2271a8c 100644
+--- a/lib/fika/route_store.ex
++++ b/lib/fika/route_store.ex
+@@ -18,11 +18,12 @@ defmodule Fika.RouteStore do
+ 
+     if function_exported?(:router, :routes, 0) do
+       routes = :router.routes()
++
+       Enum.into(routes, %{}, fn %{method: method, path: path, handler: function} ->
+-          {"#{method}:#{path}", function}
++        {"#{method}:#{path}", function}
+       end)
+     else
+-      Logger.error "Router has no function routes/0"
++      Logger.error("Router has no function routes/0")
+       %{}
+     end
+   end
+diff --git a/lib/fika/router.ex b/lib/fika/router.ex
+index d0b6a78..3240268 100644
+--- a/lib/fika/router.ex
++++ b/lib/fika/router.ex
+@@ -16,7 +16,9 @@ defmodule Fika.Router do
+ 
+   defp get_resp(method, path) do
+     case Fika.RouteStore.get_route(method, path) do
+-      nil -> {404, "Not found"}
++      nil ->
++        {404, "Not found"}
++
+       function ->
+         body = function.()
+         {200, body}
+diff --git a/lib/fika/type_checker.ex b/lib/fika/type_checker.ex
+index dea1889..685bb40 100644
+--- a/lib/fika/type_checker.ex
++++ b/lib/fika/type_checker.ex
+@@ -7,20 +7,22 @@ defmodule Fika.TypeChecker do
+   # function definitions.
+   def check_module({:module, module_name, functions} = ast, env) do
+     env = Env.init_module_env(env, module_name, ast)
++
+     Enum.reduce_while(functions, {:ok, env}, fn function, {:ok, env} ->
+       {:function, _line, {name, _args, _type, _exprs}} = function
+       signature = signature(function, module_name)
+ 
+       if Env.known_function?(env, signature) do
+-        Logger.debug "Already checked function: #{signature}. Skipping."
++        Logger.debug("Already checked function: #{signature}. Skipping.")
+         {:cont, {:ok, env}}
+       else
+         case check(function, env) do
+           {:ok, type, env} ->
+-            Logger.debug "Function: #{name} checks type: #{type}"
++            Logger.debug("Function: #{name} checks type: #{type}")
+             {:cont, {:ok, env}}
++
+           error ->
+-            Logger.debug "Function: #{name} failed type check"
++            Logger.debug("Function: #{name} failed type check")
+             {:halt, error}
+         end
+       end
+@@ -36,8 +38,10 @@ defmodule Fika.TypeChecker do
+     case infer(function, env) do
+       {:ok, ^expected_type, _env} = result ->
+         result
++
+       {:ok, other_type, _} ->
+         {:error, "Expected type: #{expected_type}, got: #{other_type}"}
++
+       error ->
+         error
+     end
+@@ -57,15 +61,18 @@ defmodule Fika.TypeChecker do
+   end
+ 
+   def infer_block(env, []) do
+-    Logger.debug "Block is empty."
++    Logger.debug("Block is empty.")
+     {:ok, "Nothing", env}
+   end
++
+   def infer_block(env, [exp]) do
+-    Logger.debug "Block has one exp left"
++    Logger.debug("Block has one exp left")
+     infer_exp(env, exp)
+   end
++
+   def infer_block(env, [exp | exp_list]) do
+-    Logger.debug "Block has multiple exps"
++    Logger.debug("Block has multiple exps")
++
+     case infer_exp(env, exp) do
+       {:ok, _type, env} -> infer_block(env, exp_list)
+       error -> error
+@@ -74,24 +81,25 @@ defmodule Fika.TypeChecker do
+ 
+   # Integer literals
+   def infer_exp(env, {:integer, _line, integer}) do
+-    Logger.debug "Integer #{integer} found. Type: Int"
++    Logger.debug("Integer #{integer} found. Type: Int")
+     {:ok, "Int", env}
+   end
+ 
+   # Booleans
+   def infer_exp(env, {:boolean, _line, boolean}) do
+-    Logger.debug "Boolean #{boolean} found. Type: Bool"
++    Logger.debug("Boolean #{boolean} found. Type: Bool")
+     {:ok, "Bool", env}
+   end
+ 
+   # Variables
+   def infer_exp(env, {:identifier, _line, name}) do
+     type = Env.scope_get(env, name)
++
+     if type do
+-      Logger.debug "Variable type found from scope: #{name}:#{type}"
++      Logger.debug("Variable type found from scope: #{name}:#{type}")
+       {:ok, type, env}
+     else
+-      Logger.debug "Variable type not found in scope: #{name}"
++      Logger.debug("Variable type not found in scope: #{name}")
+       {:error, "Unknown variable: #{name}"}
+     end
+   end
+@@ -100,7 +108,7 @@ defmodule Fika.TypeChecker do
+   def infer_exp(env, {:call, {name, _line}, args, module}) do
+     exp = %{args: args, name: name}
+     module_name = module || Env.current_module(env)
+-    Logger.debug "Inferring type of function: #{name}"
++    Logger.debug("Inferring type of function: #{name}")
+     infer_args(env, exp, module_name)
+   end
+ 
+@@ -112,15 +120,19 @@ defmodule Fika.TypeChecker do
+         case do_infer_args_without_name(env, args) do
+           {:ok, ^arg_types, env} ->
+             {:ok, type, env}
++
+           {:ok, other_arg_types, _env} ->
+-            error = "Expected function reference to be called with" <>
+-              " arguments (#{Enum.join(arg_types, ",")}), but it was called " <>
++            error =
++              "Expected function reference to be called with" <>
++                " arguments (#{Enum.join(arg_types, ",")}), but it was called " <>
+                 "with arguments (#{Enum.join(other_arg_types, ",")})"
+ 
+             {:error, error}
+         end
++
+       {:ok, type, _} ->
+         {:error, "Expected a function reference, but got type: #{type}"}
++
+       error ->
+         error
+     end
+@@ -130,9 +142,10 @@ defmodule Fika.TypeChecker do
+   def infer_exp(env, {{:=, _}, {:identifier, _line, left}, right}) do
+     case infer_exp(env, right) do
+       {:ok, type, env} ->
+-        Logger.debug "Adding variable to scope: #{left}:#{type}"
++        Logger.debug("Adding variable to scope: #{left}:#{type}")
+         env = Env.scope_add(env, left, type)
+         {:ok, type, env}
++
+       error ->
+         error
+     end
+@@ -140,7 +153,7 @@ defmodule Fika.TypeChecker do
+ 
+   # String
+   def infer_exp(env, {:string, _line, string}) do
+-    Logger.debug "String #{string} found. Type: String"
++    Logger.debug("String #{string} found. Type: String")
+     {:ok, "String", env}
+   end
+ 
+@@ -149,14 +162,28 @@ defmodule Fika.TypeChecker do
+     infer_list_exps(env, exps)
+   end
+ 
++  # Tuple
++  def infer_exp(env, {:tuple, _, exps}) do
++    case do_infer_tuple_exps(exps, env) do
++      {:ok, exp_types, env} ->
++        exp_types =
++          exp_types
++          |> Enum.reverse()
++          |> Enum.join(",")
++
++        {:ok, "{#{exp_types}}", env}
++      error ->
++        error
++    end
++  end
++
+   # Record
+   def infer_exp(env, {:record, _, name, key_values}) do
+     if name do
+       # Lookup type of name, ensure it matches.
+-      Logger.error "Not implemented"
++      Logger.error("Not implemented")
+     else
+       case do_infer_key_values(key_values, env) do
+-
+         {:ok, k_v_types, env} ->
+           k_v_types =
+             k_v_types
+@@ -164,6 +191,7 @@ defmodule Fika.TypeChecker do
+             |> Enum.join(",")
+ 
+           {:ok, "{#{k_v_types}}", env}
++
+         error ->
+           error
+       end
+@@ -172,14 +200,15 @@ defmodule Fika.TypeChecker do
+ 
+   # Function ref
+   def infer_exp(env, {:function_ref, _, {module, function_name, arg_types}}) do
+-    Logger.debug "Inferring type of function: #{function_name}"
++    Logger.debug("Inferring type of function: #{function_name}")
+ 
+     module_name = module || Env.current_module(env)
+     signature = get_signature(module_name, function_name, arg_types)
+ 
+     result =
+       if module_name == Env.current_module(env) && !Env.known_function?(env, signature) do
+-        Logger.debug "Checking unknown function #{signature} in module: #{module_name}"
++        Logger.debug("Checking unknown function #{signature} in module: #{module_name}")
++
+         case check_by_signature(env, signature) do
+           {:ok, _, _} = result -> result
+           error -> error
+@@ -192,6 +221,7 @@ defmodule Fika.TypeChecker do
+       {:ok, type, env} ->
+         type = %FunctionRef{arg_types: arg_types, return_type: type}
+         {:ok, type, env}
++
+       error ->
+         error
+     end
+@@ -205,7 +235,7 @@ defmodule Fika.TypeChecker do
+ 
+   # if-else expression
+   def infer_exp(env, {{:if, _line}, condition, if_block, else_block}) do
+-    Logger.debug "Inferring an if-else expression"
++    Logger.debug("Inferring an if-else expression")
+ 
+     case infer_if_else_condition(env, condition) do
+       {:ok, "Bool", env} -> infer_if_else_blocks(env, if_block, else_block)
+@@ -232,8 +262,9 @@ defmodule Fika.TypeChecker do
+     unless if_type_val == else_type_val do
+       Logger.debug("if and else block have different types")
+ 
+-      error = "Expected if and else blocks to have same return type. " <>
+-        "Got #{if_type_val} and #{else_type_val}"
++      error =
++        "Expected if and else blocks to have same return type. " <>
++          "Got #{if_type_val} and #{else_type_val}"
+ 
+       {:error, error}
+     else
+@@ -247,6 +278,18 @@ defmodule Fika.TypeChecker do
+         {:ok, type, env} ->
+           {:identifier, _, key} = k
+           {:cont, {:ok, ["#{key}:#{type}" | acc], env}}
++
++        error ->
++          {:halt, error}
++      end
++    end)
++  end
++
++  defp do_infer_tuple_exps(exps, env) do
++    Enum.reduce_while(exps, {:ok, [], env}, fn exp, {:ok, acc, env} ->
++      case infer_exp(env, exp) do
++        {:ok, exp_type, env} ->
++          {:cont, {:ok, [exp_type | acc], env}}
+         error -> {:halt, error}
+       end
+     end)
+@@ -258,7 +301,8 @@ defmodule Fika.TypeChecker do
+         signature = get_signature(module, exp.name, type_acc)
+ 
+         if module == Env.current_module(env) && !Env.known_function?(env, signature) do
+-          Logger.debug "Checking unknown function #{signature} in module: #{module}"
++          Logger.debug("Checking unknown function #{signature} in module: #{module}")
++
+           case check_by_signature(env, signature) do
+             {:ok, _, _} = result -> result
+             error -> error
+@@ -275,22 +319,30 @@ defmodule Fika.TypeChecker do
+   defp infer_list_exps(env, []) do
+     {:ok, "List(Nothing)", env}
+   end
++
+   defp infer_list_exps(env, [exp]) do
+     case infer_exp(env, exp) do
+       {:ok, type, env} -> {:ok, "List(#{type})", env}
+       error -> error
+     end
+   end
++
+   defp infer_list_exps(env, [exp | rest]) do
+     {:ok, type, env} = infer_exp(env, exp)
++
+     Enum.reduce_while(rest, {:ok, "List(#{type})", env}, fn exp, {:ok, acc_type, acc_env} ->
+       case infer_exp(acc_env, exp) do
+         {:ok, ^type, env} ->
+           acc = {:ok, acc_type, env}
+           {:cont, acc}
++
+         {:ok, diff_type, _} ->
+-          error = {:error, "Elements of list have different types. Expected: #{type}, got: #{diff_type}"}
++          error =
++            {:error,
++             "Elements of list have different types. Expected: #{type}, got: #{diff_type}"}
++
+           {:halt, error}
++
+         error ->
+           {:halt, error}
+       end
+@@ -301,10 +353,11 @@ defmodule Fika.TypeChecker do
+     Enum.reduce_while(exp.args, {:ok, [], env}, fn arg, {:ok, type_acc, env} ->
+       case infer_exp(env, arg) do
+         {:ok, type, env} ->
+-          Logger.debug "Argument of #{exp.name} is type: #{type}"
++          Logger.debug("Argument of #{exp.name} is type: #{type}")
+           {:cont, {:ok, [type | type_acc], env}}
++
+         error ->
+-          Logger.debug "Argument of #{exp.name} cannot be inferred"
++          Logger.debug("Argument of #{exp.name} cannot be inferred")
+           {:halt, error}
+       end
+     end)
+@@ -314,10 +367,11 @@ defmodule Fika.TypeChecker do
+     Enum.reduce_while(args, {:ok, [], env}, fn arg, {:ok, type_acc, env} ->
+       case infer_exp(env, arg) do
+         {:ok, type, env} ->
+-          Logger.debug "Argument is type: #{type}"
++          Logger.debug("Argument is type: #{type}")
+           {:cont, {:ok, type_acc ++ [type], env}}
++
+         error ->
+-          Logger.debug "Argument cannot be inferred"
++          Logger.debug("Argument cannot be inferred")
+           {:halt, error}
+       end
+     end)
+@@ -325,11 +379,12 @@ defmodule Fika.TypeChecker do
+ 
+   defp get_type_by_signature(env, signature) do
+     type = Env.get_function_type(env, signature)
++
+     if type do
+-      Logger.debug "Type of function signature: #{signature} is: #{type}"
++      Logger.debug("Type of function signature: #{signature} is: #{type}")
+       {:ok, type, env}
+     else
+-      Logger.debug "Type of function signature: #{signature} not found"
++      Logger.debug("Type of function signature: #{signature} not found")
+       {:error, "Unknown function: #{signature}"}
+     end
+   end
+@@ -342,9 +397,11 @@ defmodule Fika.TypeChecker do
+   end
+ 
+   defp add_function_type({:ok, type, env}, name, args) do
+-    types = Enum.map(args, fn {_, {_, _, type}} ->
+-      type
+-    end)
++    types =
++      Enum.map(args, fn {_, {_, _, type}} ->
++        type
++      end)
++
+     module = Env.current_module(env)
+     signature = get_signature(module, name, types)
+ 
+@@ -352,6 +409,7 @@ defmodule Fika.TypeChecker do
+ 
+     {:ok, type, env}
+   end
++
+   defp add_function_type(error, _, _) do
+     error
+   end
+@@ -368,10 +426,12 @@ defmodule Fika.TypeChecker do
+   defp check_by_signature(env, signature) do
+     functions = Env.ast_functions(env)
+     module = Env.current_module(env)
++
+     function =
+       Enum.find(functions, fn function ->
+         signature(function, module) == signature
+       end)
++
+     if function do
+       check(function, env)
+     else
+@@ -383,6 +443,7 @@ defmodule Fika.TypeChecker do
+     case result do
+       {:ok, type, env} ->
+         {:ok, to_string(type), env}
++
+       error ->
+         error
+     end
+diff --git a/mix.exs b/mix.exs
+index b5b6fe4..26edfad 100644
+--- a/mix.exs
++++ b/mix.exs
+@@ -10,7 +10,7 @@ defmodule Fika.MixProject do
+       escript: [main_module: Fika.Cli],
+       deps: deps(),
+       xref: [exclude: [:router]],
+-      elixirc_paths: elixirc_paths(Mix.env),
++      elixirc_paths: elixirc_paths(Mix.env())
+     ]
+   end
+ 

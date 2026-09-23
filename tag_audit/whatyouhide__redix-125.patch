@@ -1,0 +1,52 @@
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 652a0a1..e807c74 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -41,3 +41,16 @@ services:
+       - "26383:26383"
+     sysctls:
+       net.core.somaxconn: 1024
++
++  base_with_stunnel:
++    image: dweomer/stunnel
++    environment:
++      - STUNNEL_SERVICE=base
++      - STUNNEL_ACCEPT=6384
++      - STUNNEL_CONNECT=base:6379
++    links:
++      - base
++    ports:
++      - 6384:6384
++    sysctls:
++      net.core.somaxconn: 1024
+diff --git a/lib/redix/uri.ex b/lib/redix/uri.ex
+index 77c18a3..b656c9c 100644
+--- a/lib/redix/uri.ex
++++ b/lib/redix/uri.ex
+@@ -5,7 +5,7 @@ defmodule Redix.URI do
+   def opts_from_uri(uri) when is_binary(uri) do
+     %URI{host: host, port: port, scheme: scheme} = uri = URI.parse(uri)
+ 
+-    unless scheme == "redis" do
++    unless scheme in ["redis", "rediss"] do
+       raise ArgumentError, "expected scheme to be redis://, got: #{scheme}://"
+     end
+ 
+@@ -14,6 +14,7 @@ defmodule Redix.URI do
+     |> put_if_not_nil(:port, port)
+     |> put_if_not_nil(:password, password(uri))
+     |> put_if_not_nil(:database, database(uri))
++    |> enable_ssl_if_secure_scheme(scheme)
+   end
+ 
+   defp password(%URI{userinfo: nil}) do
+@@ -30,4 +31,9 @@ defmodule Redix.URI do
+ 
+   defp put_if_not_nil(opts, _key, nil), do: opts
+   defp put_if_not_nil(opts, key, value), do: Keyword.put(opts, key, value)
++
++  defp enable_ssl_if_secure_scheme(opts, "rediss"),
++    do: Keyword.put(opts, :ssl, true)
++
++  defp enable_ssl_if_secure_scheme(opts, _), do: opts
+ end

@@ -1,0 +1,828 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 3be5b13..f6e4f28 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -41,6 +41,25 @@ jobs:
+       - name: Run Tests
+         run: mix test --trace
+ 
++  bench:
++    if: github.ref == 'refs/heads/main'
++    name: Benchmark
++    runs-on: ubuntu-latest
++    container:
++      image: elixir:1.17
++    steps:
++      - uses: actions/checkout@v3
++
++      - name: Setup Environment
++        run: |
++          epmd -daemon
++          mix local.hex --force
++          mix local.rebar --force
++          mix deps.get
++
++      - name: Run Benchmarks
++        run: mix bench
++
+   coverage:
+     name: Coverage
+     runs-on: ubuntu-latest
+diff --git a/benchmarks/main.exs b/benchmarks/main.exs
+index 863b60a..ef76172 100644
+--- a/benchmarks/main.exs
++++ b/benchmarks/main.exs
+@@ -41,9 +41,9 @@ inputs =
+     Cachex.put(name, "gad_test", "gad_value")
+     Cachex.put(name, "incr_test", 0)
+     Cachex.put(name, "persist_test", 0)
+-    Cachex.put(name, "refresh_test", "refresh_value", ttl: one_hour)
+-    Cachex.put(name, "touch_test", "touch_value", ttl: one_hour)
+-    Cachex.put(name, "ttl_test", "ttl_value", ttl: one_hour)
++    Cachex.put(name, "refresh_test", "refresh_value", expire: one_hour)
++    Cachex.put(name, "touch_test", "touch_value", expire: one_hour)
++    Cachex.put(name, "ttl_test", "ttl_value", expire: one_hour)
+     Cachex.put(name, "update_test", "update_value")
+ 
+     if Keyword.get(options, :inspect) do
+diff --git a/docs/features/cache-warming/reactive-warming.md b/docs/features/cache-warming/reactive-warming.md
+index e07eb0d..cc6205a 100644
+--- a/docs/features/cache-warming/reactive-warming.md
++++ b/docs/features/cache-warming/reactive-warming.md
+@@ -60,7 +60,7 @@ Sometimes you might want to set an expiration based on a value retrieved via a f
+ 
+ ```elixir
+ Cachex.fetch(:my_cache, "key", fn ->
+-  { :commit, do_something(), ttl: :timer.seconds(60) }
++  { :commit, do_something(), expire: :timer.seconds(60) }
+ end)
+ ```
+ 
+diff --git a/lib/cachex.ex b/lib/cachex.ex
+index 4d3fe02..ab13d7f 100644
+--- a/lib/cachex.ex
++++ b/lib/cachex.ex
+@@ -40,7 +40,7 @@ defmodule Cachex do
+   alias Cachex.Errors
+   alias Cachex.ExecutionError
+   alias Cachex.Options
+-  alias Cachex.Query
++  alias Cachex.Query, as: Q
+   alias Cachex.Router
+   alias Cachex.Services
+ 
+@@ -721,10 +721,10 @@ defmodule Cachex do
+       ...> end)
+       { :commit, "yek_gnissim" }
+ 
+-      iex> Cachex.fetch(:my_cache, "missing_key_ttl", fn(key) ->
+-      ...>   { :commit, String.reverse(key), ttl: :timer.seconds(60) }
++      iex> Cachex.fetch(:my_cache, "missing_key_expires", fn(key) ->
++      ...>   { :commit, String.reverse(key), expire: :timer.seconds(60) }
+       ...> end)
+-      { :commit, "ltt_yek_gnissim", [ttl: 60000] }
++      { :commit, "seripxe_yek_gnissim", [expire: 60000] }
+ 
+   """
+   @spec fetch(Cachex.t(), any, function | nil, Keyword.t()) ::
+@@ -1021,7 +1021,7 @@ defmodule Cachex do
+ 
+   ## Examples
+ 
+-      iex> Cachex.put(:my_cache, "key", "value", ttl: 1000)
++      iex> Cachex.put(:my_cache, "key", "value", expiration: 1000)
+       iex> Cachex.persist(:my_cache, "key")
+       { :ok, true }
+ 
+@@ -1059,9 +1059,9 @@ defmodule Cachex do
+ 
+   ## Options
+ 
+-    * `:ttl`
++    * `:expire`
+ 
+-      An expiration time to set for the provided key (time-to-live), overriding
++      An expiration value to set for the provided key (time-to-live), overriding
+       any default expirations set on a cache. This value should be in milliseconds.
+ 
+   ## Examples
+@@ -1069,12 +1069,11 @@ defmodule Cachex do
+       iex> Cachex.put(:my_cache, "key", "value")
+       { :ok, true }
+ 
+-      iex> Cachex.put(:my_cache, "key", "value", ttl: :timer.seconds(5))
++      iex> Cachex.put(:my_cache, "key", "value", expire: :timer.seconds(5))
+       iex> Cachex.ttl(:my_cache, "key")
+       { :ok, 5000 }
+ 
+   """
+-  # TODO: maybe rename TTL to be expiration?
+   @spec put(Cachex.t(), any, any, Keyword.t()) :: {status, boolean}
+   def put(cache, key, value, options \\ []) when is_list(options),
+     do: Router.route(cache, {:put, [key, value, options]})
+@@ -1089,9 +1088,9 @@ defmodule Cachex do
+ 
+   ## Options
+ 
+-    * `:ttl`
++    * `:expire`
+ 
+-      An expiration time to set for the provided keys (time-to-live), overriding
++      An expiration value to set for the provided keys (time-to-live), overriding
+       any default expirations set on a cache. This value should be in milliseconds.
+ 
+   ## Examples
+@@ -1099,12 +1098,11 @@ defmodule Cachex do
+       iex> Cachex.put_many(:my_cache, [ { "key", "value" } ])
+       { :ok, true }
+ 
+-      iex> Cachex.put_many(:my_cache, [ { "key", "value" } ], ttl: :timer.seconds(5))
++      iex> Cachex.put_many(:my_cache, [ { "key", "value" } ], expire: :timer.seconds(5))
+       iex> Cachex.ttl(:my_cache, "key")
+       { :ok, 5000 }
+ 
+   """
+-  # TODO: maybe rename TTL to be expiration?
+   @spec put_many(Cachex.t(), [{any, any}], Keyword.t()) :: {status, boolean}
+   def put_many(cache, pairs, options \\ [])
+       when is_list(pairs) and is_list(options),
+@@ -1120,7 +1118,7 @@ defmodule Cachex do
+ 
+   ## Examples
+ 
+-      iex> Cachex.put(:my_cache, "my_key", "my_value", ttl: :timer.seconds(5))
++      iex> Cachex.put(:my_cache, "my_key", "my_value", expire: :timer.seconds(5))
+       iex> Process.sleep(4)
+       iex> Cachex.ttl(:my_cache, "my_key")
+       { :ok, 1000 }
+@@ -1251,21 +1249,21 @@ defmodule Cachex do
+         {:entry, "c", 1519015805679, nil, 3},
+         {:entry, "a", 1519015794445, nil, 1}]
+ 
+-      iex> query = Cachex.Query.where(true, :key)
++      iex> query = Cachex.Query.create(output: :key)
+       iex> :my_cache |> Cachex.stream!(query) |> Enum.to_list
+       ["b", "c", "a"]
+ 
+-      iex> query = Cachex.Query.where(true, :value)
++      iex> query = Cachex.Query.create(output: :value)
+       iex> :my_cache |> Cachex.stream!(query) |> Enum.to_list
+       [2, 3, 1]
+ 
+-      iex> query = Cachex.Query.where(true, { :key, :value })
++      iex> query = Cachex.Query.create(output: {:key, :value})
+       iex> :my_cache |> Cachex.stream!(query) |> Enum.to_list
+       [{"b", 2}, {"c", 3}, {"a", 1}]
+ 
+   """
+   @spec stream(Cachex.t(), any, Keyword.t()) :: {status, Enumerable.t()}
+-  def stream(cache, query \\ Query.where(true), options \\ [])
++  def stream(cache, query \\ Q.create(where: Q.unexpired()), options \\ [])
+       when is_list(options),
+       do: Router.route(cache, {:stream, [query, options]})
+ 
+diff --git a/lib/cachex/actions/count.ex b/lib/cachex/actions/count.ex
+index 6e431b7..b26e6ec 100644
+--- a/lib/cachex/actions/count.ex
++++ b/lib/cachex/actions/count.ex
+@@ -20,6 +20,10 @@ defmodule Cachex.Actions.Count do
+   means that any items set to be removed in the next purge will not be added
+   to the count. Lazy expiration does not apply to this call.
+   """
+-  def execute(cache(name: name), _options),
+-    do: {:ok, :ets.select_count(name, Query.unexpired(true))}
++  def execute(cache(name: name), _options) do
++    filter = Query.unexpired()
++    clause = Query.create(where: filter, output: true)
++
++    {:ok, :ets.select_count(name, clause)}
++  end
+ end
+diff --git a/lib/cachex/actions/expire.ex b/lib/cachex/actions/expire.ex
+index f810b69..6746300 100644
+--- a/lib/cachex/actions/expire.ex
++++ b/lib/cachex/actions/expire.ex
+@@ -33,8 +33,11 @@ defmodule Cachex.Actions.Expire do
+   def execute(cache() = cache, key, expiration, _options) do
+     Locksmith.write(cache, [key], fn ->
+       case expiration > -1 do
+-        true -> Actions.update(cache, key, entry_mod_now(ttl: expiration))
+-        false -> Cachex.del(cache, key, const(:purge_override))
++        true ->
++          Actions.update(cache, key, entry_mod_now(expiration: expiration))
++
++        false ->
++          Cachex.del(cache, key, const(:purge_override))
+       end
+     end)
+   end
+diff --git a/lib/cachex/actions/import.ex b/lib/cachex/actions/import.ex
+index aa8045e..c816963 100644
+--- a/lib/cachex/actions/import.ex
++++ b/lib/cachex/actions/import.ex
+@@ -26,25 +26,24 @@ defmodule Cachex.Actions.Import do
+   #
+   # As this is a direct import, we just use `Cachex.put/4` with the provided
+   # key and value from the existing entry record - nothing special here.
+-  defp import(cache, entry(key: k, ttl: nil, value: v), _time),
++  defp import(cache, entry(key: k, expiration: nil, value: v), _t),
+     do: {:ok, true} = Cachex.put(cache, k, v, const(:notify_false))
+ 
+   # Skips over entries which have already expired.
+   #
+-  # This occurs in the case there was an existing touch time and TTL, and
+-  # the expiration time would already have passed (so there's no point in
++  # This occurs in the case there was an existing modification time and expiration
++  # but the expiration time would already have passed (so there's no point in
+   # adding the record to the cache just to throw it away in future).
+-  defp import(_cache, entry(touched: t1, ttl: t2), time)
+-       when t1 + t2 < time,
+-       do: nil
++  defp import(_cache, entry(modified: m, expiration: e), t) when m + e < t,
++    do: nil
+ 
+   # Imports an entry, using the current time to offset the TTL value.
+   #
+   # This is required to shift the TTLs set in a backup to match the current
+   # import time, so that the rest of the lifetime of the key is the same. If
+   # we didn't do this, the key would live longer in the cache than intended.
+-  defp import(cache, entry(key: k, touched: t1, ttl: t2, value: v), time) do
+-    opts = const(:notify_false) ++ [ttl: t1 + t2 - time]
++  defp import(cache, entry(key: k, modified: m, expiration: e, value: v), t) do
++    opts = const(:notify_false) ++ [expire: m + e - t]
+     {:ok, true} = Cachex.put(cache, k, v, opts)
+   end
+ end
+diff --git a/lib/cachex/actions/incr.ex b/lib/cachex/actions/incr.ex
+index b7ee83d..1c8299f 100644
+--- a/lib/cachex/actions/incr.ex
++++ b/lib/cachex/actions/incr.ex
+@@ -31,7 +31,7 @@ defmodule Cachex.Actions.Incr do
+     initial = Options.get(options, :initial, &is_integer/1, 0)
+     expiry = Janitor.expiration(cache, nil)
+ 
+-    default = entry_now(key: key, ttl: expiry, value: initial)
++    default = entry_now(key: key, expiration: expiry, value: initial)
+ 
+     Locksmith.write(cache, [key], fn ->
+       try do
+diff --git a/lib/cachex/actions/inspect.ex b/lib/cachex/actions/inspect.ex
+index 44902a7..5daa117 100644
+--- a/lib/cachex/actions/inspect.ex
++++ b/lib/cachex/actions/inspect.ex
+@@ -82,16 +82,24 @@ defmodule Cachex.Actions.Inspect do
+   # The number of entries returned represents the number of records which will
+   # be removed on the next run of the Janitor service. It does not track the
+   # number of expired records which have already been purged or removed.
+-  def execute(cache(name: name), {:expired, :count}, _options),
+-    do: {:ok, :ets.select_count(name, Query.expired(true))}
++  def execute(cache(name: name), {:expired, :count}, _options) do
++    filter = Query.expired()
++    clause = Query.create(where: filter, output: true)
++
++    {:ok, :ets.select_count(name, clause)}
++  end
+ 
+   # Returns the keys of expired entries currently inside the cache.
+   #
+   # This is essentially the same as the definition above, except that it will
+   # return the list of entry keys rather than just a count. Naturally this is
+   # an expensive call and should really only be used when debugging.
+-  def execute(cache(name: name), {:expired, :keys}, _options),
+-    do: {:ok, :ets.select(name, Query.expired(:key))}
++  def execute(cache(name: name), {:expired, :keys}, _options) do
++    filter = Query.expired()
++    clause = Query.create(where: filter, output: :key)
++
++    {:ok, :ets.select(name, clause)}
++  end
+ 
+   # Returns information about the last run of the Janitor service.
+   #
+diff --git a/lib/cachex/actions/keys.ex b/lib/cachex/actions/keys.ex
+index 031e6e1..7edb8ae 100644
+--- a/lib/cachex/actions/keys.ex
++++ b/lib/cachex/actions/keys.ex
+@@ -23,6 +23,10 @@ defmodule Cachex.Actions.Keys do
+   that any entries currently inside the cache which are scheduled to be removed
+   will not be included.
+   """
+-  def execute(cache(name: name), _options),
+-    do: {:ok, :ets.select(name, Query.where(true, :key))}
++  def execute(cache(name: name), _options) do
++    filter = Query.unexpired()
++    clause = Query.create(where: filter, output: :key)
++
++    {:ok, :ets.select(name, clause)}
++  end
+ end
+diff --git a/lib/cachex/actions/purge.ex b/lib/cachex/actions/purge.ex
+index 820a553..7ab74c4 100644
+--- a/lib/cachex/actions/purge.ex
++++ b/lib/cachex/actions/purge.ex
+@@ -29,7 +29,10 @@ defmodule Cachex.Actions.Purge do
+   """
+   def execute(cache(name: name) = cache, _options) do
+     Locksmith.transaction(cache, [], fn ->
+-      {:ok, :ets.select_delete(name, Query.expired(true))}
++      filter = Query.expired()
++      clause = Query.create(where: filter, output: true)
++
++      {:ok, :ets.select_delete(name, clause)}
+     end)
+   end
+ end
+diff --git a/lib/cachex/actions/put.ex b/lib/cachex/actions/put.ex
+index 5768cf2..06c2e2a 100644
+--- a/lib/cachex/actions/put.ex
++++ b/lib/cachex/actions/put.ex
+@@ -26,10 +26,10 @@ defmodule Cachex.Actions.Put do
+   inside a lock aware context to avoid clashing with other processes.
+   """
+   def execute(cache() = cache, key, value, options) do
+-    ttlval = Options.get(options, :ttl, &is_integer/1)
+-    expiry = Janitor.expiration(cache, ttlval)
++    expiration = Options.get(options, :expire, &is_integer/1)
++    expiration = Janitor.expiration(cache, expiration)
+ 
+-    record = entry_now(key: key, ttl: expiry, value: value)
++    record = entry_now(key: key, expiration: expiration, value: value)
+ 
+     Locksmith.write(cache, [key], fn ->
+       Actions.write(cache, record)
+diff --git a/lib/cachex/actions/put_many.ex b/lib/cachex/actions/put_many.ex
+index f617870..5c61478 100644
+--- a/lib/cachex/actions/put_many.ex
++++ b/lib/cachex/actions/put_many.ex
+@@ -28,10 +28,10 @@ defmodule Cachex.Actions.PutMany do
+   inside a lock aware context to avoid clashing with other processes.
+   """
+   def execute(cache() = cache, pairs, options) do
+-    ttlval = Options.get(options, :ttl, &is_integer/1)
+-    expiry = Janitor.expiration(cache, ttlval)
++    expiration = Options.get(options, :expire, &is_integer/1)
++    expiration = Janitor.expiration(cache, expiration)
+ 
+-    with {:ok, keys, entries} <- map_entries(expiry, pairs, [], []) do
++    with {:ok, keys, entries} <- map_entries(expiration, pairs, [], []) do
+       Locksmith.write(cache, keys, fn ->
+         Actions.write(cache, entries)
+       end)
+@@ -50,17 +50,17 @@ defmodule Cachex.Actions.PutMany do
+   #
+   # If an unexpected pair is hit, an error will be returned and no
+   # values will be written to the backing table.
+-  defp map_entries(ttl, [{key, value} | pairs], keys, entries) do
+-    entry = entry_now(key: key, ttl: ttl, value: value)
+-    map_entries(ttl, pairs, [key | keys], [entry | entries])
++  defp map_entries(exp, [{key, value} | pairs], keys, entries) do
++    entry = entry_now(key: key, expiration: exp, value: value)
++    map_entries(exp, pairs, [key | keys], [entry | entries])
+   end
+ 
+-  defp map_entries(_ttl, [], [], _entries),
++  defp map_entries(_exp, [], [], _entries),
+     do: {:ok, false}
+ 
+-  defp map_entries(_ttl, [], keys, entries),
++  defp map_entries(_exp, [], keys, entries),
+     do: {:ok, keys, entries}
+ 
+-  defp map_entries(_ttl, _inv, _keys, _entries),
++  defp map_entries(_exp, _inv, _keys, _entries),
+     do: error(:invalid_pairs)
+ end
+diff --git a/lib/cachex/actions/refresh.ex b/lib/cachex/actions/refresh.ex
+index 8a94734..7697d2a 100644
+--- a/lib/cachex/actions/refresh.ex
++++ b/lib/cachex/actions/refresh.ex
+@@ -3,8 +3,8 @@ defmodule Cachex.Actions.Refresh do
+   # Command module to allow refreshing an expiration value.
+   #
+   # Refreshing an expiration is the notion of resetting an expiration time
+-  # as if it were just set. This is done by updating the touched time (as
+-  # this is used to calculate expiration offsets).
++  # as if it were just set. This is done by updating the modification time
++  # (as this is used to calculate expiration offsets).
+   #
+   # The main advantage of this command is the ability to refresh an existing
+   # expiration without knowing in advance what it was previously set to.
+@@ -22,8 +22,8 @@ defmodule Cachex.Actions.Refresh do
+   Refreshes an expiration on a cache entry.
+ 
+   If the entry currently has no expiration set, it is left unset. Otherwise the
+-  touch time of the entry is updated to the current time (as entry expiration is
+-  a function of touched time and expiration time).
++  modified time of the entry is updated to the current time (as entry expiration is
++  a function of modified time and expiration time).
+ 
+   This operates inside a lock aware context to avoid clashing with other operations
+   on the same key during execution.
+diff --git a/lib/cachex/actions/stream.ex b/lib/cachex/actions/stream.ex
+index ce31faa..0252746 100644
+--- a/lib/cachex/actions/stream.ex
++++ b/lib/cachex/actions/stream.ex
+@@ -12,7 +12,7 @@ defmodule Cachex.Actions.Stream do
+   import Cachex.Spec
+ 
+   # our test record for testing matches when a user provides a spec
+-  @test entry(key: "key", touched: now(), ttl: 1000, value: "value")
++  @test entry(key: "key", modified: now(), expiration: 1000, value: "value")
+ 
+   ##############
+   # Public API #
+diff --git a/lib/cachex/actions/touch.ex b/lib/cachex/actions/touch.ex
+index d8b67e1..47fa360 100644
+--- a/lib/cachex/actions/touch.ex
++++ b/lib/cachex/actions/touch.ex
+@@ -29,7 +29,7 @@ defmodule Cachex.Actions.Touch do
+     Locksmith.transaction(cache, [key], fn ->
+       cache
+       |> Ttl.execute(key, [])
+-      |> handle_ttl(cache, key)
++      |> handle_expiration(cache, key)
+     end)
+   end
+ 
+@@ -42,13 +42,13 @@ defmodule Cachex.Actions.Touch do
+   # If the expiration if unset, we update just the touch time insude the entry
+   # as we don't have to account for the offset. If an expiration is set, we
+   # also update the expiration on the record to be the returned offset.
+-  defp handle_ttl({:ok, value}, cache, key) do
++  defp handle_expiration({:ok, value}, cache, key) do
+     Actions.update(
+       cache,
+       key,
+       case value do
+         nil -> entry_mod_now()
+-        ttl -> entry_mod_now(ttl: ttl)
++        exp -> entry_mod_now(expiration: exp)
+       end
+     )
+   end
+diff --git a/lib/cachex/actions/ttl.ex b/lib/cachex/actions/ttl.ex
+index d47879c..0d8625e 100644
+--- a/lib/cachex/actions/ttl.ex
++++ b/lib/cachex/actions/ttl.ex
+@@ -24,8 +24,8 @@ defmodule Cachex.Actions.Ttl do
+   """
+   def execute(cache() = cache, key, _options) do
+     case Actions.read(cache, key) do
+-      entry(touched: touched, ttl: ttl) when not is_nil(ttl) ->
+-        {:ok, touched + ttl - now()}
++      entry(modified: modified, expiration: exp) when not is_nil(exp) ->
++        {:ok, modified + exp - now()}
+ 
+       _anything_else ->
+         {:ok, nil}
+diff --git a/lib/cachex/options.ex b/lib/cachex/options.ex
+index 4c77107..ed87d49 100644
+--- a/lib/cachex/options.ex
++++ b/lib/cachex/options.ex
+@@ -38,9 +38,23 @@ defmodule Cachex.Options do
+ 
+   If the value satisfies the condition provided, it will be returned. Otherwise
+   the default value provided is returned instead. Used for basic validations.
++
++  If multiple keys are provided they will be tried in order and the first
++  matching value will be returned (used for backwards compatibility).
+   """
+   @spec get(Keyword.t(), atom, (any -> boolean), any) :: any
+-  def get(options, key, condition, default \\ nil) do
++  def get(options, keys, condition, default \\ nil)
++
++  def get(options, keys, condition, default) when is_list(keys) do
++    Enum.reduce_while(keys, default, fn key, ^default ->
++      case get(options, key, condition, default) do
++        ^default -> {:cont, default}
++        parsed -> {:halt, parsed}
++      end
++    end)
++  end
++
++  def get(options, key, condition, default) do
+     transform(options, key, fn val ->
+       try do
+         (condition.(val) && val) || default
+diff --git a/lib/cachex/policy/lrw.ex b/lib/cachex/policy/lrw.ex
+index 3117021..52e8f6a 100644
+--- a/lib/cachex/policy/lrw.ex
++++ b/lib/cachex/policy/lrw.ex
+@@ -4,7 +4,7 @@ defmodule Cachex.Policy.LRW do
+ 
+   This module provides general utilities for implementing an eviction policy for
+   Cachex which will evict the least-recently written entries from the cache. This
+-  is determined by the touched time inside each cache record, which means that we
++  is determined by the modified time inside each cache record, which means that we
+   don't have to store any additional tables to keep track of access time.
+ 
+   There are several options recognised by this policy which can be passed inside the
+@@ -47,7 +47,7 @@ defmodule Cachex.Policy.LRW do
+   alias Cachex.Services.Informant
+ 
+   # compile our match to avoid recalculating
+-  @ets_match Query.raw(true, {:key, :touched})
++  @ets_match Query.create(output: {:key, :modified})
+ 
+   ####################
+   # Policy Behaviour #
+diff --git a/lib/cachex/query.ex b/lib/cachex/query.ex
+index 20383d2..03263ac 100644
+--- a/lib/cachex/query.ex
++++ b/lib/cachex/query.ex
+@@ -13,62 +13,105 @@ defmodule Cachex.Query do
+   """
+   import Cachex.Spec
+ 
++  # raw query header
++  @header entry()
++          |> entry()
++          |> Enum.with_index(1)
++          |> Enum.map(fn {_, idx} -> :"$#{idx}" end)
++          |> Enum.reverse()
++          |> Enum.concat([:_])
++          |> Enum.reverse()
++          |> List.to_tuple()
++
+   ##############
+   # Public API #
+   ##############
+ 
+   @doc """
+-  Creates a query to retrieve all expired records.
+-  """
+-  @spec expired(any) :: [{tuple, [tuple], [any]}]
+-  def expired(output \\ :"$_"),
+-    do: raw(expired_clause(), output)
++  Create a query specification for a cache.
+ 
+-  @doc """
+-  Creates a match condition for expired records.
+-  """
+-  @spec expired_clause :: tuple
+-  def expired_clause,
+-    do: {:not, unexpired_clause()}
++  This is a convenience binding to ETS select specifications, so please see
++  the appropriate documentation for any additional information on how to (e.g.)
++  format filter clauses and outputs.
++
++  ## Options
++
++    * `:expired`
++
++      Whether to filter expired records or not, with the default being no
++      filtering. Setting this to `true` will only retrieve expired records,
++      while setting to `false` will only retrieve unexpired records.
++
++    * `:output`
++
++      The query output format, which defaults to `:entry` (retrieving the entire
++      cache entry). You can provide any of the entry record fields, with bindings
++      such as tuples (`{:key, :value}`) or lists `[:key, :value]` or as a single
++      value (`:key`).
++
++    * `:where`
++
++      An ETS filter condition used to locate records in the table. This defaults to
++      retrieving all records, and is automatically joined with the value of the
++      `:expired` flag for convenience.
+ 
+-  @doc """
+-  Creates a raw query, ignoring expiration.
+   """
+-  @spec raw(any, any) :: [{tuple, [tuple], [any]}]
+-  def raw(condition, output \\ :"$_"),
++  @spec create(options :: Keyword.t()) :: [{tuple, [tuple], [any]}]
++  def create(options \\ []),
+     do: [
+       {
+-        {:_, :"$1", :"$2", :"$3", :"$4"},
+-        [map_clauses(condition)],
+-        [clean_return(map_clauses(output))]
++        @header,
++        [
++          options
++          |> Keyword.get(:where, true)
++          |> map_clauses
++        ],
++        [
++          options
++          |> Keyword.get(:output, :entry)
++          |> map_clauses
++          |> clean_return
++        ]
+       }
+     ]
+ 
+   @doc """
+-  Creates a query to retrieve all unexpired records.
+-  """
+-  @spec unexpired(any) :: [{tuple, [tuple], [any]}]
+-  def unexpired(output \\ :"$_"),
+-    do: raw(unexpired_clause(), output)
++  Create a filter against expired records in a cache.
+ 
+-  @doc """
+-  Creates a match condition for unexpired records.
++  This function accepts a subfilter to join to create more complex filters.
+   """
+-  @spec unexpired_clause :: tuple
+-  def unexpired_clause,
+-    do: {:orelse, {:==, :"$3", nil}, {:>, {:+, :"$2", :"$3"}, now()}}
++  @spec expired(filter :: boolean() | tuple()) :: tuple
++  def expired(filter \\ nil),
++    do: wrap_condition(filter, {:not, unexpired()})
+ 
+   @doc """
+-  Creates an expiration-aware query.
++  Create a filter against unexpired records in a cache.
++
++  This function accepts a subfilter to join to create more complex filters.
+   """
+-  @spec where(any, any) :: [{tuple, [tuple], [any]}]
+-  def where(condition, output \\ :"$_"),
+-    do: raw({:andalso, unexpired_clause(), condition}, output)
++  @spec unexpired(filter :: boolean() | tuple()) :: tuple
++  def unexpired(filter \\ nil),
++    do:
++      wrap_condition(
++        filter,
++        {:orelse, {:==, map_clauses(:expiration), nil},
++         {:>, {:+, map_clauses(:modified), map_clauses(:expiration)}, now()}}
++      )
+ 
+   ###############
+   # Private API #
+   ###############
+ 
++  # Sanitizes a returning value clause.
++  #
++  # This will just wrap any non-single element Tuples being returned as
++  # this is required in order to provide valid return formats.
++  defp clean_return(tpl) when tuple_size(tpl) > 1,
++    do: {tpl}
++
++  defp clean_return(val),
++    do: val
++
+   # Recursively replaces all entry tags in a clause value.
+   #
+   # This allows the use of entry fields, such as `:key` as references in
+@@ -85,23 +128,24 @@ defmodule Cachex.Query do
+     do: Enum.map(list, &map_clauses/1)
+ 
+   # basic entry field name substitution
+-  for key <- Keyword.keys(entry(entry())),
+-      do:
+-        defp(map_clauses(unquote(key)),
+-          do: :"$#{entry(unquote(key))}"
+-        )
++  for key <- Keyword.keys(entry(entry())) do
++    defp map_clauses(unquote(key)),
++      do: :"$#{entry(unquote(key))}"
++  end
++
++  # whole cache entry
++  defp map_clauses(:entry),
++    do: :"$_"
+ 
+   # no-op, already valid
+-  defp map_clauses(field),
+-    do: field
++  defp map_clauses(value),
++    do: value
+ 
+-  # Sanitizes a returning value clause.
+-  #
+-  # This will just wrap any non-single element Tuples being returned as
+-  # this is required in order to provide valid return formats.
+-  defp clean_return(tpl) when tuple_size(tpl) > 1,
+-    do: {tpl}
++  # Wrap a where clause with a new condition only if the whre clause
++  # isn't simply true; if so, defer to the provided condition.
++  defp wrap_condition(filter, subfilter) when filter in [nil, true],
++    do: subfilter
+ 
+-  defp clean_return(val),
+-    do: val
++  defp wrap_condition(filter, subfilter),
++    do: {:andalso, subfilter, filter}
+ end
+diff --git a/lib/cachex/services/janitor.ex b/lib/cachex/services/janitor.ex
+index 631f83d..0122c48 100644
+--- a/lib/cachex/services/janitor.ex
++++ b/lib/cachex/services/janitor.ex
+@@ -61,8 +61,8 @@ defmodule Cachex.Services.Janitor do
+   This will not cache lazy expiration settings into account.
+   """
+   @spec expired?(Cachex.Spec.entry()) :: boolean
+-  def expired?(entry(touched: touched, ttl: ttl)) when is_number(ttl),
+-    do: touched + ttl < now()
++  def expired?(entry(modified: modified, expiration: exp)) when is_number(exp),
++    do: modified + exp < now()
+ 
+   def expired?(_entry),
+     do: false
+@@ -103,7 +103,7 @@ defmodule Cachex.Services.Janitor do
+   #
+   # This will drop to the ETS level and use a select to match documents which
+   # need to be removed; they are then deleted by ETS at very high speeds.
+-  def handle_info(:ttl_check, {cache(name: name), _last}) do
++  def handle_info(:purge, {cache(name: name), _last}) do
+     start_time = now()
+     new_caches = Overseer.retrieve(name)
+ 
+@@ -133,7 +133,7 @@ defmodule Cachex.Services.Janitor do
+   # Schedules a check to occur after the designated interval. Once scheduled,
+   # returns the state - this is just sugar for pipelining with a state.
+   defp schedule_check(cache(expiration: expiration(interval: interval)) = cache) do
+-    :erlang.send_after(interval, self(), :ttl_check)
++    :erlang.send_after(interval, self(), :purge)
+     cache
+   end
+ end
+diff --git a/lib/cachex/spec.ex b/lib/cachex/spec.ex
+index 6256e25..1d1eab1 100644
+--- a/lib/cachex/spec.ex
++++ b/lib/cachex/spec.ex
+@@ -58,9 +58,9 @@ defmodule Cachex.Spec do
+   @type entry ::
+           record(:entry,
+             key: any,
+-            touched: number,
+-            ttl: number,
+-            value: any
++            value: any,
++            modified: number,
++            expiration: number
+           )
+ 
+   # Helper type for entry types
+@@ -174,9 +174,9 @@ defmodule Cachex.Spec do
+   """
+   defrecord :entry,
+     key: nil,
+-    touched: nil,
+-    ttl: nil,
+-    value: nil
++    value: nil,
++    modified: nil,
++    expiration: nil
+ 
+   @doc """
+   Creates an expiration record from the provided values.
+@@ -442,22 +442,22 @@ defmodule Cachex.Spec do
+   Generates a list of ETS modification Tuples with an updated touch time.
+ 
+   This will pass the arguments through and behave exactly as `entry_mod/1`
+-  except that it will automatically update the `:touched` field in the entry
++  except that it will automatically update the `:modified` field in the entry
+   to the current time.
+   """
+   @spec entry_mod_now([{atom, any}]) :: [{integer, any}]
+   defmacro entry_mod_now(pairs \\ []),
+-    do: quote(do: entry_mod(unquote([touched: quote(do: now())] ++ pairs)))
++    do: quote(do: entry_mod(unquote([modified: quote(do: now())] ++ pairs)))
+ 
+   @doc """
+   Creates an entry record with an updated touch time.
+ 
+-  This delegates through to `entry/1`, but ensures that the `:touched` field is
++  This delegates through to `entry/1`, but ensures that the `:modified` field is
+   set to the current time as a millisecond timestamp.
+   """
+   @spec entry_now([{atom, any}]) :: [{integer, any}]
+   defmacro entry_now(pairs \\ []),
+-    do: quote(do: entry(unquote([touched: quote(do: now())] ++ pairs)))
++    do: quote(do: entry(unquote([modified: quote(do: now())] ++ pairs)))
+ 
+   ############
+   # Services #
+diff --git a/lib/cachex/spec/validator.ex b/lib/cachex/spec/validator.ex
+index 685e120..79e03fc 100644
+--- a/lib/cachex/spec/validator.ex
++++ b/lib/cachex/spec/validator.ex
+@@ -48,8 +48,8 @@ defmodule Cachex.Spec.Validator do
+   # This only has to validate the touch time and ttl values inside a record,
+   # as the key and value can be of any type (including nil). The touch time
+   # and ttl values must be integers if set, and the ttl value can be nil.
+-  def valid?(:entry, entry(touched: touched, ttl: ttl)),
+-    do: is_positive_integer(touched) and nillable?(ttl, &is_positive_integer/1)
++  def valid?(:entry, entry(modified: modified, expiration: exp)),
++    do: is_positive_integer(modified) and nillable?(exp, &is_positive_integer/1)
+ 
+   # Validates an expiration specification record.
+   #
+diff --git a/lib/cachex/stats.ex b/lib/cachex/stats.ex
+index fe5d3b4..f073b84 100644
+--- a/lib/cachex/stats.ex
++++ b/lib/cachex/stats.ex
+@@ -94,7 +94,7 @@ defmodule Cachex.Stats do
+   def handle_notify(_action, {:error, _result}, stats),
+     do: {:ok, stats}
+ 
+-  # coveralls-ignore-end
++  # coveralls-ignore-stop
+ 
+   @doc false
+   # Registers an action against the stats container.

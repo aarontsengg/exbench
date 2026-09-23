@@ -1,0 +1,90 @@
+[
+  {
+    "instance_id": "plataformatec__broadway-31",
+    "repo": "plataformatec/broadway",
+    "automatic_tag": "borderline",
+    "manual_tag": "otp",
+    "reason": "Named processor configuration changes the generated process identity from Processor to Processor_#{key}, feeds demand settings into stage initialization, and passes processor_key into handle_message/3. This is a pipeline startup/identity and stage-callback contract change, beyond the publisher-to-batcher renaming.",
+    "patch_file": "plataformatec__broadway-31.patch",
+    "evidence_patch_line": 495,
+    "patch_sha256": "0d7b15394a86eafa114d878f4d77f30baf1c79d59d9cde00f2d092657a252158",
+    "review_provenance": "assistant_targeted_patch_review"
+  },
+  {
+    "instance_id": "elixir-protobuf__protobuf-164",
+    "repo": "elixir-protobuf/protobuf",
+    "automatic_tag": "borderline",
+    "manual_tag": "otp",
+    "reason": "Adds Application.stop/1 cleanup that erases extension entries from persistent_term. Without cleanup, starting the application again encounters existing entries and raises. This directly fixes application stop/restart lifecycle; the unchanged Supervisor call is only contextual evidence.",
+    "patch_file": "elixir-protobuf__protobuf-164.patch",
+    "evidence_patch_line": 27,
+    "patch_sha256": "cede93ac65764a0e5532d957f04985e1980ca44cad7d96261c8a6e61cb1e19f0",
+    "review_provenance": "assistant_targeted_patch_review"
+  },
+  {
+    "instance_id": "livebook-dev__kino-33",
+    "repo": "livebook-dev/kino",
+    "automatic_tag": "borderline",
+    "manual_tag": "control",
+    "reason": "Adds struct support, Map.get access and underscore-column filtering. DynamicSupervisor.start_child and Process.monitor remain unchanged context; the added state flag controls presentation, not supervision or monitoring.",
+    "patch_file": "livebook-dev__kino-33.patch",
+    "evidence_patch_line": 83,
+    "patch_sha256": "17139f7d8f9a815d76ada90a4d0d914eefb42e8efcddeb0835ebecffa4f5f113",
+    "review_provenance": "assistant_targeted_patch_review"
+  },
+  {
+    "instance_id": "plataformatec__broadway-95",
+    "repo": "plataformatec/broadway",
+    "automatic_tag": "borderline",
+    "manual_tag": "otp",
+    "reason": "Adds batch_mode :flush to test messages and a batch delivery branch that flushes before the size threshold or timeout, cancels the timer and delivers the batch. Changes when downstream processing and acknowledgements occur, fixing missing timely test acknowledgements.",
+    "patch_file": "plataformatec__broadway-95.patch",
+    "evidence_patch_line": 96,
+    "patch_sha256": "a72255579460da44f46fd2cf0e9286da144ff68e202f5546e861d2d7a946e15b",
+    "review_provenance": "assistant_targeted_patch_review"
+  },
+  {
+    "instance_id": "quantum-elixir__quantum-core-454",
+    "repo": "quantum-elixir/quantum-core",
+    "automatic_tag": "borderline",
+    "manual_tag": "otp",
+    "reason": "Replacing an active job now emits a delete event for the old job before adding the replacement, rather than only updating the map and emitting add. Active-to-inactive replacement also emits delete. These GenStage events coordinate scheduler state and prevent old schedules continuing to execute.",
+    "patch_file": "quantum-elixir__quantum-core-454.patch",
+    "evidence_patch_line": 45,
+    "patch_sha256": "dea2906b0dcaf81cffe83fcb5a05e94170bdc7e14c0c3e805398a9a9bd24d0f0",
+    "review_provenance": "assistant_targeted_patch_review"
+  },
+  {
+    "instance_id": "absinthe-graphql__absinthe-944",
+    "repo": "absinthe-graphql/absinthe",
+    "automatic_tag": "borderline",
+    "manual_tag": "uncertain",
+    "reason": "The issue is enum-default validation, and most changes are schema logic. A separate hunk removes [module]-to-module normalization before Supervisor.start_link. That changes the initialization argument for list-form callers, but the patch alone does not establish whether this is a substantive supported lifecycle change or obsolete compatibility cleanup. Exclude pending inspection of the base initializer/callers; do not promote just because the file is a supervisor.",
+    "patch_file": "absinthe-graphql__absinthe-944.patch",
+    "evidence_patch_line": 148,
+    "patch_sha256": "8f7b074cd0c61339f2ea7c5c321c45fde918028cf146228869195a96b68fe3f0",
+    "review_provenance": "assistant_targeted_patch_review"
+  },
+  {
+    "instance_id": "livebook-dev__kino-231",
+    "repo": "livebook-dev/kino",
+    "automatic_tag": "borderline",
+    "manual_tag": "otp",
+    "reason": "Adds a Livebook-specific io_request to detect whether the caller group leader supports the Livebook protocol, then chooses Kino debugging or Macro.dbg fallback. This adds process-context-dependent I/O interaction; the existing helper uses Process.group_leader and Process.monitor.",
+    "patch_file": "livebook-dev__kino-231.patch",
+    "evidence_patch_line": 16,
+    "patch_sha256": "1b210ac1d9e206e70872a3b95716cb1be4618bc9b1b74d5809555b24e7521cf3",
+    "review_provenance": "assistant_targeted_patch_review"
+  },
+  {
+    "instance_id": "quantum-elixir__quantum-core-523",
+    "repo": "quantum-elixir/quantum-core",
+    "automatic_tag": "borderline",
+    "manual_tag": "control",
+    "reason": "Adds function_exported?(m, f, length(args)) validation and filters invalid configured jobs with a warning. This changes input eligibility, not scheduler delivery, supervision, timing or process failure handling. Supervisor references are unchanged context.",
+    "patch_file": "quantum-elixir__quantum-core-523.patch",
+    "evidence_patch_line": 55,
+    "patch_sha256": "51e991e7d9ce34f8055563b6b88f2ce69f277237f678b970d2f6370040d1cc63",
+    "review_provenance": "assistant_targeted_patch_review"
+  }
+]
