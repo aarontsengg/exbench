@@ -1,0 +1,1201 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 862ea3d..5d5fdba 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -4,6 +4,10 @@
+ 
+ ### Changed
+ 
++- Rename `Doggo.modifier_classes/1` to `Doggo.classes/1` and `mix dog.modifiers`
++  to `mix dog.classes`. The function and mix task return all base classes,
++  nested classes, and additional customizable classes in addition to the
++  modifier classes now.
+ - Wrap inner block of `box` component into `div`.
+ - Add example styles for box and tag components.
+ 
+diff --git a/README.md b/README.md
+index e76aff2..a2e5e08 100644
+--- a/README.md
++++ b/README.md
+@@ -126,19 +126,14 @@ mix dog.gen.stories -m MyAppWeb.CoreComponents -o storybook -c button
+ 
+ ### PurgeCSS
+ 
+-If you use PurgeCSS, you will need to add `deps/doggo/lib/doggo.ex` to your
+-PurgeCSS configuration.
+-
+-Doggo also uses modifier CSS classes to alter the appearance of components. The
+-class names are generated dynamically, which means PurgeCSS won't be able to
+-find them in the source code. You can use `mix dog.modifiers` to save a
+-list of all modifier class names to a file:
++If you use PurgeCSS, you can get a list of CSS class names of all configured
++components:
+ 
+ ```bash
+-mix dog.modifiers -m MyAppWeb.CoreComponents -o assets/modifiers.txt
++mix dog.classes -m MyAppWeb.CoreComponents -o assets/modifiers.txt
+ ```
+ 
+-Add the generated file to your PurgeCSS configuration as well.
++Add the generated file to your PurgeCSS configuration.
+ 
+ ## Design decisions
+ 
+diff --git a/lib/doggo.ex b/lib/doggo.ex
+index 79bfda9..3dcfcc6 100644
+--- a/lib/doggo.ex
++++ b/lib/doggo.ex
+@@ -252,12 +252,16 @@ defmodule Doggo do
+   def modifier_class_name(_, value) when is_binary(value), do: "is-#{value}"
+ 
+   @doc """
+-  Returns all modifier classes defined in the given components module.
++  Returns all component classes used in the given components module.
++
++  This includes the base classes, nested classes (based on the base class)
++  and modifier classes.
+ 
+   ## Usage
+ 
+-      iex> modifier_classes(MyAppWeb.CoreComponents)
++      iex> classes(MyAppWeb.CoreComponents)
+       [
++        "button",
+         "is-large",
+         "is-medium",
+         "is-primary",
+@@ -265,14 +269,24 @@ defmodule Doggo do
+         "is-small"
+       ]
+   """
+-  @spec modifier_classes(module) :: [String.t()]
+-  def modifier_classes(module) when is_atom(module) do
+-    module.__dog_components__()
+-    |> Enum.flat_map(&get_modifier_classes/1)
++  @spec classes(module) :: [String.t()]
++  def classes(module) when is_atom(module) do
++    components = module.__dog_components__()
++    base_classes = Enum.map(components, &get_base_class/1)
++    modifier_classes = Enum.flat_map(components, &get_modifier_classes/1)
++    nested_classes = Enum.flat_map(components, &get_nested_classes/1)
++    extra_classes = Enum.flat_map(components, &get_extra_classes/1)
++
++    (base_classes ++ modifier_classes ++ nested_classes ++ extra_classes)
++    |> Enum.reject(&is_nil/1)
+     |> Enum.uniq()
+     |> Enum.sort()
+   end
+ 
++  defp get_base_class({_, info}) do
++    Keyword.get(info, :base_class)
++  end
++
+   defp get_modifier_classes({_, info}) do
+     class_name_fun = Keyword.fetch!(info, :class_name_fun)
+ 
+@@ -286,6 +300,25 @@ defmodule Doggo do
+     end)
+   end
+ 
++  defp get_nested_classes({_, info}) do
++    base_class = Keyword.get(info, :base_class)
++    component_module = info |> Keyword.fetch!(:component) |> component_module()
++    component_module.nested_classes(base_class)
++  end
++
++  defp get_extra_classes({_, info}) do
++    info
++    |> Keyword.fetch!(:extra)
++    |> Enum.map(fn {key, value} ->
++      if key |> to_string() |> String.ends_with?("_class"), do: value
++    end)
++  end
++
++  defp component_module(name) when is_atom(name) do
++    module_name = name |> Atom.to_string() |> Macro.camelize()
++    Module.safe_concat([Doggo.Components, module_name])
++  end
++
+   @doc false
+   def ensure_label!(%{label: s, labelledby: nil}, _, _) when is_binary(s) do
+     :ok
+diff --git a/lib/doggo/component.ex b/lib/doggo/component.ex
+index 6bf0950..6616cda 100644
+--- a/lib/doggo/component.ex
++++ b/lib/doggo/component.ex
+@@ -32,6 +32,11 @@ defmodule Doggo.Component do
+   """
+   @callback config() :: keyword
+ 
++  @doc """
++  Returns a list of all nested classes used by the component.
++  """
++  @callback nested_classes(base_class :: String.t() | nil) :: [String.t()]
++
+   @doc """
+   Returns a quoted block with the attributes and slots.
+   """
+diff --git a/lib/doggo/components/accordion.ex b/lib/doggo/components/accordion.ex
+index 599bd0a..dedf305 100644
+--- a/lib/doggo/components/accordion.ex
++++ b/lib/doggo/components/accordion.ex
+@@ -50,6 +50,11 @@ defmodule Doggo.Components.Accordion do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/action_bar.ex b/lib/doggo/components/action_bar.ex
+index f91135b..d41f3a3 100644
+--- a/lib/doggo/components/action_bar.ex
++++ b/lib/doggo/components/action_bar.ex
+@@ -53,6 +53,11 @@ defmodule Doggo.Components.ActionBar do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/alert.ex b/lib/doggo/components/alert.ex
+index 6732824..71eaa75 100644
+--- a/lib/doggo/components/alert.ex
++++ b/lib/doggo/components/alert.ex
+@@ -56,6 +56,16 @@ defmodule Doggo.Components.Alert do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-icon",
++      "#{base_class}-body",
++      "#{base_class}-title",
++      "#{base_class}-message"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/alert_dialog.ex b/lib/doggo/components/alert_dialog.ex
+index 817ae6d..3b2c2f1 100644
+--- a/lib/doggo/components/alert_dialog.ex
++++ b/lib/doggo/components/alert_dialog.ex
+@@ -85,6 +85,15 @@ defmodule Doggo.Components.AlertDialog do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-close",
++      "#{base_class}-container",
++      "#{base_class}-content"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/app_bar.ex b/lib/doggo/components/app_bar.ex
+index 0b29647..5e0a2e3 100644
+--- a/lib/doggo/components/app_bar.ex
++++ b/lib/doggo/components/app_bar.ex
+@@ -42,6 +42,14 @@ defmodule Doggo.Components.AppBar do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-actions",
++      "#{base_class}-navigation"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/avatar.ex b/lib/doggo/components/avatar.ex
+index 50173f4..fbc1870 100644
+--- a/lib/doggo/components/avatar.ex
++++ b/lib/doggo/components/avatar.ex
+@@ -57,6 +57,11 @@ defmodule Doggo.Components.Avatar do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/badge.ex b/lib/doggo/components/badge.ex
+index ca612ce..9265e23 100644
+--- a/lib/doggo/components/badge.ex
++++ b/lib/doggo/components/badge.ex
+@@ -49,6 +49,11 @@ defmodule Doggo.Components.Badge do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/bottom_navigation.ex b/lib/doggo/components/bottom_navigation.ex
+index a7028ff..a782452 100644
+--- a/lib/doggo/components/bottom_navigation.ex
++++ b/lib/doggo/components/bottom_navigation.ex
+@@ -53,6 +53,11 @@ defmodule Doggo.Components.BottomNavigation do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    ["#{base_class}-icon"]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/box.ex b/lib/doggo/components/box.ex
+index ccfd348..37a5563 100644
+--- a/lib/doggo/components/box.ex
++++ b/lib/doggo/components/box.ex
+@@ -60,6 +60,15 @@ defmodule Doggo.Components.Box do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-actions",
++      "#{base_class}-banner",
++      "#{base_class}-body"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/breadcrumb.ex b/lib/doggo/components/breadcrumb.ex
+index d6560c1..e7dcdfb 100644
+--- a/lib/doggo/components/breadcrumb.ex
++++ b/lib/doggo/components/breadcrumb.ex
+@@ -35,6 +35,11 @@ defmodule Doggo.Components.Breadcrumb do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/button.ex b/lib/doggo/components/button.ex
+index 7982915..140235b 100644
+--- a/lib/doggo/components/button.ex
++++ b/lib/doggo/components/button.ex
+@@ -77,6 +77,11 @@ defmodule Doggo.Components.Button do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/button_link.ex b/lib/doggo/components/button_link.ex
+index 03cabb6..808db05 100644
+--- a/lib/doggo/components/button_link.ex
++++ b/lib/doggo/components/button_link.ex
+@@ -77,6 +77,11 @@ defmodule Doggo.Components.ButtonLink do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/callout.ex b/lib/doggo/components/callout.ex
+index e020bd2..2c4ce6c 100644
+--- a/lib/doggo/components/callout.ex
++++ b/lib/doggo/components/callout.ex
+@@ -61,6 +61,16 @@ defmodule Doggo.Components.Callout do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-body",
++      "#{base_class}-icon",
++      "#{base_class}-message",
++      "#{base_class}-title"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/card.ex b/lib/doggo/components/card.ex
+index 5dc2cf8..5de9178 100644
+--- a/lib/doggo/components/card.ex
++++ b/lib/doggo/components/card.ex
+@@ -45,6 +45,11 @@ defmodule Doggo.Components.Card do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/carousel.ex b/lib/doggo/components/carousel.ex
+index ff4f7c5..49982d7 100644
+--- a/lib/doggo/components/carousel.ex
++++ b/lib/doggo/components/carousel.ex
+@@ -72,6 +72,19 @@ defmodule Doggo.Components.Carousel do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-controls",
++      "#{base_class}-inner",
++      "#{base_class}-item",
++      "#{base_class}-items",
++      "#{base_class}-next",
++      "#{base_class}-pagination",
++      "#{base_class}-previous"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/cluster.ex b/lib/doggo/components/cluster.ex
+index be46318..25021bc 100644
+--- a/lib/doggo/components/cluster.ex
++++ b/lib/doggo/components/cluster.ex
+@@ -42,6 +42,11 @@ defmodule Doggo.Components.Cluster do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/combobox.ex b/lib/doggo/components/combobox.ex
+index 6995033..eb20a0a 100644
+--- a/lib/doggo/components/combobox.ex
++++ b/lib/doggo/components/combobox.ex
+@@ -91,6 +91,14 @@ defmodule Doggo.Components.Combobox do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-option-description",
++      "#{base_class}-option-label"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/date.ex b/lib/doggo/components/date.ex
+index 70003ed..0ce017b 100644
+--- a/lib/doggo/components/date.ex
++++ b/lib/doggo/components/date.ex
+@@ -101,6 +101,11 @@ defmodule Doggo.Components.Date do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/datetime.ex b/lib/doggo/components/datetime.ex
+index b8a676b..5acbdf5 100644
+--- a/lib/doggo/components/datetime.ex
++++ b/lib/doggo/components/datetime.ex
+@@ -110,6 +110,11 @@ defmodule Doggo.Components.Datetime do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/disclosure_button.ex b/lib/doggo/components/disclosure_button.ex
+index ec6428d..e5dbab8 100644
+--- a/lib/doggo/components/disclosure_button.ex
++++ b/lib/doggo/components/disclosure_button.ex
+@@ -82,6 +82,11 @@ defmodule Doggo.Components.DisclosureButton do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/drawer.ex b/lib/doggo/components/drawer.ex
+index 6e1c977..ba75001 100644
+--- a/lib/doggo/components/drawer.ex
++++ b/lib/doggo/components/drawer.ex
+@@ -91,6 +91,15 @@ defmodule Doggo.Components.Drawer do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-footer",
++      "#{base_class}-header",
++      "#{base_class}-main"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/fallback.ex b/lib/doggo/components/fallback.ex
+index d228d7d..a883044 100644
+--- a/lib/doggo/components/fallback.ex
++++ b/lib/doggo/components/fallback.ex
+@@ -60,6 +60,11 @@ defmodule Doggo.Components.Fallback do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/field.ex b/lib/doggo/components/field.ex
+index 643c276..6ceaca3 100644
+--- a/lib/doggo/components/field.ex
++++ b/lib/doggo/components/field.ex
+@@ -151,6 +151,17 @@ defmodule Doggo.Components.Field do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-description",
++      "#{base_class}-errors",
++      "#{base_class}-input-addon-left",
++      "#{base_class}-input-addon-right",
++      "#{base_class}-input-wrapper"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/field_group.ex b/lib/doggo/components/field_group.ex
+index b0a4312..6bb8068 100644
+--- a/lib/doggo/components/field_group.ex
++++ b/lib/doggo/components/field_group.ex
+@@ -50,6 +50,11 @@ defmodule Doggo.Components.FieldGroup do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/frame.ex b/lib/doggo/components/frame.ex
+index dd49863..35bb045 100644
+--- a/lib/doggo/components/frame.ex
++++ b/lib/doggo/components/frame.ex
+@@ -60,6 +60,11 @@ defmodule Doggo.Components.Frame do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/icon.ex b/lib/doggo/components/icon.ex
+index 32bbde7..0134f6b 100644
+--- a/lib/doggo/components/icon.ex
++++ b/lib/doggo/components/icon.ex
+@@ -74,6 +74,11 @@ defmodule Doggo.Components.Icon do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/icon_sprite.ex b/lib/doggo/components/icon_sprite.ex
+index f7398ec..67b63a0 100644
+--- a/lib/doggo/components/icon_sprite.ex
++++ b/lib/doggo/components/icon_sprite.ex
+@@ -66,6 +66,11 @@ defmodule Doggo.Components.IconSprite do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/image.ex b/lib/doggo/components/image.ex
+index dbbc0d6..7c29382 100644
+--- a/lib/doggo/components/image.ex
++++ b/lib/doggo/components/image.ex
+@@ -56,6 +56,13 @@ defmodule Doggo.Components.Image do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-frame"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/menu.ex b/lib/doggo/components/menu.ex
+index 3a86f83..095f377 100644
+--- a/lib/doggo/components/menu.ex
++++ b/lib/doggo/components/menu.ex
+@@ -63,6 +63,11 @@ defmodule Doggo.Components.Menu do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/menu_bar.ex b/lib/doggo/components/menu_bar.ex
+index cabcf0b..713e914 100644
+--- a/lib/doggo/components/menu_bar.ex
++++ b/lib/doggo/components/menu_bar.ex
+@@ -76,6 +76,11 @@ defmodule Doggo.Components.MenuBar do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/menu_button.ex b/lib/doggo/components/menu_button.ex
+index 9bb42ea..e3834f5 100644
+--- a/lib/doggo/components/menu_button.ex
++++ b/lib/doggo/components/menu_button.ex
+@@ -84,6 +84,11 @@ defmodule Doggo.Components.MenuButton do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/menu_group.ex b/lib/doggo/components/menu_group.ex
+index bcb97c3..f58e1c9 100644
+--- a/lib/doggo/components/menu_group.ex
++++ b/lib/doggo/components/menu_group.ex
+@@ -66,6 +66,11 @@ defmodule Doggo.Components.MenuGroup do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/menu_item.ex b/lib/doggo/components/menu_item.ex
+index b66d38b..2fc5ba1 100644
+--- a/lib/doggo/components/menu_item.ex
++++ b/lib/doggo/components/menu_item.ex
+@@ -45,6 +45,11 @@ defmodule Doggo.Components.MenuItem do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/menu_item_checkbox.ex b/lib/doggo/components/menu_item_checkbox.ex
+index 5ad76bb..8801fe6 100644
+--- a/lib/doggo/components/menu_item_checkbox.ex
++++ b/lib/doggo/components/menu_item_checkbox.ex
+@@ -48,6 +48,11 @@ defmodule Doggo.Components.MenuItemCheckbox do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/menu_item_radio_group.ex b/lib/doggo/components/menu_item_radio_group.ex
+index 1fa2643..1d952cf 100644
+--- a/lib/doggo/components/menu_item_radio_group.ex
++++ b/lib/doggo/components/menu_item_radio_group.ex
+@@ -54,6 +54,11 @@ defmodule Doggo.Components.MenuItemRadioGroup do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/modal.ex b/lib/doggo/components/modal.ex
+index 3e595dd..7368ea8 100644
+--- a/lib/doggo/components/modal.ex
++++ b/lib/doggo/components/modal.ex
+@@ -123,6 +123,15 @@ defmodule Doggo.Components.Modal do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-close",
++      "#{base_class}-container",
++      "#{base_class}-content"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/navbar.ex b/lib/doggo/components/navbar.ex
+index cf0077a..acfd6ad 100644
+--- a/lib/doggo/components/navbar.ex
++++ b/lib/doggo/components/navbar.ex
+@@ -68,6 +68,13 @@ defmodule Doggo.Components.Navbar do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-brand"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/navbar_items.ex b/lib/doggo/components/navbar_items.ex
+index 08200e7..9bda7b1 100644
+--- a/lib/doggo/components/navbar_items.ex
++++ b/lib/doggo/components/navbar_items.ex
+@@ -39,6 +39,11 @@ defmodule Doggo.Components.NavbarItems do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/page_header.ex b/lib/doggo/components/page_header.ex
+index 91f975a..61e08e4 100644
+--- a/lib/doggo/components/page_header.ex
++++ b/lib/doggo/components/page_header.ex
+@@ -48,6 +48,14 @@ defmodule Doggo.Components.PageHeader do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-actions",
++      "#{base_class}-title"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/property_list.ex b/lib/doggo/components/property_list.ex
+index 56ce3ca..41397d7 100644
+--- a/lib/doggo/components/property_list.ex
++++ b/lib/doggo/components/property_list.ex
+@@ -46,6 +46,11 @@ defmodule Doggo.Components.PropertyList do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/radio_group.ex b/lib/doggo/components/radio_group.ex
+index 329f18c..3790a3e 100644
+--- a/lib/doggo/components/radio_group.ex
++++ b/lib/doggo/components/radio_group.ex
+@@ -53,6 +53,11 @@ defmodule Doggo.Components.RadioGroup do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/skeleton.ex b/lib/doggo/components/skeleton.ex
+index 0a54ce8..d72cf76 100644
+--- a/lib/doggo/components/skeleton.ex
++++ b/lib/doggo/components/skeleton.ex
+@@ -103,6 +103,11 @@ defmodule Doggo.Components.Skeleton do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/split_pane.ex b/lib/doggo/components/split_pane.ex
+index 0a27500..f06cb71 100644
+--- a/lib/doggo/components/split_pane.ex
++++ b/lib/doggo/components/split_pane.ex
+@@ -86,6 +86,11 @@ defmodule Doggo.Components.SplitPane do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/stack.ex b/lib/doggo/components/stack.ex
+index 158cd49..85ca940 100644
+--- a/lib/doggo/components/stack.ex
++++ b/lib/doggo/components/stack.ex
+@@ -61,6 +61,11 @@ defmodule Doggo.Components.Stack do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/steps.ex b/lib/doggo/components/steps.ex
+index 70db50e..010955d 100644
+--- a/lib/doggo/components/steps.ex
++++ b/lib/doggo/components/steps.ex
+@@ -76,6 +76,11 @@ defmodule Doggo.Components.Steps do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/switch.ex b/lib/doggo/components/switch.ex
+index 8efa453..bf7e819 100644
+--- a/lib/doggo/components/switch.ex
++++ b/lib/doggo/components/switch.ex
+@@ -42,6 +42,17 @@ defmodule Doggo.Components.Switch do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-control",
++      "#{base_class}-label",
++      "#{base_class}-state",
++      "#{base_class}-state-off",
++      "#{base_class}-state-on"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/tab_navigation.ex b/lib/doggo/components/tab_navigation.ex
+index 086a4cc..83e20f0 100644
+--- a/lib/doggo/components/tab_navigation.ex
++++ b/lib/doggo/components/tab_navigation.ex
+@@ -74,6 +74,11 @@ defmodule Doggo.Components.TabNavigation do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/table.ex b/lib/doggo/components/table.ex
+index 0eb2ff3..277400a 100644
+--- a/lib/doggo/components/table.ex
++++ b/lib/doggo/components/table.ex
+@@ -35,6 +35,11 @@ defmodule Doggo.Components.Table do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/tabs.ex b/lib/doggo/components/tabs.ex
+index 14ab537..7a98e46 100644
+--- a/lib/doggo/components/tabs.ex
++++ b/lib/doggo/components/tabs.ex
+@@ -62,6 +62,11 @@ defmodule Doggo.Components.Tabs do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/tag.ex b/lib/doggo/components/tag.ex
+index b022c05..0c52d57 100644
+--- a/lib/doggo/components/tag.ex
++++ b/lib/doggo/components/tag.ex
+@@ -78,6 +78,11 @@ defmodule Doggo.Components.Tag do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/time.ex b/lib/doggo/components/time.ex
+index cf6b41c..43d4985 100644
+--- a/lib/doggo/components/time.ex
++++ b/lib/doggo/components/time.ex
+@@ -110,6 +110,11 @@ defmodule Doggo.Components.Time do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/toggle_button.ex b/lib/doggo/components/toggle_button.ex
+index 60a5bdc..3fcdbb4 100644
+--- a/lib/doggo/components/toggle_button.ex
++++ b/lib/doggo/components/toggle_button.ex
+@@ -81,6 +81,11 @@ defmodule Doggo.Components.ToggleButton do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/toolbar.ex b/lib/doggo/components/toolbar.ex
+index e04e867..90f67eb 100644
+--- a/lib/doggo/components/toolbar.ex
++++ b/lib/doggo/components/toolbar.ex
+@@ -60,6 +60,11 @@ defmodule Doggo.Components.Toolbar do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/tooltip.ex b/lib/doggo/components/tooltip.ex
+index f354172..1eaa440 100644
+--- a/lib/doggo/components/tooltip.ex
++++ b/lib/doggo/components/tooltip.ex
+@@ -77,6 +77,11 @@ defmodule Doggo.Components.Tooltip do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/tree.ex b/lib/doggo/components/tree.ex
+index fbc224c..e05c3b9 100644
+--- a/lib/doggo/components/tree.ex
++++ b/lib/doggo/components/tree.ex
+@@ -67,6 +67,11 @@ defmodule Doggo.Components.Tree do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/tree_item.ex b/lib/doggo/components/tree_item.ex
+index d756b71..84a8af5 100644
+--- a/lib/doggo/components/tree_item.ex
++++ b/lib/doggo/components/tree_item.ex
+@@ -71,6 +71,11 @@ defmodule Doggo.Components.TreeItem do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(_) do
++    []
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/vertical_nav.ex b/lib/doggo/components/vertical_nav.ex
+index 69f2d80..328da6c 100644
+--- a/lib/doggo/components/vertical_nav.ex
++++ b/lib/doggo/components/vertical_nav.ex
+@@ -55,6 +55,13 @@ defmodule Doggo.Components.VerticalNav do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-title"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/vertical_nav_nested.ex b/lib/doggo/components/vertical_nav_nested.ex
+index 5447246..b875a5e 100644
+--- a/lib/doggo/components/vertical_nav_nested.ex
++++ b/lib/doggo/components/vertical_nav_nested.ex
+@@ -44,6 +44,13 @@ defmodule Doggo.Components.VerticalNavNested do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-title"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/components/vertical_nav_section.ex b/lib/doggo/components/vertical_nav_section.ex
+index 7b08033..efffe7d 100644
+--- a/lib/doggo/components/vertical_nav_section.ex
++++ b/lib/doggo/components/vertical_nav_section.ex
+@@ -37,6 +37,14 @@ defmodule Doggo.Components.VerticalNavSection do
+     ]
+   end
+ 
++  @impl true
++  def nested_classes(base_class) do
++    [
++      "#{base_class}-item",
++      "#{base_class}-title"
++    ]
++  end
++
+   @impl true
+   def attrs_and_slots do
+     quote do
+diff --git a/lib/doggo/macros.ex b/lib/doggo/macros.ex
+index ebc28cd..a88164d 100644
+--- a/lib/doggo/macros.ex
++++ b/lib/doggo/macros.ex
+@@ -49,6 +49,7 @@ defmodule Doggo.Macros do
+         component_info =
+           opts
+           |> Keyword.put(:component, unquote(name))
++          |> Keyword.put(:extra, extra)
+           |> Keyword.put(:type, unquote(type))
+ 
+         name = Keyword.fetch!(opts, :name)
+diff --git a/lib/mix/tasks/dog.modifiers.ex b/lib/mix/tasks/dog.classes.ex
+similarity index 68%
+rename from lib/mix/tasks/dog.modifiers.ex
+rename to lib/mix/tasks/dog.classes.ex
+index 46e4e3d..5bac10b 100644
+--- a/lib/mix/tasks/dog.modifiers.ex
++++ b/lib/mix/tasks/dog.classes.ex
+@@ -1,18 +1,18 @@
+-defmodule Mix.Tasks.Dog.Modifiers do
+-  @shortdoc "Lists all modifier classes"
++defmodule Mix.Tasks.Dog.Classes do
++  @shortdoc "Lists all component classes"
+ 
+   @moduledoc """
+-  Returns a list of all modifier classes.
++  Returns a list of all component classes.
+ 
+   ## Usage
+ 
+-  List modifier classes:
++  List all component classes:
+ 
+-      mix dog.modifiers
++      mix dog.modifiers -m MyAppWeb.CoreComponents
+ 
+-  Write modifier classes to file:
++  Write classes to file:
+ 
+-      mix dog.modifiers -m MyAppWeb.CoreComponents -o assets/modifiers.txt
++      mix dog.classes -m MyAppWeb.CoreComponents -o assets/classes.txt
+   """
+ 
+   use Mix.Task
+@@ -44,7 +44,7 @@ defmodule Mix.Tasks.Dog.Modifiers do
+   defp list_modifiers(module) do
+     [module]
+     |> Module.safe_concat()
+-    |> Doggo.modifier_classes()
++    |> Doggo.classes()
+     |> Enum.join("\n")
+   end
+ end

@@ -1,0 +1,20 @@
+{
+  "aliases": {
+    "slashdotdash/commanded": "commanded/commanded"
+  },
+  "evidence": [
+    {
+      "names": [
+        "slashdotdash/commanded",
+        "commanded/commanded"
+      ],
+      "github_repository_id": 54749959,
+      "verified_on": "2026-09-22",
+      "sources": [
+        "https://api.github.com/repos/slashdotdash/commanded",
+        "https://api.github.com/repos/commanded/commanded"
+      ]
+    }
+  ],
+  "scope": "Known verified alias only; other repositories have not all been checked for transfers or forks."
+}

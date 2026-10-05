@@ -1,0 +1,3 @@
+{
+  "phoenixframework__phoenix-4309": "Changes JavaScript heartbeat timers, reconnect handling and browser event ordering; incidental Elixir float-to-param support and documentation. Non-OTP, but excluded from sample because the reported bug and primary fix are browser JavaScript, not Elixir."
+}

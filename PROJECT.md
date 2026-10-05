@@ -79,9 +79,9 @@ No one has published construct-level (OTP / macros / Ecto / Phoenix) agent resul
 ## Build sequence
 
 1. ✅ Prior-work and Hugging Face audit.  
-2. ⬜ **Profile** (`scripts/profile_elixir.py`). The key output is the number of clean OTP tasks after the per-repo cap, which needs to be ≥ 30\. Also pin the dataset revision and language label.  
-3. ⬜ **Check the tags by hand.** Read about 20 tasks tagged OTP and about 20 tagged control, confirm the regex tags are right, then adjust `exbench/constructs.py` and re-run step 2 if not.  
-4. ⬜ **Sample** (`scripts/sample_v0.py`). Produces 30 matched pairs, then check the balance table.  
+2. ✅ **Profile** (`profile_elixir.py`): verify pinned source, schema and Elixir/quality counts.
+3. ✅ **Review tags:** AI-assisted patch audit, with recorded reasons and user-assisted examples.
+4. ✅ **Sample** (`profile_elixir.py` → `candidate_pairs.json`): 30 reviewed matched pairs, shared cap five; runtime validation pending.
 5. ⬜ **Harness:** wire `exbench/harness.py` to the SWE-rebench V2 harness and mini-swe-agent.  
 6. ⬜ **Validate gold patches** (`scripts/validate_gold.py`). Free, no model calls. Replace any task whose gold patch fails by re-sampling.  
 7. ⬜ **Run** (`scripts/run_eval.py`). Needs Aaron's model list and budget.  
@@ -161,3 +161,9 @@ Before model evaluation, raised the shared repository cap from four to five. Rev
 &nbsp;
 
 - **Audit follow-up:** Resolved the two uncertain entries: ash-project__ash-1624 is control (process-local error bookkeeping); commanded__commanded-105 is OTP under the mixed-patch rule (stricter acknowledgement failure handling), though its main feature is ID propagation. Final audit: 17 OTP / 23 control, 5/40 disagreements. See tag_audit/AUDIT.md for scope and limitations.
+
+- **2 Oct 2026:** Merged verified alias slashdotdash/commanded into commanded/commanded for repository caps, preserving source names and IDs. Corrected feasibility: cap four = 27 pairs; cap five = 30. Archived the invalid earlier sample in sample_history/ and regenerated 30 draft pairs. Checked 60 unique tasks, within-bucket matches and shared cap; Commanded contributes five. Other repository transfers/forks still need verification. Selected controls needing review: 28. No paid model calls or runtime evaluation.
+
+- **5 Oct 2026:** Completed current GitHub identity checks for all 61 Elixir repository names: 60 IDs, with Commanded the sole duplicated ID. Saved sample respects cap five by current ID. Finch is now a fork and needs historical base-commit/PR lineage verification. See repository_audit/REPORT.md. No new cap collision or resampling required; control review remains next.
+
+- **5 Oct 2026 — sample review completed:** Saved 28 selected-control decisions (7 user-assisted, 21 assistant static reviews). All 60 selected tasks now have reviewed labels. Replaced JavaScript-focused phoenixframework__phoenix-4309 with already-reviewed ash-project__ash-1853 in the same medium/large bucket; other 29 pairs preserved. Exclusion is separate from its control label. Validated pinned dataset, unique IDs, exact-A eligibility, group labels, review hashes where recorded, matching buckets and shared canonical-repository cap five. See tag_audit/selected_controls/REPORT.md and candidate_pairs.json. No runtime tests or paid model calls. Next: resolve Finch historical lineage and integrate the upstream harness to validate base/reference patches before any agent evaluation.

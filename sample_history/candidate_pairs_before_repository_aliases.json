@@ -1,0 +1,704 @@
+{
+  "dataset": "nebius/SWE-rebench-V2",
+  "revision": "475dd5e8703bb5fb22dd3c60b5d038b019eba1e0",
+  "dataset_sha256": "0e0bf9355f892ad74ae98d4e1c404f39fd6654a8e351ee3e6ab162e4a64cd3ad",
+  "repository_cap": 5,
+  "seed": 42,
+  "selection_method": "MILP with seeded random task costs",
+  "status": "candidate sample; pending control review and runtime validation",
+  "pairs": [
+    {
+      "difficulty": "easy",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "phoenixframework__phoenix-2974",
+        "repo": "phoenixframework/phoenix",
+        "tag": "otp",
+        "bucket": [
+          "easy",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "elixir-protobuf__protobuf-387",
+        "repo": "elixir-protobuf/protobuf",
+        "tag": "control",
+        "bucket": [
+          "easy",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "easy",
+      "patch_size_bucket": "small",
+      "otp": {
+        "instance_id": "absinthe-graphql__absinthe-1336",
+        "repo": "absinthe-graphql/absinthe",
+        "tag": "otp",
+        "bucket": [
+          "easy",
+          "small"
+        ]
+      },
+      "control": {
+        "instance_id": "phoenixframework__phoenix_html-282",
+        "repo": "phoenixframework/phoenix_html",
+        "tag": "control",
+        "bucket": [
+          "easy",
+          "small"
+        ]
+      }
+    },
+    {
+      "difficulty": "hard",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "general-cbic__poolex-35",
+        "repo": "general-CbIC/poolex",
+        "tag": "otp",
+        "bucket": [
+          "hard",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "elixir-plug__plug-1245",
+        "repo": "elixir-plug/plug",
+        "tag": "control",
+        "bucket": [
+          "hard",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "commanded__commanded-139",
+        "repo": "commanded/commanded",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "absinthe-graphql__absinthe-1005",
+        "repo": "absinthe-graphql/absinthe",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "commanded__commanded-290",
+        "repo": "commanded/commanded",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "absinthe-graphql__absinthe-1155",
+        "repo": "absinthe-graphql/absinthe",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "commanded__commanded-335",
+        "repo": "commanded/commanded",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "adobe__elixir-styler-197",
+        "repo": "adobe/elixir-styler",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "coryodaniel__bonny-156",
+        "repo": "coryodaniel/bonny",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "adobe__elixir-styler-205",
+        "repo": "adobe/elixir-styler",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "fika-lang__fika-77",
+        "repo": "fika-lang/fika",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "derekkraan__curl_req-53",
+        "repo": "derekkraan/curl_req",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "general-cbic__poolex-15",
+        "repo": "general-CbIC/poolex",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "divvypayhq__absinthe_federation-22",
+        "repo": "DivvyPayHQ/absinthe_federation",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "general-cbic__poolex-54",
+        "repo": "general-CbIC/poolex",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "elixir-ecto__ecto-4552",
+        "repo": "elixir-ecto/ecto",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "general-cbic__poolex-59",
+        "repo": "general-CbIC/poolex",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "elixir-plug__plug-990",
+        "repo": "elixir-plug/plug",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "kraigie__nostrum-369",
+        "repo": "Kraigie/nostrum",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "fika-lang__fika-14",
+        "repo": "fika-lang/fika",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "phoenixframework__phoenix-2721",
+        "repo": "phoenixframework/phoenix",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "fika-lang__fika-34",
+        "repo": "fika-lang/fika",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "plataformatec__broadway-31",
+        "repo": "plataformatec/broadway",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "mhanberg__temple-243",
+        "repo": "mhanberg/temple",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "slashdotdash__commanded-102",
+        "repo": "slashdotdash/commanded",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "phoenixframework__phoenix-3250",
+        "repo": "phoenixframework/phoenix",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "slashdotdash__commanded-83",
+        "repo": "slashdotdash/commanded",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "phoenixframework__phoenix-4309",
+        "repo": "phoenixframework/phoenix",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "large",
+      "otp": {
+        "instance_id": "whitfin__cachex-341",
+        "repo": "whitfin/cachex",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      },
+      "control": {
+        "instance_id": "woylie__doggo-379",
+        "repo": "woylie/doggo",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "large"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "commanded__commanded-171",
+        "repo": "commanded/commanded",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "100phlecs__tailwind_formatter-33",
+        "repo": "100phlecs/tailwind_formatter",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "commanded__commanded-380",
+        "repo": "commanded/commanded",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "adobe__elixir-styler-155",
+        "repo": "adobe/elixir-styler",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "edgurgel__mimic-47",
+        "repo": "edgurgel/mimic",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "elixir-ecto__ecto-2348",
+        "repo": "elixir-ecto/ecto",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "elixir-protobuf__protobuf-164",
+        "repo": "elixir-protobuf/protobuf",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "elixir-gettext__gettext-239",
+        "repo": "elixir-gettext/gettext",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "general-cbic__poolex-127",
+        "repo": "general-CbIC/poolex",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "jeregrine__jsonapi-164",
+        "repo": "jeregrine/jsonapi",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "livebook-dev__kino-231",
+        "repo": "livebook-dev/kino",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "keathley__finch-47",
+        "repo": "keathley/finch",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "newrelic__elixir_agent-37",
+        "repo": "newrelic/elixir_agent",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "keathley__norm-41",
+        "repo": "keathley/norm",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "plataformatec__broadway-40",
+        "repo": "plataformatec/broadway",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "kraigie__nostrum-377",
+        "repo": "Kraigie/nostrum",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "quantum-elixir__quantum-core-454",
+        "repo": "quantum-elixir/quantum-core",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "phoenixframework__phoenix_html-263",
+        "repo": "phoenixframework/phoenix_html",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "whitfin__cachex-292",
+        "repo": "whitfin/cachex",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "rrrene__credo-1095",
+        "repo": "rrrene/credo",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "whitfin__cachex-294",
+        "repo": "whitfin/cachex",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "rrrene__credo-1152",
+        "repo": "rrrene/credo",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "whitfin__cachex-343",
+        "repo": "whitfin/cachex",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "tallarium__reverse_proxy_plug-177",
+        "repo": "tallarium/reverse_proxy_plug",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    },
+    {
+      "difficulty": "medium",
+      "patch_size_bucket": "medium",
+      "otp": {
+        "instance_id": "whitfin__cachex-348",
+        "repo": "whitfin/cachex",
+        "tag": "otp",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      },
+      "control": {
+        "instance_id": "woylie__flop_phoenix-221",
+        "repo": "woylie/flop_phoenix",
+        "tag": "control",
+        "bucket": [
+          "medium",
+          "medium"
+        ]
+      }
+    }
+  ],
+  "tasks_per_repository": {
+    "100phlecs/tailwind_formatter": 1,
+    "DivvyPayHQ/absinthe_federation": 1,
+    "Kraigie/nostrum": 2,
+    "absinthe-graphql/absinthe": 3,
+    "adobe/elixir-styler": 3,
+    "commanded/commanded": 5,
+    "coryodaniel/bonny": 1,
+    "derekkraan/curl_req": 1,
+    "edgurgel/mimic": 1,
+    "elixir-ecto/ecto": 2,
+    "elixir-gettext/gettext": 1,
+    "elixir-plug/plug": 2,
+    "elixir-protobuf/protobuf": 2,
+    "fika-lang/fika": 3,
+    "general-CbIC/poolex": 5,
+    "jeregrine/jsonapi": 1,
+    "keathley/finch": 1,
+    "keathley/norm": 1,
+    "livebook-dev/kino": 1,
+    "mhanberg/temple": 1,
+    "newrelic/elixir_agent": 1,
+    "phoenixframework/phoenix": 4,
+    "phoenixframework/phoenix_html": 2,
+    "plataformatec/broadway": 2,
+    "quantum-elixir/quantum-core": 1,
+    "rrrene/credo": 2,
+    "slashdotdash/commanded": 2,
+    "tallarium/reverse_proxy_plug": 1,
+    "whitfin/cachex": 5,
+    "woylie/doggo": 1,
+    "woylie/flop_phoenix": 1
+  }
+}

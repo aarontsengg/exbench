@@ -16,10 +16,20 @@ from scipy.sparse import lil_matrix
 # Shared across OTP and control tasks.
 repo_cap = 5
 
+with open("repository_aliases.json") as file:
+    repository_identity = json.load(file)
+
+
+def canonical_repo(repo):
+    name = repo.lower()
+    return repository_identity["aliases"].get(name, name)
+
+
 review_files = [
     "tag_audit/reviews.json",
     "tag_audit/borderline_eight/reviews.json",
     "tag_audit/remaining_otp/reviews.json",
+    "tag_audit/selected_controls/reviews.json",
 ]
 
 reviewed_tags = {}
@@ -29,7 +39,10 @@ for filename in review_files:
         reviews = json.load(file)
 
     for review in reviews:
-        reviewed_tags[review["instance_id"]] = review["manual_tag"]
+        if review["manual_tag"] is not None:
+            reviewed_tags[review["instance_id"]] = review["manual_tag"]
+
+sample_exclusions = json.loads(Path("sample_exclusions.json").read_text())
 
 # Provisional rules—not a complete or manually validated OTP detector.
 OTP_PATTERNS = [
@@ -184,7 +197,7 @@ for task in tasks:
     tag_counts[tag] += 1
 
     if tag == "otp":
-        otp_tasks_per_repo[task["repo"]] += 1
+        otp_tasks_per_repo[canonical_repo(task["repo"])] += 1
 
     if annotations.get("code") == "A":
         quality_a_tasks.append(task)
@@ -206,7 +219,7 @@ for task in quality_a_tasks:
     review_adjusted_counts[tag] += 1
 
     if tag == "otp":
-        review_adjusted_otp_repos[task["repo"]] += 1
+        review_adjusted_otp_repos[canonical_repo(task["repo"])] += 1
 
 otp_capacity = sum(
     min(count, repo_cap)
@@ -246,12 +259,14 @@ for task in quality_a_tasks:
     quality_a_tags[tag] += 1
 
     if tag == "otp":
-        quality_a_otp_repos[task["repo"]] += 1
+        quality_a_otp_repos[canonical_repo(task["repo"])] += 1
 
 quality_a_otp_capacity = sum(
     min(count, repo_cap)
     for count in quality_a_otp_repos.values()
 )
+
+
 
 
 # 7. Build the report from the calculated values.
@@ -297,6 +312,7 @@ report = {
         "otp_capacity_after_cap": quality_a_otp_capacity,
     },
     "repository_cap": repo_cap,
+    "repository_identity": repository_identity,
     "review_adjusted_exact_a": {
         "review_files": review_files,
         "tasks": len(quality_a_tasks),
@@ -315,7 +331,7 @@ report = {
     "limitations": [
         "Tags are provisional regex classifications.",
         "Markers can match documentation or unrelated names and miss OTP code.",
-        "Repository names have not been checked for renames or duplicates.",
+        "Current repository identities checked; Finch historical fork lineage remains unresolved.",
         "OTP capacity is before matching and gold-patch validation.",
         "The eventual repository cap must be shared across OTP and control tasks.",
         "Exact-A filtering uses upstream annotations without overrides.",
@@ -340,6 +356,8 @@ for task in quality_a_tasks:
     tag = effective_tag(task)
     if tag not in {"otp", "control"}:
         continue
+    if task["instance_id"] in sample_exclusions:
+        continue
 
     # Preserve the original control eligibility rule:
     # no OTP markers anywhere in the reference patch.
@@ -353,6 +371,7 @@ for task in quality_a_tasks:
     candidates.append({
         "instance_id": task["instance_id"],
         "repo": task["repo"],
+        "canonical_repo": canonical_repo(task["repo"]),
         "tag": tag,
         "bucket": (
             difficulty,
@@ -361,7 +380,7 @@ for task in quality_a_tasks:
     })
 
 buckets = sorted({task["bucket"] for task in candidates})
-repositories = sorted({task["repo"] for task in candidates})
+repositories = sorted({task["canonical_repo"] for task in candidates})
 
 bucket_rows = {bucket: i for i, bucket in enumerate(buckets)}
 repo_rows = {
@@ -379,7 +398,7 @@ for column, task in enumerate(candidates):
     )
 
     # Both groups consume repository slots.
-    matrix[repo_rows[task["repo"]], column] = 1
+    matrix[repo_rows[task["canonical_repo"]], column] = 1
 
 # SciPy minimizes: negative OTP count maximizes selected OTP tasks.
 objective = np.array([
@@ -426,8 +445,187 @@ report["matching_feasibility"] = {
     "maximum_pairs_by_repository_cap": matching_capacity,
     "patch_size_buckets": {"small": "1-10", "medium": "11-80", "large": "81+"},
     "control_rule": "Reviewed/effective control and no regex markers anywhere in patch",
-    "limitations": "Before control review and runtime validation; repository names are not canonicalized",
+    "limitations": "Before runtime validation; Finch historical fork lineage remains unresolved",
+    "sample_exclusions": sample_exclusions,
 }
+
+from scipy.sparse import vstack
+
+target_pairs = 30
+
+if matching_capacity[str(repo_cap)] < target_pairs:
+    Path("elixir_profile.json").write_text(json.dumps(report, indent=2) + "\n")
+    raise SystemExit(
+        f"Only {matching_capacity[str(repo_cap)]} pairs feasible; "
+        "saved profile, did not generate a sample."
+    )
+
+# Add a constraint requiring exactly 30 OTP tasks.
+otp_row = np.array([
+    1 if task["tag"] == "otp" else 0
+    for task in candidates
+])
+
+selection_matrix = vstack(
+    [matrix.tocsr(), otp_row.reshape(1, -1)],
+    format="csr",
+)
+
+lower = np.concatenate([
+    np.zeros(len(buckets)),
+    np.zeros(len(repositories)),
+    [target_pairs],
+])
+
+upper = np.concatenate([
+    np.zeros(len(buckets)),
+    np.full(len(repositories), repo_cap),
+    [target_pairs],
+])
+
+rng = np.random.default_rng(42)
+
+result = milp(
+    c=rng.random(n),
+    integrality=np.ones(n),
+    bounds=Bounds(0, 1),
+    constraints=LinearConstraint(selection_matrix, lower, upper),
+    options={"mip_rel_gap": 0.0},
+)
+
+if not result.success:
+    raise RuntimeError(result.message)
+
+chosen = [
+    task
+    for task, value in zip(candidates, result.x)
+    if value > 0.5
+]
+
+# Verify the selection before writing it.
+repo_counts = Counter(task["canonical_repo"] for task in chosen)
+
+assert len(chosen) == target_pairs * 2
+assert len({task["instance_id"] for task in chosen}) == len(chosen)
+assert max(repo_counts.values()) <= repo_cap
+
+pairs = []
+
+for bucket in buckets:
+    otp = sorted(
+        [
+            task for task in chosen
+            if task["tag"] == "otp" and task["bucket"] == bucket
+        ],
+        key=lambda task: task["instance_id"],
+    )
+    controls = sorted(
+        [
+            task for task in chosen
+            if task["tag"] == "control" and task["bucket"] == bucket
+        ],
+        key=lambda task: task["instance_id"],
+    )
+
+    assert len(otp) == len(controls)
+
+    for treatment, control in zip(otp, controls):
+        pairs.append({
+            "difficulty": bucket[0],
+            "patch_size_bucket": bucket[1],
+            "otp": treatment,
+            "control": control,
+        })
+
+assert len(pairs) == target_pairs
+
+sample = {
+    "dataset": dataset,
+    "revision": revision,
+    "dataset_sha256": actual_sha256,
+    "repository_cap": repo_cap,
+    "repository_identity": repository_identity,
+    "seed": 42,
+    "selection_method": "MILP with seeded random task costs",
+    "status": "candidate sample; pending control review and runtime validation",
+    "pairs": pairs,
+    "tasks_per_repository": dict(sorted(repo_counts.items())),
+}
+
+sample_path = Path("candidate_pairs.json")
+
+# Preserve an existing sample rather than silently replacing it.
+if sample_path.exists():
+    existing = json.loads(sample_path.read_text())
+    if existing.get("repository_identity") != repository_identity:
+        raise ValueError("Existing sample uses different repository identities; archive it before resampling.")
+    print("Kept existing candidate_pairs.json.")
+else:
+    sample_path.write_text(
+        json.dumps(sample, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(f"Saved {len(pairs)} candidate pairs to {sample_path}.")
+
+# Validate the persisted sample, not just the optimizer's fresh solution.
+saved = json.loads(sample_path.read_text())
+eligible = {task["instance_id"]: task for task in candidates}
+source_tasks = {task["instance_id"]: task for task in tasks}
+if (saved["dataset"], saved["revision"], saved["dataset_sha256"], saved["repository_cap"]) != (
+    dataset, revision, actual_sha256, repo_cap
+):
+    raise ValueError("Saved sample configuration differs from the pinned configuration")
+seen = set()
+validated_repos = Counter()
+balance = Counter()
+reviewed_selected = 0
+for pair in saved["pairs"]:
+    bucket = (pair["difficulty"], pair["patch_size_bucket"])
+    for group in ["otp", "control"]:
+        entry = pair[group]
+        instance_id = entry["instance_id"]
+        current = eligible.get(instance_id)
+        if instance_id in seen or current is None:
+            raise ValueError(f"Duplicate or ineligible selected task: {instance_id}")
+        if (current["tag"] != group or current["bucket"] != bucket
+                or tuple(entry["bucket"]) != bucket or entry["tag"] != group
+                or entry["repo"] != current["repo"]
+                or entry["canonical_repo"] != current["canonical_repo"]):
+            raise ValueError(f"Saved metadata or group mismatch: {instance_id}")
+        if instance_id in reviewed_tags:
+            if reviewed_tags[instance_id] != group:
+                raise ValueError(f"Review disagrees with sample: {instance_id}")
+            reviewed_selected += 1
+        seen.add(instance_id)
+        validated_repos[current["canonical_repo"]] += 1
+        balance[(group, *bucket)] += 1
+if len(saved["pairs"]) != target_pairs or len(seen) != 2 * target_pairs:
+    raise ValueError("Saved sample does not contain 30 distinct pairs")
+if max(validated_repos.values()) > repo_cap:
+    raise ValueError("Saved sample exceeds shared repository cap")
+if dict(validated_repos) != saved["tasks_per_repository"]:
+    raise ValueError("Saved repository counts are stale")
+for review_file in review_files:
+    for review in json.loads(Path(review_file).read_text()):
+        if review["instance_id"] in seen and review.get("patch_sha256"):
+            patch = source_tasks[review["instance_id"]]["patch"]
+            if hashlib.sha256(patch.encode()).hexdigest() != review["patch_sha256"]:
+                raise ValueError(f"Reviewed patch hash mismatch: {review['instance_id']}")
+saved["status"] = (
+    "labels reviewed; pending runtime validation and historical repository lineage check"
+    if reviewed_selected == len(seen) else "candidate sample; incomplete label review"
+)
+saved["validation"] = {
+    "unique_tasks": len(seen), "reviewed_tasks": reviewed_selected,
+    "exact_a_and_matching_buckets_verified": True,
+    "shared_repository_cap_verified": True,
+    "runtime_validated": False,
+    "balance": [dict(group=g, difficulty=d, patch_size_bucket=b, count=c)
+                for (g, d, b), c in sorted(balance.items())],
+}
+sample_path.write_text(json.dumps(saved, indent=2) + "\n")
+report["selected_sample_validation"] = saved["validation"]
+print(f"Validated saved sample: {len(seen)} unique tasks, {reviewed_selected} reviewed.")
 
 # 9. Save the profile after all checks finish.
 with open("elixir_profile.json", "w") as file:
@@ -435,3 +633,28 @@ with open("elixir_profile.json", "w") as file:
     file.write("\n")
 
 print("\nSaved elixir_profile.json")
+
+with open("candidate_pairs.json") as file:
+    saved_sample = json.load(file)
+
+selected_repo_counts = Counter()
+unreviewed_controls = []
+
+for pair in saved_sample["pairs"]:
+    for group in ["otp", "control"]:
+        task = pair[group]
+        selected_repo_counts[canonical_repo(task["repo"]) ] += 1
+
+    control = pair["control"]
+    if reviewed_tags.get(control["instance_id"]) not in {"otp", "control"}:
+        unreviewed_controls.append(control)
+
+print("\nSelected tasks per repository (both groups):")
+for repo, count in selected_repo_counts.most_common():
+    print(repo, count)
+
+assert max(selected_repo_counts.values()) <= saved_sample["repository_cap"]
+
+print("\nSelected controls needing review:", len(unreviewed_controls))
+for task in unreviewed_controls:
+    print(task["instance_id"], task["repo"])

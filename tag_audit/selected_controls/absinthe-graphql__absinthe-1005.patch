@@ -1,0 +1,578 @@
+diff --git a/.formatter.exs b/.formatter.exs
+index 508536a3..50e79de9 100644
+--- a/.formatter.exs
++++ b/.formatter.exs
+@@ -32,7 +32,6 @@ locals_without_parens = [
+   object: 3,
+   on: 1,
+   parse: 1,
+-  repeatable: 1,
+   resolve: 1,
+   resolve_type: 1,
+   scalar: 2,
+diff --git a/lib/absinthe/blueprint/schema/directive_definition.ex b/lib/absinthe/blueprint/schema/directive_definition.ex
+index 1a56f146..65e8a9df 100644
+--- a/lib/absinthe/blueprint/schema/directive_definition.ex
++++ b/lib/absinthe/blueprint/schema/directive_definition.ex
+@@ -12,7 +12,6 @@ defmodule Absinthe.Blueprint.Schema.DirectiveDefinition do
+     directives: [],
+     arguments: [],
+     locations: [],
+-    repeatable: false,
+     source_location: nil,
+     expand: nil,
+     errors: [],
+@@ -25,7 +24,6 @@ defmodule Absinthe.Blueprint.Schema.DirectiveDefinition do
+           description: nil,
+           arguments: [Blueprint.Schema.InputValueDefinition.t()],
+           locations: [String.t()],
+-          repeatable: boolean(),
+           source_location: nil | Blueprint.SourceLocation.t(),
+           errors: [Absinthe.Phase.Error.t()]
+         }
+@@ -38,7 +36,6 @@ defmodule Absinthe.Blueprint.Schema.DirectiveDefinition do
+       args: Blueprint.Schema.ObjectTypeDefinition.build_args(type_def, schema),
+       locations: type_def.locations |> Enum.sort(),
+       definition: type_def.module,
+-      repeatable: type_def.repeatable,
+       expand: type_def.expand
+     }
+   end
+diff --git a/lib/absinthe/language.ex b/lib/absinthe/language.ex
+index 1e8eb915..58d459bd 100644
+--- a/lib/absinthe/language.ex
++++ b/lib/absinthe/language.ex
+@@ -9,7 +9,6 @@ defmodule Absinthe.Language do
+           Language.Argument.t()
+           | Language.BooleanValue.t()
+           | Language.Directive.t()
+-          | Language.DirectiveDefinition.t()
+           | Language.Document.t()
+           | Language.EnumTypeDefinition.t()
+           | Language.EnumValue.t()
+diff --git a/lib/absinthe/language/directive_definition.ex b/lib/absinthe/language/directive_definition.ex
+index a3233e5f..51456389 100644
+--- a/lib/absinthe/language/directive_definition.ex
++++ b/lib/absinthe/language/directive_definition.ex
+@@ -8,8 +8,7 @@ defmodule Absinthe.Language.DirectiveDefinition do
+             arguments: [],
+             directives: [],
+             locations: [],
+-            loc: %{line: nil},
+-            repeatable: false
++            loc: %{line: nil}
+ 
+   @type t :: %__MODULE__{
+           name: String.t(),
+@@ -17,8 +16,7 @@ defmodule Absinthe.Language.DirectiveDefinition do
+           directives: [Language.Directive.t()],
+           arguments: [Language.Argument.t()],
+           locations: [String.t()],
+-          loc: Language.loc_t(),
+-          repeatable: boolean()
++          loc: Language.loc_t()
+         }
+ 
+   defimpl Blueprint.Draft do
+@@ -30,7 +28,6 @@ defmodule Absinthe.Language.DirectiveDefinition do
+         arguments: Absinthe.Blueprint.Draft.convert(node.arguments, doc),
+         directives: Absinthe.Blueprint.Draft.convert(node.directives, doc),
+         locations: node.locations,
+-        repeatable: node.repeatable,
+         source_location: source_location(node)
+       }
+     end
+diff --git a/lib/absinthe/lexer.ex b/lib/absinthe/lexer.ex
+index 9a79f8fa..2354c9db 100644
+--- a/lib/absinthe/lexer.ex
++++ b/lib/absinthe/lexer.ex
+@@ -302,7 +302,6 @@ defmodule Absinthe.Lexer do
+     on
+     ON
+     query
+-    repeatable
+     scalar
+     schema
+     subscription
+diff --git a/lib/absinthe/phase/document/validation/repeatable_directives.ex b/lib/absinthe/phase/document/validation/repeatable_directives.ex
+deleted file mode 100644
+index d8428833..00000000
+--- a/lib/absinthe/phase/document/validation/repeatable_directives.ex
++++ /dev/null
+@@ -1,86 +0,0 @@
+-defmodule Absinthe.Phase.Document.Validation.RepeatableDirectives do
+-  @moduledoc false
+-
+-  alias Absinthe.{Blueprint, Phase}
+-
+-  use Absinthe.Phase
+-  use Absinthe.Phase.Validation
+-
+-  @doc """
+-  Run the validation.
+-  """
+-  @spec run(Blueprint.t(), Keyword.t()) :: Phase.result_t()
+-  def run(input, _options \\ []) do
+-    result = Blueprint.postwalk(input, &handle_node/1)
+-    {:ok, result}
+-  end
+-
+-  defp handle_node(%Blueprint.Directive{} = node) do
+-    node
+-  end
+-
+-  defp handle_node(%{directives: []} = node) do
+-    node
+-  end
+-
+-  defp handle_node(%{directives: _} = node) do
+-    node
+-    |> check_directives
+-    |> inherit_invalid(node.directives, :bad_directive)
+-  end
+-
+-  defp handle_node(node) do
+-    node
+-  end
+-
+-  defp check_directives(node) do
+-    directives =
+-      for directive <- node.directives do
+-        case directive do
+-          %{schema_node: nil} ->
+-            directive
+-
+-          %{schema_node: %{repeatable: true}} ->
+-            directive
+-
+-          directive ->
+-            check_duplicates(
+-              directive,
+-              Enum.filter(
+-                node.directives,
+-                &compare_directive_schema_node(directive.schema_node, &1.schema_node)
+-              )
+-            )
+-        end
+-      end
+-
+-    %{node | directives: directives}
+-  end
+-
+-  defp compare_directive_schema_node(_, nil), do: false
+-
+-  defp compare_directive_schema_node(%{identifier: identifier}, %{identifier: identifier}),
+-    do: true
+-
+-  defp compare_directive_schema_node(_, _), do: false
+-
+-  # Generate the error for the node
+-  @spec error_repeated(Blueprint.node_t()) :: Phase.Error.t()
+-  defp error_repeated(node) do
+-    %Phase.Error{
+-      phase: __MODULE__,
+-      message: "Directive `#{node.name}' cannot be applied repeatedly.",
+-      locations: [node.source_location]
+-    }
+-  end
+-
+-  defp check_duplicates(directive, [_single]) do
+-    directive
+-  end
+-
+-  defp check_duplicates(directive, _multiple) do
+-    directive
+-    |> flag_invalid(:duplicate_directive)
+-    |> put_error(error_repeated(directive))
+-  end
+-end
+diff --git a/lib/absinthe/pipeline.ex b/lib/absinthe/pipeline.ex
+index f503167e..3f69edeb 100644
+--- a/lib/absinthe/pipeline.ex
++++ b/lib/absinthe/pipeline.ex
+@@ -85,7 +85,6 @@ defmodule Absinthe.Pipeline do
+       Phase.Document.Arguments.FlagInvalid,
+       # Validate Full Document
+       Phase.Document.Validation.KnownDirectives,
+-      Phase.Document.Validation.RepeatableDirectives,
+       Phase.Document.Validation.ScalarLeafs,
+       Phase.Document.Validation.VariablesAreInputTypes,
+       Phase.Document.Validation.ArgumentsOfCorrectType,
+diff --git a/lib/absinthe/schema/notation.ex b/lib/absinthe/schema/notation.ex
+index 13614bf4..c964a5a4 100644
+--- a/lib/absinthe/schema/notation.ex
++++ b/lib/absinthe/schema/notation.ex
+@@ -212,7 +212,12 @@ defmodule Absinthe.Schema.Notation do
+ 
+     __CALLER__
+     |> recordable!(:object, @placement[:object])
+-    |> record!(Schema.ObjectTypeDefinition, identifier, attrs, block)
++    |> record!(
++      Schema.ObjectTypeDefinition,
++      identifier,
++      attrs |> Keyword.update(:description, nil, &wrap_in_unquote/1),
++      block
++    )
+   end
+ 
+   @placement {:interfaces, [under: [:object]]}
+@@ -407,6 +412,7 @@ defmodule Absinthe.Schema.Notation do
+       |> expand_ast(caller)
+       |> Keyword.delete(:args)
+       |> Keyword.delete(:meta)
++      |> Keyword.update(:description, nil, &wrap_in_unquote/1)
+       |> handle_deprecate
+ 
+     {attrs, block}
+@@ -719,7 +725,7 @@ defmodule Absinthe.Schema.Notation do
+   defmacro scalar(identifier, attrs, do: block) do
+     __CALLER__
+     |> recordable!(:scalar, @placement[:scalar])
+-    |> record!(Schema.ScalarTypeDefinition, identifier, attrs, block)
++    |> record_scalar!(identifier, attrs, block)
+   end
+ 
+   @doc """
+@@ -730,13 +736,13 @@ defmodule Absinthe.Schema.Notation do
+   defmacro scalar(identifier, do: block) do
+     __CALLER__
+     |> recordable!(:scalar, @placement[:scalar])
+-    |> record!(Schema.ScalarTypeDefinition, identifier, [], block)
++    |> record_scalar!(identifier, [], block)
+   end
+ 
+   defmacro scalar(identifier, attrs) do
+     __CALLER__
+     |> recordable!(:scalar, @placement[:scalar])
+-    |> record!(Schema.ScalarTypeDefinition, identifier, attrs, nil)
++    |> record_scalar!(identifier, attrs, nil)
+   end
+ 
+   @placement {:serialize, [under: [:scalar]]}
+@@ -912,23 +918,6 @@ defmodule Absinthe.Schema.Notation do
+     |> record_expand!(func_ast)
+   end
+ 
+-  @placement {:repeatable, [under: [:directive]]}
+-  @doc """
+-  Set whether the directive can be applied multiple times
+-  an entity.
+-
+-  If omitted, defaults to `false`
+-
+-  ## Placement
+-
+-  #{Utils.placement_docs(@placement)}
+-  """
+-  defmacro repeatable(bool) do
+-    __CALLER__
+-    |> recordable!(:repeatable, @placement[:repeatable])
+-    |> record_repeatable!(bool)
+-  end
+-
+   # INPUT OBJECTS
+ 
+   @placement {:input_object, [toplevel: true]}
+@@ -951,7 +940,12 @@ defmodule Absinthe.Schema.Notation do
+   defmacro input_object(identifier, attrs \\ [], do: block) do
+     __CALLER__
+     |> recordable!(:input_object, @placement[:input_object])
+-    |> record!(Schema.InputObjectTypeDefinition, identifier, attrs, block)
++    |> record!(
++      Schema.InputObjectTypeDefinition,
++      identifier,
++      attrs |> Keyword.update(:description, nil, &wrap_in_unquote/1),
++      block
++    )
+   end
+ 
+   # UNIONS
+@@ -982,7 +976,12 @@ defmodule Absinthe.Schema.Notation do
+   defmacro union(identifier, attrs \\ [], do: block) do
+     __CALLER__
+     |> recordable!(:union, @placement[:union])
+-    |> record!(Schema.UnionTypeDefinition, identifier, attrs, block)
++    |> record!(
++      Schema.UnionTypeDefinition,
++      identifier,
++      attrs |> Keyword.update(:description, nil, &wrap_in_unquote/1),
++      block
++    )
+   end
+ 
+   @placement {:types, [under: [:union]]}
+@@ -1086,10 +1085,11 @@ defmodule Absinthe.Schema.Notation do
+     |> expand_ast(env)
+     |> Keyword.update(:values, [], fn values ->
+       Enum.map(values, fn ident ->
+-        value_attrs = handle_enum_value_attrs(ident, module: env.module)
++        value_attrs = handle_enum_value_attrs(ident, [], env)
+         struct!(Schema.EnumValueDefinition, value_attrs)
+       end)
+     end)
++    |> Keyword.update(:description, nil, &wrap_in_unquote/1)
+   end
+ 
+   @placement {:value, [under: [:enum]]}
+@@ -1313,6 +1313,7 @@ defmodule Absinthe.Schema.Notation do
+     raw_attrs
+     |> Keyword.put_new(:name, to_string(identifier))
+     |> Keyword.put_new(:type, type)
++    |> Keyword.update(:description, nil, &wrap_in_unquote/1)
+     |> handle_deprecate
+   end
+ 
+@@ -1322,11 +1323,6 @@ defmodule Absinthe.Schema.Notation do
+     put_attr(env.module, {:expand, func_ast})
+   end
+ 
+-  @doc false
+-  def record_repeatable!(env, bool) do
+-    put_attr(env.module, {:repeatable, bool})
+-  end
+-
+   @doc false
+   # Record directive AST nodes in the current scope
+   def record_locations!(env, locations) do
+@@ -1341,6 +1337,7 @@ defmodule Absinthe.Schema.Notation do
+       attrs
+       |> Keyword.put(:identifier, identifier)
+       |> Keyword.put_new(:name, to_string(identifier))
++      |> Keyword.update(:description, nil, &wrap_in_unquote/1)
+ 
+     scoped_def(env, Schema.DirectiveDefinition, identifier, attrs, block)
+   end
+@@ -1423,16 +1420,27 @@ defmodule Absinthe.Schema.Notation do
+     scoped_def(env, :enum, identifier, attrs, block)
+   end
+ 
+-  defp reformat_description(text), do: String.trim(text)
+-
+   @doc false
+   # Record a description in the current scope
+   def record_description!(env, text_block) do
+-    text = reformat_description(text_block)
++    text = wrap_in_unquote(text_block)
++
+     put_attr(env.module, {:desc, text})
+   end
+ 
+-  def handle_enum_value_attrs(identifier, raw_attrs) do
++  @doc false
++  # Record a scalar
++  def record_scalar!(env, identifier, attrs, block_or_nil) do
++    record!(
++      env,
++      Schema.ScalarTypeDefinition,
++      identifier,
++      attrs |> Keyword.update(:description, nil, &wrap_in_unquote/1),
++      block_or_nil
++    )
++  end
++
++  def handle_enum_value_attrs(identifier, raw_attrs, env) do
+     value =
+       case Keyword.get(raw_attrs, :as, identifier) do
+         value when is_tuple(value) ->
+@@ -1445,18 +1453,19 @@ defmodule Absinthe.Schema.Notation do
+       end
+ 
+     raw_attrs
+-    |> expand_ast(raw_attrs)
++    |> expand_ast(env)
+     |> Keyword.put(:identifier, identifier)
+     |> Keyword.put(:value, value)
+     |> Keyword.put_new(:name, String.upcase(to_string(identifier)))
+     |> Keyword.delete(:as)
++    |> Keyword.update(:description, nil, &wrap_in_unquote/1)
+     |> handle_deprecate
+   end
+ 
+   @doc false
+   # Record an enum value in the current scope
+   def record_value!(env, identifier, raw_attrs) do
+-    attrs = handle_enum_value_attrs(identifier, raw_attrs)
++    attrs = handle_enum_value_attrs(identifier, raw_attrs, env)
+     record!(env, Schema.EnumValueDefinition, identifier, attrs, [])
+   end
+ 
+@@ -1467,7 +1476,7 @@ defmodule Absinthe.Schema.Notation do
+       values
+       |> expand_ast(env)
+       |> Enum.map(fn ident ->
+-        value_attrs = handle_enum_value_attrs(ident, module: env.module)
++        value_attrs = handle_enum_value_attrs(ident, [], env)
+         struct!(Schema.EnumValueDefinition, value_attrs)
+       end)
+ 
+@@ -1506,6 +1515,14 @@ defmodule Absinthe.Schema.Notation do
+     put_attr(env.module, {:middleware, [new_middleware]})
+   end
+ 
++  # We wrap the value (from the user) in an `unquote` call, so that when the schema `blueprint` is
++  # placed into `__absinthe_blueprint__` via `unquote(Macro.escape(blueprint, unquote: true))` the
++  # value get's unquoted. This allows us to evaluate function calls in the scope of the schema
++  # module.
++  defp wrap_in_unquote(value) do
++    {:unquote, [], [value]}
++  end
++
+   # ------------------------------
+ 
+   @doc false
+@@ -1888,6 +1905,18 @@ defmodule Absinthe.Schema.Notation do
+ 
+   defp expand_ast(ast, env) do
+     Macro.prewalk(ast, fn
++      # We don't want to expand `@bla` into `Module.get_attribute(module, @bla)` because this
++      # function call will fail if the module is already compiled. Remember that the ast gets put
++      # into a generated `__absinthe_blueprint__` function which is called at "__after_compile__"
++      # time. This will be after a module has been compiled if there are multiple modules in the
++      # schema (in the case of an `import_types`).
++      #
++      # Also see test "test/absinthe/type/import_types_test.exs"
++      # "__absinthe_blueprint__ is callable at runtime even if there is a module attribute"
++      # and it's comment for more information
++      {:@, _, _} = node ->
++        node
++
+       {_, _, _} = node ->
+         Macro.expand(node, env)
+ 
+diff --git a/lib/absinthe/schema/notation/sdl_render.ex b/lib/absinthe/schema/notation/sdl_render.ex
+index 366a042e..38f6d282 100644
+--- a/lib/absinthe/schema/notation/sdl_render.ex
++++ b/lib/absinthe/schema/notation/sdl_render.ex
+@@ -192,7 +192,6 @@ defmodule Absinthe.Schema.Notation.SDL.Render do
+       "directive ",
+       concat("@", string(directive.name)),
+       arguments(directive.arguments, type_definitions),
+-      repeatable(directive.repeatable),
+       " on ",
+       join(locations, " | ")
+     ])
+@@ -442,9 +441,6 @@ defmodule Absinthe.Schema.Notation.SDL.Render do
+   defp block_string_line(["", _ | _]), do: nest(line(), :reset)
+   defp block_string_line(_), do: line()
+ 
+-  defp repeatable(true), do: " repeatable"
+-  defp repeatable(_), do: empty()
+-
+   def join(docs, joiner) do
+     fold_doc(docs, fn doc, acc ->
+       concat([doc, concat(List.wrap(joiner)), acc])
+diff --git a/lib/absinthe/type/built_ins/directives.ex b/lib/absinthe/type/built_ins/directives.ex
+index 74b0959d..868443b3 100644
+--- a/lib/absinthe/type/built_ins/directives.ex
++++ b/lib/absinthe/type/built_ins/directives.ex
+@@ -13,8 +13,6 @@ defmodule Absinthe.Type.BuiltIns.Directives do
+ 
+     on [:field, :fragment_spread, :inline_fragment]
+ 
+-    repeatable false
+-
+     expand fn
+       %{if: true}, node ->
+         Blueprint.put_flag(node, :include, __MODULE__)
+@@ -29,8 +27,6 @@ defmodule Absinthe.Type.BuiltIns.Directives do
+     Directs the executor to skip this field or fragment when the `if` argument is true.
+     """
+ 
+-    repeatable false
+-
+     arg :if, non_null(:boolean), description: "Skipped when true."
+ 
+     on [:field, :fragment_spread, :inline_fragment]
+diff --git a/lib/absinthe/type/built_ins/introspection.ex b/lib/absinthe/type/built_ins/introspection.ex
+index 6d562569..3d3c9953 100644
+--- a/lib/absinthe/type/built_ins/introspection.ex
++++ b/lib/absinthe/type/built_ins/introspection.ex
+@@ -48,17 +48,12 @@ defmodule Absinthe.Type.BuiltIns.Introspection do
+   object :__directive do
+     description "Represents a directive"
+ 
+-    field :name, non_null(:string)
++    field :name, :string
+ 
+     field :description, :string
+ 
+-    field :is_repeatable, non_null(:boolean),
+-      resolve: fn _, %{source: source} ->
+-        {:ok, source.repeatable}
+-      end
+-
+     field :args,
+-      type: non_null(list_of(non_null(:__inputvalue))),
++      type: list_of(:__inputvalue),
+       resolve: fn _, %{source: source} ->
+         args =
+           source.args
+@@ -89,7 +84,7 @@ defmodule Absinthe.Type.BuiltIns.Introspection do
+         {:ok, Enum.member?(source.locations, :field)}
+       end
+ 
+-    field :locations, non_null(list_of(non_null(:__directive_location)))
++    field :locations, list_of(:__directive_location)
+   end
+ 
+   enum :__directive_location,
+diff --git a/lib/absinthe/type/directive.ex b/lib/absinthe/type/directive.ex
+index 6b67933c..5d3cbf21 100644
+--- a/lib/absinthe/type/directive.ex
++++ b/lib/absinthe/type/directive.ex
+@@ -17,7 +17,6 @@ defmodule Absinthe.Type.Directive do
+   * `:description` - A nice description for introspection.
+   * `:args` - A map of `Absinthe.Type.Argument` structs. See `Absinthe.Schema.Notation.arg/2`.
+   * `:locations` - A list of places the directives can be used.
+-  * `:repeatable` - A directive may be defined as repeatable by including the “repeatable” keyword
+ 
+   The `:__reference__` key is for internal use.
+   """
+@@ -29,7 +28,6 @@ defmodule Absinthe.Type.Directive do
+           locations: [location],
+           expand: (map, Absinthe.Blueprint.node_t() -> atom),
+           definition: module,
+-          repeatable: boolean,
+           __private__: Keyword.t(),
+           __reference__: Type.Reference.t()
+         }
+@@ -44,7 +42,6 @@ defmodule Absinthe.Type.Directive do
+             locations: [],
+             expand: nil,
+             definition: nil,
+-            repeatable: false,
+             __private__: [],
+             __reference__: nil
+ 
+diff --git a/src/absinthe_parser.yrl b/src/absinthe_parser.yrl
+index 174f2881..68d8844c 100644
+--- a/src/absinthe_parser.yrl
++++ b/src/absinthe_parser.yrl
+@@ -17,7 +17,7 @@ Nonterminals
+ 
+ Terminals
+   '{' '}' '(' ')' '[' ']' '!' ':' '@' '$' '=' '|' '...'
+-  'query' 'mutation' 'subscription' 'fragment' 'on' 'directive' 'repeatable'
++  'query' 'mutation' 'subscription' 'fragment' 'on' 'directive'
+   'type' 'implements' 'interface' 'union' 'scalar' 'enum' 'input' 'extend' 'schema'
+   name int_value float_value string_value block_string_value boolean_value null.
+ 
+@@ -194,18 +194,6 @@ DirectiveDefinition -> 'directive' '@' Name 'on' DirectiveDefinitionLocations Di
+ DirectiveDefinition -> 'directive' '@' Name ArgumentsDefinition 'on' DirectiveDefinitionLocations Directives :
+   build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'arguments' => '$4', 'directives' => '$7', 'locations' => extract_directive_locations('$6')}, extract_location('$1')).
+ 
+-DirectiveDefinition -> 'directive' '@' Name 'repeatable' 'on' DirectiveDefinitionLocations :
+-  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'locations' => extract_directive_locations('$6'), 'repeatable' => true}, extract_location('$1')).
+-DirectiveDefinition -> 'directive' '@' Name ArgumentsDefinition 'repeatable' 'on' DirectiveDefinitionLocations :
+-  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'arguments' => '$4', 'locations' => extract_directive_locations('$7'), 'repeatable' => true}, extract_location('$1')).
+-
+-DirectiveDefinition -> 'directive' '@' Name 'repeatable' 'on' DirectiveDefinitionLocations Directives :
+-  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'directives' => '$7', 'locations' => extract_directive_locations('$6'), 'repeatable' => true}, extract_location('$1')).
+-DirectiveDefinition -> 'directive' '@' Name ArgumentsDefinition 'repeatable' 'on' DirectiveDefinitionLocations Directives :
+-  build_ast_node('DirectiveDefinition', #{'name' => extract_binary('$3'), 'arguments' => '$4', 'directives' => '$8', 'locations' => extract_directive_locations('$7'), 'repeatable' => true}, extract_location('$1')).
+-
+-
+-
+ SchemaDefinition -> 'schema' : build_ast_node('SchemaDeclaration', #{}, extract_location('$1')).
+ SchemaDefinition -> 'schema' Directives : build_ast_node('SchemaDeclaration', #{'directives' => '$2'}, extract_location('$1')).
+ SchemaDefinition -> 'schema' '{' FieldDefinitionList '}' : build_ast_node('SchemaDeclaration', #{'fields' => '$3'}, extract_location('$1')).

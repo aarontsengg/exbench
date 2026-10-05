@@ -1,0 +1,282 @@
+diff --git a/.github/workflows/elixir.yml b/.github/workflows/elixir.yml
+index 43fb1664..c79946a1 100644
+--- a/.github/workflows/elixir.yml
++++ b/.github/workflows/elixir.yml
+@@ -14,47 +14,58 @@ jobs:
+     strategy:
+       matrix:
+         elixir:
+-          - '1.10'
+-          - '1.11'
++          - "1.10"
++          - "1.11"
++          - "1.12"
++          - "1.13"
+         otp:
+-          - '22'
+-          - '23'
++          - "22"
++          - "23"
++          - "24"
++        exclude:
++          - elixir: "1.10"
++            otp: "24"
++        include:
++          - elixir: "1.13"
++            otp: "24"
++            format: true
+ 
+     steps:
+-    - name: Checkout
+-      uses: actions/checkout@v2
+-
+-    - name: Set up Elixir
+-      uses: erlef/setup-elixir@v1
+-      with:
+-        elixir-version: ${{ matrix.elixir }}
+-        otp-version: ${{ matrix.otp }}
+-
+-    - name: Restore deps cache
+-      uses: actions/cache@v2
+-      with:
+-        path: |
+-          deps
+-          _build
+-        key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}-${{ github.sha }}
+-        restore-keys: |
+-          deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+-          deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+-
+-    - name: Install package dependencies
+-      run: mix deps.get
+-
+-    - name: Check Formatting
+-      run: mix format --check-formatted
+-
+-    - name: Run unit tests
+-      run: |
+-        mix clean
+-        mix test
+-
+-    - name: Run unit tests with persistent_term backend
+-      run: |
+-        mix clean
+-        mix test
+-      env:
+-        SCHEMA_PROVIDER: persistent_term
++      - name: Checkout
++        uses: actions/checkout@v2
++
++      - name: Set up Elixir
++        uses: erlef/setup-elixir@v1
++        with:
++          elixir-version: ${{ matrix.elixir }}
++          otp-version: ${{ matrix.otp }}
++
++      - name: Restore deps cache
++        uses: actions/cache@v2
++        with:
++          path: |
++            deps
++            _build
++          key: deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}-${{ github.sha }}
++          restore-keys: |
++            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
++            deps-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
++
++      - name: Install package dependencies
++        run: mix deps.get
++
++      - name: Check Formatting
++        run: mix format --check-formatted
++        if: ${{ matrix.format }}
++
++      - name: Run unit tests
++        run: |
++          mix clean
++          mix test
++
++      - name: Run unit tests with persistent_term backend
++        run: |
++          mix clean
++          mix test
++        env:
++          SCHEMA_PROVIDER: persistent_term
+diff --git a/config/config.exs b/config/config.exs
+index 3f0cfbbb..f48fd37d 100644
+--- a/config/config.exs
++++ b/config/config.exs
+@@ -1,6 +1,6 @@
+ # This file is responsible for configuring your application
+ # and its dependencies with the aid of the Mix.Config module.
+-use Mix.Config
++import Config
+ 
+ config :logger, level: :debug
+ 
+diff --git a/config/dev.exs b/config/dev.exs
+index d2d855e6..becde769 100644
+--- a/config/dev.exs
++++ b/config/dev.exs
+@@ -1,1 +1,1 @@
+-use Mix.Config
++import Config
+diff --git a/lib/absinthe/lexer.ex b/lib/absinthe/lexer.ex
+index 6ba05a65..a481e53c 100644
+--- a/lib/absinthe/lexer.ex
++++ b/lib/absinthe/lexer.ex
+@@ -345,7 +345,9 @@ defmodule Absinthe.Lexer do
+ 
+   defp block_string_value_token(rest, chars, context, _loc, _byte_offset) do
+     value = '"""' ++ (chars |> Enum.reverse()) ++ '"""'
+-    {rest, [{:block_string_value, context.token_location, value}], Map.delete(context, :token_location)}
++
++    {rest, [{:block_string_value, context.token_location, value}],
++     Map.delete(context, :token_location)}
+   end
+ 
+   defp string_value_token(rest, chars, context, _loc, _byte_offset) do
+diff --git a/lib/absinthe/phase/document/arguments/variable_types_match.ex b/lib/absinthe/phase/document/arguments/variable_types_match.ex
+index efa838b4..2ba712e4 100644
+--- a/lib/absinthe/phase/document/arguments/variable_types_match.ex
++++ b/lib/absinthe/phase/document/arguments/variable_types_match.ex
+@@ -185,8 +185,6 @@ defmodule Absinthe.Phase.Document.Arguments.VariableTypesMatch do
+         op -> "In operation `#{op}`, variable"
+       end
+ 
+-    "#{start} `#{Blueprint.Input.inspect(variable)}` of type `#{variable_name}` found as input to argument of type `#{
+-      location_type
+-    }`."
++    "#{start} `#{Blueprint.Input.inspect(variable)}` of type `#{variable_name}` found as input to argument of type `#{location_type}`."
+   end
+ end
+diff --git a/lib/absinthe/phase/document/complexity/analysis.ex b/lib/absinthe/phase/document/complexity/analysis.ex
+index 5f93e0e4..bc72caf2 100644
+--- a/lib/absinthe/phase/document/complexity/analysis.ex
++++ b/lib/absinthe/phase/document/complexity/analysis.ex
+@@ -138,9 +138,7 @@ defmodule Absinthe.Phase.Document.Complexity.Analysis do
+ 
+     Defined at:
+ 
+-      #{field.schema_node.__reference__.location.file}:#{
+-      field.schema_node.__reference__.location.line
+-    }
++      #{field.schema_node.__reference__.location.file}:#{field.schema_node.__reference__.location.line}
+ 
+     Got value:
+ 
+diff --git a/lib/absinthe/phase/document/result.ex b/lib/absinthe/phase/document/result.ex
+index 14414bc1..b3e91f5c 100644
+--- a/lib/absinthe/phase/document/result.ex
++++ b/lib/absinthe/phase/document/result.ex
+@@ -61,9 +61,7 @@ defmodule Absinthe.Phase.Document.Result do
+                 Could not serialize term #{inspect(value)} as type #{schema_node.name}
+ 
+                 When serializing the field:
+-                #{emitter.parent_type.name}.#{emitter.schema_node.name} (#{
+-                  emitter.schema_node.__reference__.location.file
+-                }:#{emitter.schema_node.__reference__.location.line})
++                #{emitter.parent_type.name}.#{emitter.schema_node.name} (#{emitter.schema_node.__reference__.location.file}:#{emitter.schema_node.__reference__.location.line})
+                 """
+               )
+           end
+diff --git a/lib/absinthe/phase/document/validation/scalar_leafs.ex b/lib/absinthe/phase/document/validation/scalar_leafs.ex
+index bb32fcfa..3843d212 100644
+--- a/lib/absinthe/phase/document/validation/scalar_leafs.ex
++++ b/lib/absinthe/phase/document/validation/scalar_leafs.ex
+@@ -114,8 +114,6 @@ defmodule Absinthe.Phase.Document.Validation.ScalarLeafs do
+   """
+   @spec required_subselection_message(String.t(), String.t()) :: String.t()
+   def required_subselection_message(field_name, type_name) do
+-    ~s(Field "#{field_name}" of type "#{type_name}" must have a selection of subfields. Did you mean "#{
+-      field_name
+-    } { ... }"?)
++    ~s(Field "#{field_name}" of type "#{type_name}" must have a selection of subfields. Did you mean "#{field_name} { ... }"?)
+   end
+ end
+diff --git a/lib/absinthe/phase/schema/type_imports.ex b/lib/absinthe/phase/schema/type_imports.ex
+index 04e14e7e..a6419802 100644
+--- a/lib/absinthe/phase/schema/type_imports.ex
++++ b/lib/absinthe/phase/schema/type_imports.ex
+@@ -71,6 +71,13 @@ defmodule Absinthe.Phase.Schema.TypeImports do
+     else
+       Code.ensure_compiled(module)
+     end
++  catch
++    # Code.ensure_compiled! in Elixir >1.12 raises an ArgumentError if it is unable to find the module with message similar to
++    # "could not load module <module> due to reason <reason>"
++    # where reason is an atom :embedded | :badfile | :nofile | :on_load_failure | :unavailable
++    _, %ArgumentError{message: message} ->
++      reason = message |> String.split(":") |> List.last()
++      {:error, reason}
+   end
+ 
+   # Generate an error when loading module fails
+diff --git a/lib/absinthe/phase/schema/validation/no_circular_field_imports.ex b/lib/absinthe/phase/schema/validation/no_circular_field_imports.ex
+index 53f3af78..1c30669b 100644
+--- a/lib/absinthe/phase/schema/validation/no_circular_field_imports.ex
++++ b/lib/absinthe/phase/schema/validation/no_circular_field_imports.ex
+@@ -56,9 +56,7 @@ defmodule Absinthe.Phase.Schema.Validation.NoCircularFieldImports do
+         String.trim("""
+         Field Import Cycle Error
+ 
+-        Field Import in object `#{type.identifier}' `import_fields(#{inspect(type.imports)}) forms a cycle via: (#{
+-          inspect(deps)
+-        })
++        Field Import in object `#{type.identifier}' `import_fields(#{inspect(type.imports)}) forms a cycle via: (#{inspect(deps)})
+         """),
+       locations: [type.__reference__.location],
+       phase: __MODULE__,
+diff --git a/lib/absinthe/phase/schema/validation/object_interfaces_must_be_valid.ex b/lib/absinthe/phase/schema/validation/object_interfaces_must_be_valid.ex
+index a14f33e3..8aca5204 100644
+--- a/lib/absinthe/phase/schema/validation/object_interfaces_must_be_valid.ex
++++ b/lib/absinthe/phase/schema/validation/object_interfaces_must_be_valid.ex
+@@ -101,9 +101,7 @@ defmodule Absinthe.Phase.Schema.Validation.ObjectInterfacesMustBeValid do
+ 
+   def explanation(%{object: obj, interface: interface, implemented_by: implemented}) do
+     """
+-    Type "#{obj}" must implement interface type "#{interface}" because it is implemented by "#{
+-      implemented.identifier
+-    }".
++    Type "#{obj}" must implement interface type "#{interface}" because it is implemented by "#{implemented.identifier}".
+ 
+     #{@description}
+     """
+diff --git a/lib/absinthe/resolution.ex b/lib/absinthe/resolution.ex
+index 9808232d..3d827903 100644
+--- a/lib/absinthe/resolution.ex
++++ b/lib/absinthe/resolution.ex
+@@ -224,9 +224,7 @@ defmodule Absinthe.Resolution do
+ 
+           Defined at:
+ 
+-              #{res.definition.schema_node.__reference__.location.file}:#{
+-            res.definition.schema_node.__reference__.location.line
+-          }
++              #{res.definition.schema_node.__reference__.location.file}:#{res.definition.schema_node.__reference__.location.line}
+ 
+           Info: #{inspect(res)}
+           """
+@@ -400,9 +398,7 @@ defmodule Absinthe.Resolution do
+ 
+     Defined at:
+ 
+-        #{field.schema_node.__reference__.location.file}:#{
+-      field.schema_node.__reference__.location.line
+-    }
++        #{field.schema_node.__reference__.location.file}:#{field.schema_node.__reference__.location.line}
+ 
+     Resolving on:
+ 
+diff --git a/mix.lock b/mix.lock
+index 9f32881b..d0bb8bca 100644
+--- a/mix.lock
++++ b/mix.lock
+@@ -13,6 +13,6 @@
+   "makeup_erlang": {:hex, :makeup_erlang, "0.1.1", "3fcb7f09eb9d98dc4d208f49cc955a34218fc41ff6b84df7c75b3e6e533cc65f", [:mix], [{:makeup, "~> 1.0", [hex: :makeup, repo: "hexpm", optional: false]}], "hexpm", "174d0809e98a4ef0b3309256cbf97101c6ec01c4ab0b23e926a9e17df2077cbb"},
+   "makeup_graphql": {:hex, :makeup_graphql, "0.1.2", "81e2939aab6d2b81d39ee5d9e13fae02599e9ca6e1152e0eeed737a98a5f96aa", [:mix], [{:makeup, "~> 1.0", [hex: :makeup, repo: "hexpm", optional: false]}, {:nimble_parsec, "~> 1.1", [hex: :nimble_parsec, repo: "hexpm", optional: false]}], "hexpm", "3390ab04ba388d52a94bbe64ef62aa4d7923ceaffac43ec948f58f631440e8fb"},
+   "mix_test_watch": {:hex, :mix_test_watch, "1.0.2", "34900184cbbbc6b6ed616ed3a8ea9b791f9fd2088419352a6d3200525637f785", [:mix], [{:file_system, "~> 0.2.1 or ~> 0.3", [hex: :file_system, repo: "hexpm", optional: false]}], "hexpm", "47ac558d8b06f684773972c6d04fcc15590abdb97aeb7666da19fcbfdc441a07"},
+-  "nimble_parsec": {:hex, :nimble_parsec, "1.2.2", "811e32fb77aabb2b5b6196b21f76fe6ba8b6861c3d8c9eaeedbbf1f4cda627d1", [:mix], [], "hexpm", "dd3504559b0ddfeb7f55297557313fc05340120a037f981a4775b1c43e61d1b9"},
++  "nimble_parsec": {:hex, :nimble_parsec, "1.2.2", "b99ca56bbce410e9d5ee4f9155a212e942e224e259c7ebbf8f2c86ac21d4fa3c", [:mix], [], "hexpm", "98d51bd64d5f6a2a9c6bb7586ee8129e27dfaab1140b5a4753f24dac0ba27d2f"},
+   "telemetry": {:hex, :telemetry, "0.4.3", "a06428a514bdbc63293cd9a6263aad00ddeb66f608163bdec7c8995784080818", [:rebar3], [], "hexpm", "eb72b8365ffda5bed68a620d1da88525e326cb82a75ee61354fc24b844768041"},
+ }

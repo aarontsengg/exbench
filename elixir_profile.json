@@ -145,15 +145,14 @@
       "borderline": 21,
       "control": 323
     },
-    "otp_repositories": 21,
+    "otp_repositories": 20,
     "otp_tasks_per_repository": {
       "newrelic/elixir_agent": 9,
       "whitfin/cachex": 9,
       "livebook-dev/kino": 3,
-      "general-CbIC/poolex": 8,
-      "commanded/commanded": 11,
+      "general-cbic/poolex": 8,
+      "commanded/commanded": 15,
       "phoenixframework/phoenix": 11,
-      "slashdotdash/commanded": 4,
       "elixir-ecto/ecto": 1,
       "edgurgel/mimic": 2,
       "tallarium/reverse_proxy_plug": 1,
@@ -165,11 +164,11 @@
       "plataformatec/broadway": 1,
       "elixir-grpc/grpc": 2,
       "fika-lang/fika": 2,
-      "Kraigie/nostrum": 1,
+      "kraigie/nostrum": 1,
       "coryodaniel/bonny": 1,
       "ash-project/ash": 1
     },
-    "otp_capacity_after_cap": 49
+    "otp_capacity_after_cap": 45
   },
   "exact_a_only": {
     "tasks": 299,
@@ -178,32 +177,52 @@
       "borderline": 10,
       "control": 244
     },
-    "otp_repositories": 15,
+    "otp_repositories": 14,
     "otp_tasks_per_repository": {
       "whitfin/cachex": 7,
       "livebook-dev/kino": 2,
-      "general-CbIC/poolex": 6,
-      "commanded/commanded": 10,
+      "general-cbic/poolex": 6,
+      "commanded/commanded": 12,
       "phoenixframework/phoenix": 3,
       "edgurgel/mimic": 1,
       "newrelic/elixir_agent": 6,
       "absinthe-graphql/absinthe": 1,
       "derekkraan/curl_req": 1,
       "plataformatec/broadway": 1,
-      "slashdotdash/commanded": 2,
       "fika-lang/fika": 2,
-      "Kraigie/nostrum": 1,
+      "kraigie/nostrum": 1,
       "coryodaniel/bonny": 1,
       "ash-project/ash": 1
     },
-    "otp_capacity_after_cap": 36
+    "otp_capacity_after_cap": 34
   },
   "repository_cap": 5,
+  "repository_identity": {
+    "aliases": {
+      "slashdotdash/commanded": "commanded/commanded"
+    },
+    "evidence": [
+      {
+        "names": [
+          "slashdotdash/commanded",
+          "commanded/commanded"
+        ],
+        "github_repository_id": 54749959,
+        "verified_on": "2026-09-22",
+        "sources": [
+          "https://api.github.com/repos/slashdotdash/commanded",
+          "https://api.github.com/repos/commanded/commanded"
+        ]
+      }
+    ],
+    "scope": "Known verified alias only; other repositories have not all been checked for transfers or forks."
+  },
   "review_adjusted_exact_a": {
     "review_files": [
       "tag_audit/reviews.json",
       "tag_audit/borderline_eight/reviews.json",
-      "tag_audit/remaining_otp/reviews.json"
+      "tag_audit/remaining_otp/reviews.json",
+      "tag_audit/selected_controls/reviews.json"
     ],
     "tasks": 299,
     "tag_counts": {
@@ -212,32 +231,31 @@
       "control": 258,
       "uncertain": 1
     },
-    "otp_repositories": 15,
+    "otp_repositories": 14,
     "otp_tasks_per_repository": {
       "plataformatec/broadway": 3,
       "whitfin/cachex": 6,
       "elixir-protobuf/protobuf": 1,
-      "general-CbIC/poolex": 5,
+      "general-cbic/poolex": 5,
       "phoenixframework/phoenix": 2,
       "edgurgel/mimic": 1,
       "quantum-elixir/quantum-core": 1,
       "newrelic/elixir_agent": 2,
       "absinthe-graphql/absinthe": 1,
-      "commanded/commanded": 10,
-      "slashdotdash/commanded": 2,
+      "commanded/commanded": 12,
       "livebook-dev/kino": 1,
       "fika-lang/fika": 1,
-      "Kraigie/nostrum": 1,
+      "kraigie/nostrum": 1,
       "coryodaniel/bonny": 1
     },
-    "otp_capacity_after_cap": 32,
+    "otp_capacity_after_cap": 30,
     "unreviewed_otp_candidates": 0,
     "review_method": "Assistant static patch review; not independent human validation"
   },
   "limitations": [
     "Tags are provisional regex classifications.",
     "Markers can match documentation or unrelated names and miss OTP code.",
-    "Repository names have not been checked for renames or duplicates.",
+    "Current repository identities checked; Finch historical fork lineage remains unresolved.",
     "OTP capacity is before matching and gold-patch validation.",
     "The eventual repository cap must be shared across OTP and control tasks.",
     "Exact-A filtering uses upstream annotations without overrides."
@@ -250,8 +268,8 @@
   },
   "matching_feasibility": {
     "maximum_pairs_by_repository_cap": {
-      "4": 29,
-      "5": 32
+      "4": 27,
+      "5": 30
     },
     "patch_size_buckets": {
       "small": "1-10",
@@ -259,6 +277,78 @@
       "large": "81+"
     },
     "control_rule": "Reviewed/effective control and no regex markers anywhere in patch",
-    "limitations": "Before control review and runtime validation; repository names are not canonicalized"
+    "limitations": "Before runtime validation; Finch historical fork lineage remains unresolved",
+    "sample_exclusions": {
+      "phoenixframework__phoenix-4309": "Changes JavaScript heartbeat timers, reconnect handling and browser event ordering; incidental Elixir float-to-param support and documentation. Non-OTP, but excluded from sample because the reported bug and primary fix are browser JavaScript, not Elixir."
+    }
+  },
+  "selected_sample_validation": {
+    "unique_tasks": 60,
+    "reviewed_tasks": 60,
+    "exact_a_and_matching_buckets_verified": true,
+    "shared_repository_cap_verified": true,
+    "runtime_validated": false,
+    "balance": [
+      {
+        "group": "control",
+        "difficulty": "easy",
+        "patch_size_bucket": "large",
+        "count": 1
+      },
+      {
+        "group": "control",
+        "difficulty": "easy",
+        "patch_size_bucket": "small",
+        "count": 1
+      },
+      {
+        "group": "control",
+        "difficulty": "hard",
+        "patch_size_bucket": "large",
+        "count": 2
+      },
+      {
+        "group": "control",
+        "difficulty": "medium",
+        "patch_size_bucket": "large",
+        "count": 13
+      },
+      {
+        "group": "control",
+        "difficulty": "medium",
+        "patch_size_bucket": "medium",
+        "count": 13
+      },
+      {
+        "group": "otp",
+        "difficulty": "easy",
+        "patch_size_bucket": "large",
+        "count": 1
+      },
+      {
+        "group": "otp",
+        "difficulty": "easy",
+        "patch_size_bucket": "small",
+        "count": 1
+      },
+      {
+        "group": "otp",
+        "difficulty": "hard",
+        "patch_size_bucket": "large",
+        "count": 2
+      },
+      {
+        "group": "otp",
+        "difficulty": "medium",
+        "patch_size_bucket": "large",
+        "count": 13
+      },
+      {
+        "group": "otp",
+        "difficulty": "medium",
+        "patch_size_bucket": "medium",
+        "count": 13
+      }
+    ]
   }
 }

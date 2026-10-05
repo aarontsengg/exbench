@@ -69,3 +69,11 @@ and gold-patch validation. No final sample has been selected.
 Incorporate reviewed disagreements and the clarified audit rubric into
 the eligibility policy, and recompute capacity before matched sampling.
 The counts above remain the original automatic profile, not audited totals.
+
+## Reviewed sample — 5 October 2026 (supersedes provisional capacity above)
+
+30 matched OTP/control pairs (60 unique tasks) are saved in candidate_pairs.json. All selected labels have static reviews; this is AI-assisted, not independent human validation. Exact-A effective counts remain 38 OTP, 258 control, 2 borderline, 1 uncertain. After merging the Commanded repository alias, matching capacity is 27 pairs at cap four and 30 at cap five. The cap is shared across both groups.
+
+The selected-control audit adds 28 reviews. Phoenix #4309 remains labeled control but is excluded as a primarily JavaScript task, replaced by reviewed Ash #1853 in the same bucket. See tag_audit/selected_controls/REPORT.md and sample_exclusions.json. The earlier sample is archived in sample_history/.
+
+The profiler now checks the persisted sample against current eligibility, reviews, pinned source, matching buckets, unique IDs and canonical repository cap. All checks pass; zero selected controls remain unreviewed. Current identities for all 61 source names were checked; Finch historical lineage still needs verification. Next is upstream harness integration and base/reference-patch runtime validation. No paid model calls have been made.

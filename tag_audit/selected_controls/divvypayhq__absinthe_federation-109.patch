@@ -1,0 +1,613 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index e9ce013..3b3004f 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -139,11 +139,11 @@ jobs:
+         working-directory: ./federation_compatibility
+ 
+       - name: Test subgraph compatibility
+-        uses: apollographql/federation-subgraph-compatibility@v1
++        uses: apollographql/federation-subgraph-compatibility@v2
+         with:
+           compose: "federation_compatibility_docker_compose.yml"
+           schema: "federation_compatibility/schema.graphql"
+           token: ${{ steps.actionsecrets.outputs.github_token }}
+           port: 4001
+-          failOnWarning: true
++          failOnWarning: false
+           failOnRequired: true
+diff --git a/README.md b/README.md
+index 516f5af..bcaa638 100644
+--- a/README.md
++++ b/README.md
+@@ -318,19 +318,22 @@ defmodule Example.Schema do
+ 
+ + extend schema do
+ +   directive :link,
+-+     url: "https://specs.apollo.dev/federation/v2.3",
+++     url: "https://specs.apollo.dev/federation/v2.7",
+ +     import: [
+-+       "@key",
+-+       "@shareable",
+-+       "@provides",
+-+       "@requires",
+-+       "@external",
+-+       "@tag",
+-+       "@extends",
+-+       "@override",
+-+       "@inaccessible",
+-+       "@composeDirective",
+-+       "@interfaceObject"
++        "@authenticated",
++        "@extends",
++        "@external",
++        "@inaccessible",
++        "@key",
++        "@override",
++        "@policy",
++        "@provides",
++        "@requires",
++        "@requiresScopes",
++        "@shareable",
++        "@tag",
++        "@composeDirective",
++        "@interfaceObject"
+ +     ]
+ + end
+ 
+diff --git a/federation_compatibility/lib/products_web/schema.ex b/federation_compatibility/lib/products_web/schema.ex
+index 5c20ffb..de43303 100644
+--- a/federation_compatibility/lib/products_web/schema.ex
++++ b/federation_compatibility/lib/products_web/schema.ex
+@@ -40,15 +40,18 @@ defmodule ProductsWeb.Schema do
+     directive :link, url: "https://divvypay.com/test/v2.4", import: ["@custom"]
+ 
+     directive :link,
+-      url: "https://specs.apollo.dev/federation/v2.3",
++      url: "https://specs.apollo.dev/federation/v2.7",
+       import: [
++        "@authenticated",
+         "@extends",
+         "@external",
+         "@inaccessible",
+         "@key",
+         "@override",
++        "@policy",
+         "@provides",
+         "@requires",
++        "@requiresScopes",
+         "@shareable",
+         "@tag",
+         "@composeDirective",
+diff --git a/lib/absinthe/federation/notation.ex b/lib/absinthe/federation/notation.ex
+index 9fcfaf2..772f00c 100644
+--- a/lib/absinthe/federation/notation.ex
++++ b/lib/absinthe/federation/notation.ex
+@@ -219,12 +219,16 @@ defmodule Absinthe.Federation.Notation do
+   end
+ 
+   @doc """
+-  Adds The @override directive is used to indicate that the current subgraph is
++  The `@override` directive is used to indicate that the current subgraph is
+   taking responsibility for resolving the marked field away from the
+   subgraph specified in the from argument.
+ 
+-  ## Example
++  The progressive `@override` feature enables the gradual, progressive deployment of a subgraph with an `@override` field.
++  As a subgraph developer, you can customize the percentage of traffic that the overriding and overridden subgraphs each resolve for a field. 
++
++  ## Example 
+ 
++      # @override 
+       object :user do
+         key_fields("id")
+         field :id, non_null(:id)
+@@ -234,17 +238,42 @@ defmodule Absinthe.Federation.Notation do
+         end
+       end
+ 
++      # progressive @override     
++      object :user do
++        key_fields("id")
++        field :id, non_null(:id)
++
++        field :name, :string do
++          override_from("SubgraphA", label: "percent(10)")
++        end
++      end
+ 
+   ## SDL Output
+ 
++      # @override
+       type User @key(fields: "id") {
+         id: ID!
+         name: String @override(from: "SubgraphA")
+       }
++
++      # progressive @override
++      type User @key(fields: "id") {
++        id: ID!
++        name: String @override(from: "SubgraphA", label: "percent(10)")
++      }
++    
+   """
+-  defmacro override_from(subgraph) when is_binary(subgraph) do
+-    quote do
+-      meta :override_from, unquote(subgraph)
++  defmacro override_from(subgraph, opts \\ []) when is_binary(subgraph) and is_list(opts) do
++    label = Keyword.get(opts, :label)
++
++    if label do
++      quote do
++        meta :override_from, from: unquote(subgraph), label: unquote(label)
++      end
++    else
++      quote do
++        meta :override_from, from: unquote(subgraph)
++      end
+     end
+   end
+ 
+@@ -351,6 +380,177 @@ defmodule Absinthe.Federation.Notation do
+     end
+   end
+ 
++  @doc """
++  The `@authenticated` directive marks specific fields and types as requiring authentication.
++
++  ## Example
++
++      object :secret do
++        field :text, :string do
++          authenticated()
++        end
++      end
++
++
++  ## SDL Output
++
++      type Secret {
++        text: String @authenticated
++      }
++  """
++  defmacro authenticated() do
++    quote do
++      meta :authenticated, true
++    end
++  end
++
++  @doc """
++  The `@requiresScopes` directive marks fields and types as restricted based on required scopes.
++
++  ## Example
++
++      object :user do
++        field :id, non_null(:id)
++        field :username, :string
++        field :email, :string do
++          requires_scopes([["read:email"]])
++        end
++        field :profile_image, :string
++      end
++
++
++  ## SDL Output
++
++     type User {
++       id: ID!
++       username: String
++       email: String @requiresScopes(scopes: [["read:email"]])
++       profileImage: String
++     }
++  """
++  defmacro requires_scopes(scopes) when is_list(scopes) do
++    quote do
++      meta :requires_scopes, unquote(scopes)
++    end
++  end
++
++  @doc """
++  The `@policy` directive marks fields and types as restricted based on authorization policies evaluated in a Rhai script or coprocessor.
++  This enables custom authorization validation beyond authentication and scopes.
++
++  ## Example
++
++      object :user do
++        field :id, non_null(:id)
++        field :username, :string
++        field :email, :string 
++        field :profile_image, :string
++        field :credit_card, :string do
++         policy([["read_credit_card"]])
++        end
++      end
++
++
++  ## SDL Output
++
++      type User {
++        id: ID!
++        username: String
++        email: String
++        profileImage: String
++        credit_card: String @policy(policies: [["read_credit_card"]])
++      }
++  """
++  defmacro policy(policies) when is_list(policies) do
++    quote do
++      meta :policies, unquote(policies)
++    end
++  end
++
++  @doc """
++  The `@listSize` directive is used to customize the cost calculation of the demand control feature of GraphOS Router.
++
++  ## Example
++
++      object :post do
++        field :text, :string
++      end
++
++      object :user do
++       field :posts, non_null(list_of(:post)) do
++         list_size(
++           assumed_size: 10, 
++           slicing_arguments: ["first", "last"],
++           sized_fields: ["postCount"],
++           required_one_slicing_argument: false
++         )
++         arg :first, :integer
++         arg :last, :integer
++       end
++      end
++
++
++  ## SDL Output
++
++      type User {
++        posts(first: Int, last: Int): [Post]! @listSize(assumedSize: 10, slicingArguments: ["first", "last"], sizedFields: ["postCount"], requiredOneSlicingArgument: false)
++      }
++  """
++  defmacro list_size(opts) when is_list(opts) do
++    quote do
++      meta :list_size, unquote(opts)
++    end
++  end
++
++  @doc """
++  The `@cost` directive defines a custom weight for a schema location. For GraphOS Router, it customizes the operation cost calculation of the demand control feature.
++
++  ## Example
++
++      object :user do
++        field :posts, list_of(:post) do
++          cost(5)
++          resolve &PostResolvers.list_for_user/3
++        end
++      end
++
++  ## SDL Output
++
++      type User {
++        posts: [Post] @cost(weight: 5)
++      }
++  """
++  defmacro cost(weight) when is_integer(weight) do
++    quote do
++      meta :cost, unquote(weight)
++    end
++  end
++
++  @doc """
++  The `@context` directive defines a named context from which a field of the annotated type can be passed to a receiver of the context.
++  The receiver must be a field annotated with the `@fromContext` directive.
++
++  ## Example
++
++      object :user do
++        context("userContext")
++        field :id, non_null(:id)
++        field :name, :string
++      end
++
++  ## SDL Output
++
++      type User @context(name: "userContext") {
++        id: ID!
++        name: String
++      }
++  """
++  defmacro context(name) when is_binary(name) do
++    quote do
++      meta :context, unquote(name)
++    end
++  end
++
+   @doc """
+   The `@link` directive links definitions from an external specification to this schema.
+   Every Federation 2 subgraph uses the `@link` directive to import the other federation-specific directives.
+diff --git a/lib/absinthe/federation/schema/directive.ex b/lib/absinthe/federation/schema/directive.ex
+index fa776d1..625341c 100644
+--- a/lib/absinthe/federation/schema/directive.ex
++++ b/lib/absinthe/federation/schema/directive.ex
+@@ -5,6 +5,9 @@ defmodule Absinthe.Federation.Schema.Directive do
+   alias Absinthe.Blueprint
+   alias Absinthe.Blueprint.Directive, as: BlueprintDirective
+   alias Absinthe.Blueprint.Input.Argument
++  alias Absinthe.Blueprint.Input.List
++  alias Absinthe.Blueprint.Input.Boolean
++  alias Absinthe.Blueprint.Input.Integer
+   alias Absinthe.Blueprint.Input.RawValue
+   alias Absinthe.Blueprint.Input.String
+   alias Absinthe.Blueprint.SourceLocation
+@@ -36,28 +39,27 @@ defmodule Absinthe.Federation.Schema.Directive do
+     }
+   end
+ 
+-  defp build_arguments("key", adapter, fields) when is_list(fields) do
++  defp build_arguments(directive_name, adapter, fields) when is_list(fields) do
+     fields
+-    |> Enum.map(fn {key, value} -> {key, to_external_name(value, adapter)} end)
+-    |> Enum.map(&build_argument/1)
++    |> Enum.map(fn {key, value} -> {key, maybe_convert_value_case(directive_name, key, value, adapter)} end)
++    |> Enum.map(fn field -> build_argument(field, adapter) end)
+   end
+ 
+-  defp build_arguments(_name, _adapter, fields) when is_list(fields) do
+-    Enum.map(fields, &build_argument/1)
+-  end
+-
+-  defp build_argument({key, value}) when is_atom(key) and is_binary(value) do
++  defp build_argument({key, value}, adapter) when is_atom(key) do
+     %Argument{
+-      name: Atom.to_string(key),
++      name: to_external_name(key, adapter),
+       input_value: %RawValue{
+-        content: %String{
+-          value: value
+-        }
++        content: build_value(value)
+       },
+       source_location: %SourceLocation{line: 0, column: 0}
+     }
+   end
+ 
++  defp build_value(value) when is_list(value), do: %List{items: Enum.map(value, &build_value/1)}
++  defp build_value(value) when is_binary(value), do: %String{value: value}
++  defp build_value(value) when is_integer(value), do: %Integer{value: value}
++  defp build_value(value) when is_boolean(value), do: %Boolean{value: value}
++
+   defp to_external_name(key, adapter) when is_atom(key) do
+     key
+     |> Atom.to_string()
+@@ -72,7 +74,25 @@ defmodule Absinthe.Federation.Schema.Directive do
+     end
+   end
+ 
++  defp to_external_name(key, _adapter) do
++    key
++  end
++
+   defp adapter_has_to_external_name_modifier?(adapter) do
+     Keyword.get(adapter.__info__(:functions), :to_external_name) == 2
+   end
++
++  defp maybe_convert_value_case("key", :fields, value, adapter) when is_binary(value) do
++    to_external_name(value, adapter)
++  end
++
++  defp maybe_convert_value_case("list_size", :sized_fields, values, adapter) when is_list(values) do
++    Enum.map(values, fn value ->
++      to_external_name(value, adapter)
++    end)
++  end
++
++  defp maybe_convert_value_case(_directive_name, _key, value, _adapter) do
++    value
++  end
+ end
+diff --git a/lib/absinthe/federation/schema/phase/add_federated_directives.ex b/lib/absinthe/federation/schema/phase/add_federated_directives.ex
+index dfa94dc..dcc328b 100644
+--- a/lib/absinthe/federation/schema/phase/add_federated_directives.ex
++++ b/lib/absinthe/federation/schema/phase/add_federated_directives.ex
+@@ -35,6 +35,12 @@ defmodule Absinthe.Federation.Schema.Phase.AddFederatedDirectives do
+     |> maybe_add_inaccessible_directive(meta)
+     |> maybe_add_interface_object_directive(meta)
+     |> maybe_add_tag_directive(meta)
++    |> maybe_add_requires_scopes_directive(meta)
++    |> maybe_add_policy_directive(meta)
++    |> maybe_add_authenticated_directive(meta)
++    |> maybe_add_context_directive(meta)
++    |> maybe_add_list_size_directive(meta)
++    |> maybe_add_cost_directive(meta)
+   end
+ 
+   @spec maybe_add_key_directive(term(), map()) :: term()
+@@ -84,6 +90,54 @@ defmodule Absinthe.Federation.Schema.Phase.AddFederatedDirectives do
+ 
+   defp maybe_add_extends_directive(node, _meta), do: node
+ 
++  defp maybe_add_requires_scopes_directive(node, %{requires_scopes: scopes, absinthe_adapter: adapter}) do
++    directive = Directive.build("requires_scopes", adapter, scopes: scopes)
++
++    add_directive(node, directive)
++  end
++
++  defp maybe_add_requires_scopes_directive(node, _meta), do: node
++
++  defp maybe_add_authenticated_directive(node, %{authenticated: true, absinthe_adapter: adapter}) do
++    directive = Directive.build("authenticated", adapter)
++
++    add_directive(node, directive)
++  end
++
++  defp maybe_add_authenticated_directive(node, _meta), do: node
++
++  defp maybe_add_policy_directive(node, %{policies: policies, absinthe_adapter: adapter}) do
++    directive = Directive.build("policy", adapter, policies: policies)
++
++    add_directive(node, directive)
++  end
++
++  defp maybe_add_policy_directive(node, _meta), do: node
++
++  defp maybe_add_context_directive(node, %{context: name, absinthe_adapter: adapter}) do
++    directive = Directive.build("context", adapter, name: name)
++
++    add_directive(node, directive)
++  end
++
++  defp maybe_add_context_directive(node, _meta), do: node
++
++  defp maybe_add_list_size_directive(node, %{list_size: args, absinthe_adapter: adapter}) do
++    directive = Directive.build("list_size", adapter, args)
++
++    add_directive(node, directive)
++  end
++
++  defp maybe_add_list_size_directive(node, _meta), do: node
++
++  defp maybe_add_cost_directive(node, %{cost: weight, absinthe_adapter: adapter}) do
++    directive = Directive.build("cost", adapter, weight: weight)
++
++    add_directive(node, directive)
++  end
++
++  defp maybe_add_cost_directive(node, _meta), do: node
++
+   defp maybe_add_shareable_directive(node, %{shareable: true, absinthe_adapter: adapter}) do
+     directive = Directive.build("shareable", adapter)
+ 
+@@ -92,8 +146,8 @@ defmodule Absinthe.Federation.Schema.Phase.AddFederatedDirectives do
+ 
+   defp maybe_add_shareable_directive(node, _meta), do: node
+ 
+-  defp maybe_add_override_directive(node, %{override_from: subgraph, absinthe_adapter: adapter}) do
+-    directive = Directive.build("override", adapter, from: subgraph)
++  defp maybe_add_override_directive(node, %{override_from: args, absinthe_adapter: adapter}) do
++    directive = Directive.build("override", adapter, args)
+ 
+     add_directive(node, directive)
+   end
+diff --git a/lib/absinthe/federation/schema/prototype/federated_directives.ex b/lib/absinthe/federation/schema/prototype/federated_directives.ex
+index 45f692a..72429b3 100644
+--- a/lib/absinthe/federation/schema/prototype/federated_directives.ex
++++ b/lib/absinthe/federation/schema/prototype/federated_directives.ex
+@@ -24,6 +24,16 @@ defmodule Absinthe.Federation.Schema.Prototype.FederatedDirectives do
+         parse &{:ok, &1}
+       end
+ 
++      scalar :federation_scope, name: "federation__Scope" do
++        serialize & &1
++        parse &{:ok, &1}
++      end
++
++      scalar :federation_policy, name: "federation__Policy" do
++        serialize & &1
++        parse &{:ok, &1}
++      end
++
+       @desc """
+       The `@key` directive is used to indicate a combination of fields that can be used
+       to uniquely identify and fetch an object or interface.
+@@ -78,6 +88,83 @@ defmodule Absinthe.Federation.Schema.Prototype.FederatedDirectives do
+         on [:schema]
+       end
+ 
++      @desc """
++      The @requiresScopes directive marks fields and types as restricted based on required scopes.
++      The directive includes a scopes argument with an array of the required scopes to declare which scopes are required.
++      """
++      directive :requires_scopes do
++        arg :scopes, non_null(list_of(non_null(list_of(non_null(:federation_scope)))))
++
++        on [:field_definition, :object, :interface, :scalar, :enum]
++      end
++
++      @desc """
++      The @authenticated directive marks specific fields and types as requiring authentication.
++      It works by checking for the apollo::authentication::jwt_claims key in a request's context,
++      that is added either by the JWT authentication plugin, when the request contains a valid JWT,
++      or by an authentication coprocessor. If the key exists, it means the request is authenticated,
++      and the router executes the query in its entirety. If the request is unauthenticated, the router
++      removes @authenticated fields before planning the query and only executes the parts of the query
++      that don't require authentication.
++      """
++      directive :authenticated do
++        arg :scopes, non_null(list_of(non_null(list_of(non_null(:federation_scope)))))
++
++        on [:field_definition, :object, :interface, :scalar, :enum]
++      end
++
++      @desc """
++      The @policy directive marks fields and types as restricted based on authorization policies evaluated in a [Rhai script](https://www.apollographql.com/docs/graphos/routing/customization/rhai/) or
++      [coprocessor](https://www.apollographql.com/docs/router/customizations/coprocessor). This enables custom authorization validation beyond authentication and scopes. It is useful when we need more complex policy evaluation
++      than verifying the presence of a claim value in a list (example: checking specific values in headers).
++      """
++      directive :policy do
++        arg :policies, non_null(list_of(non_null(list_of(non_null(:federation_policy)))))
++
++        on [:field_definition, :object, :interface, :scalar, :enum]
++      end
++
++      @desc """
++      The @context directive defines a named context from which a field of the annotated type can be passed to a receiver of the context.
++      The receiver must be a field annotated with the @fromContext directive.  
++      """
++      directive :context do
++        arg :name, non_null(:string)
++
++        on [:object, :interface, :union]
++      end
++
++      @desc """
++      The @listSize directive is used to customize the cost calculation of the demand control feature of GraphOS Router.
++
++      In the static analysis phase, the cost calculator does not know how many entities will be returned by each list field in a given query.
++      By providing an estimated list size for a field with @listSize, the cost calculator can produce a more accurate estimate of the cost during static analysis.  
++      """
++      directive :list_size do
++        arg :assumed_size, :integer
++        arg :slicing_arguments, list_of(non_null(:string))
++        arg :sized_fields, list_of(non_null(:string))
++        arg :required_one_slicing_argument, :boolean, default_value: true
++
++        on [:field_definition]
++      end
++
++      @desc """
++      The @cost directive defines a custom weight for a schema location. For GraphOS Router, it customizes the operation cost calculation of the demand control feature.
++
++      If @cost is not specified for a field, a default value is used:
++
++        - Scalars and enums have default cost of 0
++        - Composite input and output types have default cost of 1
++
++      Regardless of whether @cost is specified on a field, the field cost for that field also accounts for its arguments and selections.  
++      """
++      directive :cost do
++        arg :weight, non_null(:integer)
++
++        on [:argument_definition, :enum, :field_definition, :input_field_definition, :object, :scalar]
++      end
++
+       @desc """
+       The `@shareable` directive is used to indicate that a field can be resolved by multiple subgraphs.
+       Any subgraph that includes a shareable field can potentially resolve a query for that field.
+@@ -92,9 +179,16 @@ defmodule Absinthe.Federation.Schema.Prototype.FederatedDirectives do
+       The `@override` directive is used to indicate that the current subgraph is
+       taking responsibility for resolving the marked field away from
+       the subgraph specified in the from argument.
++
++      The progressive @override feature enables the gradual, progressive deployment of a subgraph with an @override field.
++      As a subgraph developer, you can customize the percentage of traffic that the overriding and overridden subgraphs each resolve for a field.
++
++      see [Apollo Federation docs](https://www.apollographql.com/docs/graphos/schema-design/federated-schemas/reference/directives#progressive-override)
++      for details.
+       """
+       directive :override do
+         arg :from, non_null(:string)
++        arg :label, :string
+ 
+         on [:field_definition]
+       end
