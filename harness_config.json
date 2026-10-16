@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/SWE-rebench/SWE-rebench-V2",
+  "revision": "c71902a8cf8d2b725f63d51f199f4d3e56f68d2d",
+  "files_sha256": {
+    "scripts/eval.py": "4768c0c3e2adf3540c2228f819f4b073e4665ada06fa00f2234a1f7620d69eda",
+    "lib/agent/log_parsers.py": "a717b03efde1cb79dfb11e2a57d0262c0057d352a347a9fb09667ef6e5f6f20c",
+    "lib/agent/swe_constants.py": "823dd1ef512d363ed5d4dce05d70f22d7f93b25722cda5b0971f17010f5168a5",
+    "LICENSE": "a40ff05d694f7e0ac735502c1261d5a942da7c0d2355b0a287f15fe09cf4cbed"
+  }
+}

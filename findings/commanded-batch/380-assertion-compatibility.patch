@@ -1,0 +1,46 @@
+diff --git a/test/serialization/json_decoder_test.exs b/test/serialization/json_decoder_test.exs
+--- a/test/serialization/json_decoder_test.exs
++++ b/test/serialization/json_decoder_test.exs
+@@ -25,7 +25,7 @@
+     {:ok, dt, _} = DateTime.from_iso8601("2016-09-20 20:01:02Z")
+     event = %ExampleEvent{name: "Ben", datetime: dt}
+ 
+-    assert JsonSerializer.serialize(event) == @serialized_event_json
++    assert Jason.decode!(JsonSerializer.serialize(event)) == Jason.decode!(@serialized_event_json)
+   end
+ 
+   test "should allow decoding of deserialized value from JSON" do
+diff --git a/test/subscriptions/subscriptions_test.exs b/test/subscriptions/subscriptions_test.exs
+--- a/test/subscriptions/subscriptions_test.exs
++++ b/test/subscriptions/subscriptions_test.exs
+@@ -16,7 +16,7 @@
+       :ok = Subscriptions.register(DefaultApp, "handler2", :eventual)
+       :ok = Subscriptions.register(DefaultApp, "handler3", :strong)
+ 
+-      assert Subscriptions.all(DefaultApp) == [{"handler3", self()}, {"handler1", self()}]
++      assert Enum.sort(Subscriptions.all(DefaultApp)) == [{"handler1", self()}, {"handler3", self()}]
+     end
+ 
+     test "should not remove PID when process terminates" do
+diff --git a/test/application/application_test.exs b/test/application/application_test.exs
+--- a/test/application/application_test.exs
++++ b/test/application/application_test.exs
+@@ -64,13 +64,11 @@
+     test "should fail to start unconfigured application" do
+       Process.flag(:trap_exit, true)
+ 
+-      UnconfiguredApplication.start_link()
+-
+-      assert_receive {:EXIT, _pid,
+-                      {%ArgumentError{
+-                         message:
+-                           "missing :event_store config for application Commanded.UnconfiguredApplication"
+-                       }, _}}
++      assert {:error,
++              {%ArgumentError{
++                 message:
++                   "missing :event_store config for application Commanded.UnconfiguredApplication"
++               }, _stacktrace}} = UnconfiguredApplication.start_link()
+     end
+   end
+ end

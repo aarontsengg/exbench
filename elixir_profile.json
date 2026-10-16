@@ -255,7 +255,7 @@
   "limitations": [
     "Tags are provisional regex classifications.",
     "Markers can match documentation or unrelated names and miss OTP code.",
-    "Current repository identities checked; Finch historical fork lineage remains unresolved.",
+    "Current repository identities checked; Finch historical PR/base lineage verified in repository_audit/finch_lineage.json.",
     "OTP capacity is before matching and gold-patch validation.",
     "The eventual repository cap must be shared across OTP and control tasks.",
     "Exact-A filtering uses upstream annotations without overrides."
@@ -268,8 +268,8 @@
   },
   "matching_feasibility": {
     "maximum_pairs_by_repository_cap": {
-      "4": 27,
-      "5": 30
+      "4": 26,
+      "5": 29
     },
     "patch_size_buckets": {
       "small": "1-10",
@@ -277,78 +277,10 @@
       "large": "81+"
     },
     "control_rule": "Reviewed/effective control and no regex markers anywhere in patch",
-    "limitations": "Before runtime validation; Finch historical fork lineage remains unresolved",
+    "limitations": "Before runtime validation; Finch historical lineage verified",
     "sample_exclusions": {
-      "phoenixframework__phoenix-4309": "Changes JavaScript heartbeat timers, reconnect handling and browser event ordering; incidental Elixir float-to-param support and documentation. Non-OTP, but excluded from sample because the reported bug and primary fix are browser JavaScript, not Elixir."
+      "phoenixframework__phoenix-4309": "Changes JavaScript heartbeat timers, reconnect handling and browser event ordering; incidental Elixir float-to-param support and documentation. Non-OTP, but excluded from sample because the reported bug and primary fix are browser JavaScript, not Elixir.",
+      "phoenixframework__phoenix-2974": "Quarantined from scoring: sole FAIL_TO_PASS test to_param for binaries passes on base in recorded smoke run; test patch does not directly test Ecto-free fallback generation. Gold includes the generator fix plus unrelated OTP changes. Both phases also encounter EEx.Engine incompatibility. See SMOKE_RESULTS.md."
     }
-  },
-  "selected_sample_validation": {
-    "unique_tasks": 60,
-    "reviewed_tasks": 60,
-    "exact_a_and_matching_buckets_verified": true,
-    "shared_repository_cap_verified": true,
-    "runtime_validated": false,
-    "balance": [
-      {
-        "group": "control",
-        "difficulty": "easy",
-        "patch_size_bucket": "large",
-        "count": 1
-      },
-      {
-        "group": "control",
-        "difficulty": "easy",
-        "patch_size_bucket": "small",
-        "count": 1
-      },
-      {
-        "group": "control",
-        "difficulty": "hard",
-        "patch_size_bucket": "large",
-        "count": 2
-      },
-      {
-        "group": "control",
-        "difficulty": "medium",
-        "patch_size_bucket": "large",
-        "count": 13
-      },
-      {
-        "group": "control",
-        "difficulty": "medium",
-        "patch_size_bucket": "medium",
-        "count": 13
-      },
-      {
-        "group": "otp",
-        "difficulty": "easy",
-        "patch_size_bucket": "large",
-        "count": 1
-      },
-      {
-        "group": "otp",
-        "difficulty": "easy",
-        "patch_size_bucket": "small",
-        "count": 1
-      },
-      {
-        "group": "otp",
-        "difficulty": "hard",
-        "patch_size_bucket": "large",
-        "count": 2
-      },
-      {
-        "group": "otp",
-        "difficulty": "medium",
-        "patch_size_bucket": "large",
-        "count": 13
-      },
-      {
-        "group": "otp",
-        "difficulty": "medium",
-        "patch_size_bucket": "medium",
-        "count": 13
-      }
-    ]
   }
 }

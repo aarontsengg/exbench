@@ -1,0 +1,33 @@
+{
+  "instance_id": "derekkraan__curl_req-53",
+  "model_calls": 0,
+  "test_patch_applied": false,
+  "setup_patch_applied": false,
+  "erl_flags": "+JMsingle true",
+  "phases": {
+    "base": {
+      "exit_code": 3,
+      "markers": [
+        "EXBENCH_OPTION_REGISTERED=false",
+        "EXBENCH_ARGUMENT_ERROR=unknown option :receive_timeout"
+      ],
+      "log_sha256": "69a2cf9e0ffc9c0d3851612905a1fec90e0d760d5ce969414a728e0ecd25937f"
+    },
+    "gold": {
+      "exit_code": 0,
+      "markers": [
+        "EXBENCH_OPTION_REGISTERED=true",
+        "EXBENCH_MERGE_OK=15000"
+      ],
+      "log_sha256": "9a597e821ffae78b397a744fc56655d67470bc9d3823a6fe0d8bd53e182052e4"
+    }
+  },
+  "probe_sha256": "e58b8e5b846e798b4377c6f671e3ebb4f31706f36f873831c5a5cdb58c274ae3",
+  "image_id": "sha256:f1ab5decc508a08b4f46fc08fee3fad35a36d3de4a78c84c432596a52646ee6c",
+  "repo_digests": [
+    "swerebenchv2/derekkraan-curl-req@sha256:f1ab5decc508a08b4f46fc08fee3fad35a36d3de4a78c84c432596a52646ee6c"
+  ],
+  "base_commit": "dee56a23f9b78d1883760f561a4d78f1051f89f9",
+  "reference_patch_sha256": "3ee8807689b9d0e65b0e13a6c74a58cff8e901fc8dbc17199e1b99d8ad294f7d",
+  "image_release_exit_code": 0
+}

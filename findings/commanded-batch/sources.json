@@ -1,0 +1,122 @@
+[
+  {
+    "task": "commanded__commanded-139",
+    "path": ".travis.yml",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/ea683bd9c7a906807810d70b37e6aded456d376e/.travis.yml",
+    "sha256": "d30f6b21a3b6a1ee922ee111c5fdbf0a55d1a8304e28261f063df4724a819794"
+  },
+  {
+    "task": "commanded__commanded-139",
+    "path": "mix.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/ea683bd9c7a906807810d70b37e6aded456d376e/mix.exs",
+    "sha256": "ac2fdb9d12d6ae0071412823a0f56b9249fa95836ee9cd7c3133568a538a3ca0"
+  },
+  {
+    "task": "commanded__commanded-139",
+    "path": "mix.lock",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/ea683bd9c7a906807810d70b37e6aded456d376e/mix.lock",
+    "sha256": "6f4033755edd747f79c33ba056f8da439303c08c739273300fee4126a886d569"
+  },
+  {
+    "task": "commanded__commanded-139",
+    "path": "test/subscriptions/distributed_subscriptions_test.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/ea683bd9c7a906807810d70b37e6aded456d376e/test/subscriptions/distributed_subscriptions_test.exs",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "task": "commanded__commanded-290",
+    "path": ".travis.yml",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/ac814fe3043da22605370ee1af660370bd54721f/.travis.yml",
+    "sha256": "3bea2413330e55147e8c36d69d8c4a8f31bcdf946bcb2962b59102de5a5d573b"
+  },
+  {
+    "task": "commanded__commanded-290",
+    "path": "mix.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/ac814fe3043da22605370ee1af660370bd54721f/mix.exs",
+    "sha256": "b02230935985f5eb29b2b58c34db05edd230059900f4c3be4fc15a8fac709c39"
+  },
+  {
+    "task": "commanded__commanded-290",
+    "path": "mix.lock",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/ac814fe3043da22605370ee1af660370bd54721f/mix.lock",
+    "sha256": "0f7c7f8c1040023723f00e3f104c209583d6741dfc74756b0d585013e6df50fa"
+  },
+  {
+    "task": "commanded__commanded-290",
+    "path": "test/subscriptions/distributed_subscriptions_test.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/ac814fe3043da22605370ee1af660370bd54721f/test/subscriptions/distributed_subscriptions_test.exs",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "task": "commanded__commanded-335",
+    "path": ".travis.yml",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/c08251c38b994c27204fcce596f2f254bb889026/.travis.yml",
+    "sha256": "a0d1b33ae654ebf9b141e65334b1ddf05363a926b82264930d66f6efa021a0df"
+  },
+  {
+    "task": "commanded__commanded-335",
+    "path": "mix.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/c08251c38b994c27204fcce596f2f254bb889026/mix.exs",
+    "sha256": "f482fb7e490f13ad5d6a2362a273257d665e15b03abff36913bdf88b89c6dfc9"
+  },
+  {
+    "task": "commanded__commanded-335",
+    "path": "mix.lock",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/c08251c38b994c27204fcce596f2f254bb889026/mix.lock",
+    "sha256": "65b889d8033ff46e88ad2fad2ae91af44bcffabcfc3d1fa7cd07f3ac3d17b4ed"
+  },
+  {
+    "task": "commanded__commanded-335",
+    "path": "test/subscriptions/distributed_subscriptions_test.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/c08251c38b994c27204fcce596f2f254bb889026/test/subscriptions/distributed_subscriptions_test.exs",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "task": "commanded__commanded-171",
+    "path": ".travis.yml",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/e4e48a80e629c6d5e54ec70e160c9e9d5b09c386/.travis.yml",
+    "sha256": "d30f6b21a3b6a1ee922ee111c5fdbf0a55d1a8304e28261f063df4724a819794"
+  },
+  {
+    "task": "commanded__commanded-171",
+    "path": "mix.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/e4e48a80e629c6d5e54ec70e160c9e9d5b09c386/mix.exs",
+    "sha256": "489ad174ba1e7133c2ad16cfa7d8a123a3346baf49a924021a6760d3b2d281b3"
+  },
+  {
+    "task": "commanded__commanded-171",
+    "path": "mix.lock",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/e4e48a80e629c6d5e54ec70e160c9e9d5b09c386/mix.lock",
+    "sha256": "7e8227eeb16a88b4ee2f83c1d1dd27db2a6da5a61e13e435cf31732bcfdf4db5"
+  },
+  {
+    "task": "commanded__commanded-171",
+    "path": "test/subscriptions/distributed_subscriptions_test.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/e4e48a80e629c6d5e54ec70e160c9e9d5b09c386/test/subscriptions/distributed_subscriptions_test.exs",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "task": "commanded__commanded-380",
+    "path": ".travis.yml",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/.travis.yml",
+    "sha256": "eda38d873c8c2320246c8242b911810a3847a6f38ed475f9a3bb051a9303f61f"
+  },
+  {
+    "task": "commanded__commanded-380",
+    "path": "mix.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/mix.exs",
+    "sha256": "961f25857665deb0dfed6a4a44e4d45d4f74ba6375119ae10be74c9b27c40573"
+  },
+  {
+    "task": "commanded__commanded-380",
+    "path": "mix.lock",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/mix.lock",
+    "sha256": "bb33ef3132c58328d3f200c9bb0a6a2bb84b2da99f01e266748908da1a5036ec"
+  },
+  {
+    "task": "commanded__commanded-380",
+    "path": "test/subscriptions/distributed_subscriptions_test.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/test/subscriptions/distributed_subscriptions_test.exs",
+    "sha256": "8a22a76eb36a6172242f30ab4fea148c566f1cb266129117f67bd80153bab18e"
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "path": "lib/commanded/aggregates/aggregate.ex",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/lib/commanded/aggregates/aggregate.ex",
+    "sha256": "27e80f140c3e0d9c6b2ad5fe03037062470ea63884c211fb639bce3c2f0f2617"
+  },
+  {
+    "path": "lib/commanded/subscriptions.ex",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/lib/commanded/subscriptions.ex",
+    "sha256": "a88067e7c8f5e3ad445ac5ef088ec19283ffe5f33eec309e97f5571e5b8c9301"
+  },
+  {
+    "path": "lib/commanded/application.ex",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/lib/commanded/application.ex",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "path": "lib/commanded/application/supervisor.ex",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/lib/commanded/application/supervisor.ex",
+    "sha256": "148d32828f63a5ef3ec5a02c4614a0d9a21a1368ffd5e79606266d3224313174"
+  },
+  {
+    "path": "test/application/application_test.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/test/application/application_test.exs",
+    "sha256": "3ae3e43f88a2ca6e87271ca1743f79c2ead26b62e33439d5fd19b86ea65371a0"
+  },
+  {
+    "path": "test/aggregates/aggregate_lifespan_test.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/test/aggregates/aggregate_lifespan_test.exs",
+    "sha256": "1e42aa6d2ee51706bbe32cf72dc2256e9e587cc8814eda5fd68614b424547f43"
+  },
+  {
+    "path": "test/subscriptions/subscriptions_test.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/test/subscriptions/subscriptions_test.exs",
+    "sha256": "7cbba27feab8c56d0b51b3baf0dcfcb906e45fb26e6adf78fe8845d1817ab4d3"
+  },
+  {
+    "path": "test/serialization/json_decoder_test.exs",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/test/serialization/json_decoder_test.exs",
+    "sha256": "2a0ee5469415bc72c07df6371aebf6912d0337cf755ff5e0bdc6e261c675dce1"
+  },
+  {
+    "path": "lib/commanded/serialization/json_serializer.ex",
+    "url": "https://raw.githubusercontent.com/commanded/commanded/4a6df4a3fc3e318805574ca9cab5cef0a83617e3/lib/commanded/serialization/json_serializer.ex",
+    "sha256": "a0857f9cf303a188857c14da10fb1a714a039b9dfbe6770963fc7b15f1c9b943"
+  }
+]

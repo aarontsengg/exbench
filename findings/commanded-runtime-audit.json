@@ -1,0 +1,42 @@
+[
+  {
+    "instance_id": "commanded__commanded-139",
+    "gold_failed_count": 92,
+    "gold_log": "validation_runs/remaining-56/commanded__commanded-139.gold.log",
+    "gold_log_sha256": "b0a28365e4547ef2efbf502bdc67e84ab2d1da5582f85af1e33efb18222b24f0",
+    "pg2_undefined_crash_present": true,
+    "distribution_connection_refused_present": false
+  },
+  {
+    "instance_id": "commanded__commanded-290",
+    "gold_failed_count": 28,
+    "gold_log": "validation_runs/remaining-56/commanded__commanded-290.gold.log",
+    "gold_log_sha256": "04e88d23d02e32189b9a7b0cf4586622d8b94e5e086fe37212bbde3388017d01",
+    "pg2_undefined_crash_present": true,
+    "distribution_connection_refused_present": false
+  },
+  {
+    "instance_id": "commanded__commanded-335",
+    "gold_failed_count": 9,
+    "gold_log": "validation_runs/remaining-56/commanded__commanded-335.gold.log",
+    "gold_log_sha256": "41069effe54ddaff7025d78cebe50273e4ba800d0c8feee184c6023dcc4d05ef",
+    "pg2_undefined_crash_present": true,
+    "distribution_connection_refused_present": false
+  },
+  {
+    "instance_id": "commanded__commanded-171",
+    "gold_failed_count": 22,
+    "gold_log": "validation_runs/remaining-56/commanded__commanded-171.gold.log",
+    "gold_log_sha256": "912c2ca2ada2b61627210a290ed4c52443a561fbe986d9429509550495f4f41c",
+    "pg2_undefined_crash_present": true,
+    "distribution_connection_refused_present": false
+  },
+  {
+    "instance_id": "commanded__commanded-380",
+    "gold_failed_count": 5,
+    "gold_log": "validation_runs/remaining-56/commanded__commanded-380.gold.log",
+    "gold_log_sha256": "3fbae21750834e202a041a2a4da22392f0e96c74e2f5ed9d73d35d98d145f954",
+    "pg2_undefined_crash_present": false,
+    "distribution_connection_refused_present": true
+  }
+]

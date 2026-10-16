@@ -1,0 +1,2389 @@
+{
+  "scope": "60-task draft; not final balanced sample",
+  "counts": {
+    "quarantined": 1,
+    "validated": 23,
+    "needs_investigation": 36
+  },
+  "metrics": {
+    "upstream_gold_passed_list_match": 47,
+    "strict_gold_ok": 28,
+    "upstream_match_but_strict_gold_fails": 19,
+    "strict_validated_by_group": {
+      "control": 15,
+      "otp": 8
+    },
+    "intact_strict_validated_pairs": 4,
+    "expected_api_compile_failure_by_group": {
+      "otp": 3
+    }
+  },
+  "policy_sha256": "3fc3976fc0490576d55d49c72eaddd6a5fc5d317b908c574585b5b87573c726e",
+  "model_calls": 0,
+  "sources": [
+    {
+      "path": "validation_runs/smoke-single-map/report.json",
+      "sha256": "ad03a298824f1fc50a21cdc116e800b7d612c788b7d24a2414cdbdf0eabfba89",
+      "complete": true
+    },
+    {
+      "path": "validation_runs/batch-02/report.json",
+      "sha256": "fc691a4cd065cc6b1d47b80a6767047e0a07511df986182eb941aa5c803ce836",
+      "complete": true
+    },
+    {
+      "path": "validation_runs/remaining-56/report.json",
+      "sha256": "3ac5708dbb7f4898bd47afb677c886170052101481012e5137210b84001502a7",
+      "complete": true
+    }
+  ],
+  "tasks": [
+    {
+      "instance_id": "phoenixframework__phoenix-2974",
+      "group": "otp",
+      "status": "quarantined",
+      "source": "validation_runs/smoke-single-map/report.json",
+      "image_id": "sha256:ffa7b3e7ec651545ec4a118be1a0c21b6a75df54367f4d949c35ca3624971df8",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 20.33,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 100,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [
+            "compilation_error"
+          ],
+          "log": "validation_runs/smoke-single-map/phoenixframework__phoenix-2974.base.log",
+          "log_sha256": "288dfa2518d7f8be770f5b189cdd515ea1c9a5c5db268b81c795e6ebdc0067d9"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 16.05,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 35,
+          "failed_count": 3,
+          "missing_expected_count": 1,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/smoke-single-map/phoenixframework__phoenix-2974.gold.log",
+          "log_sha256": "865d8c301c79d3094fc5a719994e8bd152242391f470953938511cc6479e75c9"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "elixir-protobuf__protobuf-387",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/smoke-single-map/report.json",
+      "image_id": "sha256:d03f4c536ed00eed9c69391a8a8974892bb622e33ff73e62715ada9815b410c8",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 30.65,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 476,
+          "failed_count": 5,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/smoke-single-map/elixir-protobuf__protobuf-387.base.log",
+          "log_sha256": "e3ac3f84162bb8ec5dafd8cacfbdd319f2a5199e6e24ffb6f80ef01e106c0573"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 29.65,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 481,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/smoke-single-map/elixir-protobuf__protobuf-387.gold.log",
+          "log_sha256": "83b0dcb0afe8cac29b7d6f926f69f4c7d0970b5f74786d6952d08b3c6c0fbd18"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "absinthe-graphql__absinthe-1336",
+      "group": "otp",
+      "status": "validated",
+      "source": "validation_runs/batch-02/report.json",
+      "image_id": "sha256:61f7f3b31f6f07cce7b47444c9fdd13d87783b1f8520315253653ba3480d6ac0",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 16.98,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1300,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/batch-02/absinthe-graphql__absinthe-1336.base.log",
+          "log_sha256": "8ecc4ad7dab6cd6a9d9ad6cb29c6fa388ce5e98336b867487d0dd7716bc9ee29"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 14.02,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 1301,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/batch-02/absinthe-graphql__absinthe-1336.gold.log",
+          "log_sha256": "5966599b02e82c942066fe762d6badd50931e6cbcec10fa719d174cf5d84d4c9"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "phoenixframework__phoenix_html-282",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/batch-02/report.json",
+      "image_id": "sha256:f08cf4f893f821e4b617b81f57dae080e4f2aa5421511375ed5b55ae0c38ff29",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 1.63,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 144,
+          "failed_count": 6,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/batch-02/phoenixframework__phoenix_html-282.base.log",
+          "log_sha256": "7d193418d9f638fa5ab560397715820a62071fc1e56d7cf1517e916476c2fdf7"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 1.73,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 145,
+          "failed_count": 5,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/batch-02/phoenixframework__phoenix_html-282.gold.log",
+          "log_sha256": "5330b2b355db20f1988cafbbce9f7fe3930a165c1b562e633d47289cd3031c15"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "general-cbic__poolex-35",
+      "group": "otp",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:1de25814644043d57852bfb19169ab0cd9e55436834f88510aefad25a5735b9a",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 3.75,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 15,
+          "failed_count": 2,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-35.base.log",
+          "log_sha256": "7218f4551c734e14d7f492366db80d8c24ca176b7e24c39f9c264654b7912406"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 2.65,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 17,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-35.gold.log",
+          "log_sha256": "030f4c78d59f86109a32fa171621da95aacb17fdac237bd987928df4a030b5a8"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "divvypayhq__absinthe_federation-109",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:75b2de812abbdb291f929c5e3df68fe679a8c58ebd5b83213fb53da928ccbafb",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 7.25,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 64,
+          "failed_count": 7,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/divvypayhq__absinthe_federation-109.base.log",
+          "log_sha256": "828898c090df268c2d840d83edb547886f48c4a4a0f2bed683afa4583c097330"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 6.79,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 71,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/divvypayhq__absinthe_federation-109.gold.log",
+          "log_sha256": "84c2adcea9ef904ed11e40ac49b93ea77036c7ef80b6d9104412ed4a3237d39b"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "plataformatec__broadway-95",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:74945f8a23e48fcb1cd48a1c58c80a51de6776725b6cd989be4cd8ea699759ec",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 3.55,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 79,
+          "failed_count": 21,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/plataformatec__broadway-95.base.log",
+          "log_sha256": "ea3004fab1d78e96535a1535def26d8ab639b4f7e37a9fe8bab3b6e5a3b3604a"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 3.46,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 97,
+          "failed_count": 3,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/plataformatec__broadway-95.gold.log",
+          "log_sha256": "2af900643051bd6e23ffed4eca75f5efb881d6df90e6921b7b467b288903df21"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "elixir-plug__plug-1245",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:62684ea6de49ba91cc07ef704ed05f9237311421b3557c41394e8906a86a2a41",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 4.18,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 554,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/elixir-plug__plug-1245.base.log",
+          "log_sha256": "5587439a3941eea9fc972bd001f0fa713c783b0f70c3f3106ef7e09f967a5198"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 6.29,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 554,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/elixir-plug__plug-1245.gold.log",
+          "log_sha256": "2d545a84eb6f37474017ea8b6a31ccbd9b80c646ed66dffdb5936338ef89ca0c"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "commanded__commanded-139",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:8b26e016a9ec5dcdba8331945a4745fea833bb8d56e4fcf176d9eb4f0f773b8a",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 5.37,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 107,
+          "failed_count": 70,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-139.base.log",
+          "log_sha256": "645ee8f1c88d2a1324002fa809ad5a053ccbdf472d96959d0e207e958e07f92a"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 4.7,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 85,
+          "failed_count": 92,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-139.gold.log",
+          "log_sha256": "b0a28365e4547ef2efbf502bdc67e84ab2d1da5582f85af1e33efb18222b24f0"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "absinthe-graphql__absinthe-1005",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:ac23db14e86fa4f09ef1b4356d414aea18ffa2f4954c2493747d2824bd34b116",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 5.89,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 1058,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/absinthe-graphql__absinthe-1005.base.log",
+          "log_sha256": "5ea4032d74bcf2211d377ceebc7560a488f7ccbf70dcfc00ff9d913c1bad365b"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 13.43,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1058,
+          "failed_count": 7,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/absinthe-graphql__absinthe-1005.gold.log",
+          "log_sha256": "3463351d25d8d1d3f401e19707a42819b1935bd1a2520c0a6387a22f2e86f250"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "commanded__commanded-290",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:251a1a562540521fd6d7c1330943f7285b02fd78501295cfa0f1d2c7849140c9",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 9.53,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 171,
+          "failed_count": 37,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-290.base.log",
+          "log_sha256": "fc6b104166ee33b41f31ca53f5e42eeb936f900cde9bf8ea002d9a30ed60a662"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 9.9,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 180,
+          "failed_count": 28,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-290.gold.log",
+          "log_sha256": "04e88d23d02e32189b9a7b0cf4586622d8b94e5e086fe37212bbde3388017d01"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "absinthe-graphql__absinthe-1155",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:fc227e60ac778e55746e75652fed162071a52a4a2ee45d7573b010c8fba44778",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 1.53,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 1178,
+          "triage_hints": [
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/absinthe-graphql__absinthe-1155.base.log",
+          "log_sha256": "96bf3c83c995c4d587ea0b995a94c9e73a89a744fa2ec13ec6f8850a84558e7e"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 12.45,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1178,
+          "failed_count": 8,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/absinthe-graphql__absinthe-1155.gold.log",
+          "log_sha256": "4844d36f5d56ca7474cfb0ae645dd0cd00269844687cbdaa3cbd3f4a10b893d5"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "commanded__commanded-335",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:868df7e2225bccc459b580fbbc90593f259fbc4730424d4261efa7da7655e789",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 26.84,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 311,
+          "failed_count": 26,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-335.base.log",
+          "log_sha256": "cf10f142cb6a55ba84d6873145988982f1562ee8fdedac9482d7c7b901b16c13"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 18.07,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 328,
+          "failed_count": 9,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-335.gold.log",
+          "log_sha256": "41069effe54ddaff7025d78cebe50273e4ba800d0c8feee184c6023dcc4d05ef"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "adobe__elixir-styler-197",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:19b7920a7ce5d3d210d7381b54c9249f420436f6ccfb480c3ced07f83d57d3f7",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 4.61,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 217,
+          "failed_count": 3,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/adobe__elixir-styler-197.base.log",
+          "log_sha256": "8ee7dc5f6e52ef67a09ddc0a1c722df8302bd43d143f330c7bd25aef9900ce52"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 4.24,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 220,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/adobe__elixir-styler-197.gold.log",
+          "log_sha256": "aa027068c2211937ed912ad4f0b37323c23d369238507981f372837fce40323e"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "coryodaniel__bonny-156",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:d91618e85ad58d2602f50773731533a6d17c92a43d1248454566ef1ca24edccc",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 1.37,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 96,
+          "triage_hints": [
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/coryodaniel__bonny-156.base.log",
+          "log_sha256": "0d2d5f1716d57409682e459855fe1634bee88d6cd3a17c2e2d2d8f2f591368fb"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 1.23,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 96,
+          "triage_hints": [
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/coryodaniel__bonny-156.gold.log",
+          "log_sha256": "bccba477f10e28b81d5c35813ef170041ff731b7b950f50bf8565c86bfa5d85b"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "adobe__elixir-styler-205",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:2bfbb8a4ab20fb8bd2af78ee29bef3c326f1e27419635abbf5438bfd3f79ee11",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 4.1,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 226,
+          "failed_count": 4,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/adobe__elixir-styler-205.base.log",
+          "log_sha256": "4ed6430427db19d447dc20061955ec0dcbd59869f641fcaf6e595a4fc361f9f8"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 4.41,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 230,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/adobe__elixir-styler-205.gold.log",
+          "log_sha256": "ff49f7e1695bc5890a21722af347c82c9ca6256c905d2ce9bd79776d597cb5dc"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "fika-lang__fika-77",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:fda962d13e4bb4005b3859b42956b5d2305373d6ebc95825d646eee53fd0cdd1",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 2.19,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 211,
+          "failed_count": 11,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/fika-lang__fika-77.base.log",
+          "log_sha256": "3274ebbe20e6d3509ebc3d7f65ee2f2b5db6a97f045a749dc0791d945138db70"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 3.05,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 220,
+          "failed_count": 2,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/fika-lang__fika-77.gold.log",
+          "log_sha256": "ae0ee943c1558c8bcbfe8b12d1defd9c2fad7c25aa8e29e1fb791919ab421f00"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "derekkraan__curl_req-53",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:f1ab5decc508a08b4f46fc08fee3fad35a36d3de4a78c84c432596a52646ee6c",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 9.66,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 80,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/derekkraan__curl_req-53.base.log",
+          "log_sha256": "9ce1118f481f3199e414252220191c108219ecec066610c72a62916016b48a16"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 7.72,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 80,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/derekkraan__curl_req-53.gold.log",
+          "log_sha256": "fa001e81850e33eca1ac19263e854ef9b1f301b670681cdfd882e5403f6dc6aa"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "general-cbic__poolex-15",
+      "group": "otp",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:f89c52d223b3ea2810023fa83023814c6482e15196d298267e24bfc1e2aa494d",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 6.74,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 7,
+          "failed_count": 5,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-15.base.log",
+          "log_sha256": "c7e234f5e487d3ad09534a76891267d3ed548a009f13d173e5a53349d5e9f795"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 6.88,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 12,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-15.gold.log",
+          "log_sha256": "f92fa42301948a709a5e89abe6c58474772ebdf8a25a1cdcc76117369f0e4e4a"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "elixir-ecto__ecto-4552",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:14b1bf8ba837e9452b25d2b4ad6dd8ac0323ca29e844df60a3d3f4e530477fb9",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 15.02,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1287,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/elixir-ecto__ecto-4552.base.log",
+          "log_sha256": "23a4f8cba8fe5987687daeb7345fd9fb4ce4c7a661936aa1b5ac9400bcffe2d5"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 15.25,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 1288,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/elixir-ecto__ecto-4552.gold.log",
+          "log_sha256": "e911238e6aed6b56b1e9a08097cf32dd9bfb9b047f64ffc89773f4708b2466db"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "general-cbic__poolex-54",
+      "group": "otp",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:77f44da0b84d7c0daf8fdb3507f02ef824e9d9f9775b73a3cb5b0cb5aea4418c",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 3.89,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 25,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-54.base.log",
+          "log_sha256": "d37c35110aad2d6af62ce74b0d4c2cc759ec1511db7141ac4d8dd5cf882be6a7"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 3.5,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 26,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-54.gold.log",
+          "log_sha256": "6061f0bfdc8b12ed5702d201bdb60ce753ed5b28998031f7e9357b99e4ab36c4"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "elixir-plug__plug-990",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:732e6096ffc6962abd9b1cb1aaf5d4d8309dbec8507822a872283ab9379fb687",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 10.6,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 2,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/elixir-plug__plug-990.base.log",
+          "log_sha256": "90bc1f3725edfe78239bc3dbfc7ad3e7b522f3c580bbeccc4b042943c77ad4ed"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 12.85,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 24,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [
+            "compilation_error"
+          ],
+          "log": "validation_runs/remaining-56/elixir-plug__plug-990.gold.log",
+          "log_sha256": "c3453b0ecbcf30a353344ba0a92c95bfe93716973f0a5f94505aef5351881202"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "general-cbic__poolex-59",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:b2dc80bec3402ae1779560e560cd27c76055de3e075338646be2aab38c7b8aed",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 3.18,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 31,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-59.base.log",
+          "log_sha256": "f19d6fe959030a5e24d562adeac176e0b634b59e79fb7c2b3018914ec481a0b4"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 5.29,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 31,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-59.gold.log",
+          "log_sha256": "e893cbfdb4b852191d12428b8f4b24f09c2fe497a1c1ca497b95a98d562fec1b"
+        }
+      },
+      "baseline_category": "expected_api_compile_failure",
+      "baseline_review_reason": "Tests require the explicitly specified Poolex.Caller struct."
+    },
+    {
+      "instance_id": "fika-lang__fika-14",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:e5a79fd136cc2bb701ff52a9581d9aa0cdf04da836b41ef340a68a1cbdd9384f",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 3.87,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 69,
+          "failed_count": 6,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/fika-lang__fika-14.base.log",
+          "log_sha256": "f86a9d7da930f277063fd3704c351c3da2a6ff87cd8dd2033549354f511938aa"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 18.02,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 75,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/fika-lang__fika-14.gold.log",
+          "log_sha256": "2b4aeb5bf62dcbe65a8339bd7b36bd6b6e4a17393bfb85b429866923bbfc2d5e"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "kraigie__nostrum-369",
+      "group": "otp",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:e940f4ffb87a4223007a416f34541f19544bf01b34e012363d6ff769a25bd9c5",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 50.41,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 60,
+          "failed_count": 8,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/kraigie__nostrum-369.base.log",
+          "log_sha256": "8ba0b19e0198378720081004221a3af47d3c8c115fc3f8f96197e8c1beffeb84"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 57.07,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 68,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/kraigie__nostrum-369.gold.log",
+          "log_sha256": "1355ef0f0e3df4008780acc1d72f531928b05dd14ff37f35bdcb8f2b947415e1"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "fika-lang__fika-34",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:d0d5f0f9c76f9f0c0922270f59b74d1a882abfc1b17e97770c73b1b6327e14aa",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 3.76,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 139,
+          "failed_count": 6,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/fika-lang__fika-34.base.log",
+          "log_sha256": "6969c06fc489fb27905bd90f250725e6e29e37e9133e89e1040f6c1b64215b40"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 5.82,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 145,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/fika-lang__fika-34.gold.log",
+          "log_sha256": "54612dcb31fa2265fb9fb1d2c35e28ce5a295e1831e5273b21cbc47c2a650349"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "newrelic__elixir_agent-84",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:6a5d8de521b5a3e974e36d21943eecf0a0628757292ceb842aba8eb8cb4b52e5",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 6.86,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 109,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/newrelic__elixir_agent-84.base.log",
+          "log_sha256": "3c2a68d6fd5416c011839b171352f55c23070be1435e1744f8e215c36785208a"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 41.36,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 111,
+          "failed_count": 17,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/newrelic__elixir_agent-84.gold.log",
+          "log_sha256": "97c4ecfc86c10c0a25c38476e9e8c530a6c08c3a3ea14224e93329e73209e8f9"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "mhanberg__temple-243",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:3c96622bfe1df8e64d0d64f705c8e5b790dd2b38e0692b643ced73da7a8112c6",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 10.41,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 60,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/mhanberg__temple-243.base.log",
+          "log_sha256": "418108966c6009401b84fa566859ed68662c6188a5c6e69e186a101cafb34e95"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 7.84,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 61,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/mhanberg__temple-243.gold.log",
+          "log_sha256": "f1a7058ddb81bd8a6e9453154df01e33e96720e82d7cf7b36614aaaaaf23d962"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "phoenixframework__phoenix-2721",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:4b8cc8a69e0440a35acfadc6512d34cd57ae11f4ed9ce5b2a83d2ae408a31ea8",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 5.61,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 1,
+          "failed_count": 0,
+          "missing_expected_count": 9,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/phoenixframework__phoenix-2721.base.log",
+          "log_sha256": "aec93e82b0fae49d16f0e4dc272a435f4b9eaba0a54901f02c83048cb40168ef"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 6.47,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 19,
+          "failed_count": 0,
+          "missing_expected_count": 7,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/phoenixframework__phoenix-2721.gold.log",
+          "log_sha256": "fc437589f314112859053318b99c8d8e8f8d0dced17e5f67200a51f8b05a5ef4"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "phoenixframework__phoenix-3250",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:f371e20425626b4ae3cc503fcf87194b8d0e497c67163c8814a62a14662779da",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 27.49,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 2,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/phoenixframework__phoenix-3250.base.log",
+          "log_sha256": "7ba5fc4291a94a72164ff791adbffe08ec3b4b4b8bd030ad1385e1cf28ae3062"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 25.96,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 68,
+          "failed_count": 13,
+          "missing_expected_count": 0,
+          "triage_hints": [
+            "compilation_error"
+          ],
+          "log": "validation_runs/remaining-56/phoenixframework__phoenix-3250.gold.log",
+          "log_sha256": "c43cab31507ae17b9eeac1494df54789dc3c6adf6a1fda3969f1d51cbebc94cd"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "plataformatec__broadway-31",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:412d82fb1c3ca6a3326bffb66b8903ca0e3f8eaaf148eb926b872f62f96c2596",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 2.25,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 80,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/plataformatec__broadway-31.base.log",
+          "log_sha256": "182b73b823299dcae048e9564517f1ed4a41f99607746fbc64de0f07d4346812"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 4.68,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 80,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/plataformatec__broadway-31.gold.log",
+          "log_sha256": "e98511034e1890f6a677eeba91025040d954023a519dd8dd43d28ed2fcd8a0ea"
+        }
+      },
+      "baseline_category": "expected_api_compile_failure",
+      "baseline_review_reason": "Tests require the explicitly specified Broadway.Message.put_batcher/2 API."
+    },
+    {
+      "instance_id": "ash-project__ash-1853",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:3d3155d8d8206cd30bfe7a693050d32068794ea3ecabd221adea9df70f064422",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 104.47,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1300,
+          "failed_count": 21,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/ash-project__ash-1853.base.log",
+          "log_sha256": "5fb9a8cf362d33eb902eafbcec379589e76dc5e8e6a08c6df3f484ec19453561"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 123.76,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1320,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/ash-project__ash-1853.gold.log",
+          "log_sha256": "ed1f82f4cae4be86bfb27ee9f261e1fa7b4c3deb335d09cbb431b06990e587ea"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "whitfin__cachex-341",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:71b3ef14457ae2711eed2df7cb6c47e7a48fb6a7e26560902e1a6369f876d84f",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 10.02,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 193,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/whitfin__cachex-341.base.log",
+          "log_sha256": "12938e9cb19bfdb21382e354652058e8ed762a264215b8ec205f6de09a02c221"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 57.34,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 192,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/whitfin__cachex-341.gold.log",
+          "log_sha256": "207bc3434d0257940b391468cdad4643efadf2daaad0d5ed45fc7b6b79f7a996"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "woylie__doggo-379",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:951a18765844200566470d267a5f12ed49ecd463ad4966b9b313fd6eda963171",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 72.78,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 377,
+          "failed_count": 4,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/woylie__doggo-379.base.log",
+          "log_sha256": "24b02c1973fbb27229cddf94c117d0ed803e3137125121df3e05bf92aaece9c1"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 80.07,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 381,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/woylie__doggo-379.gold.log",
+          "log_sha256": "a9d4f8883f5a5ea70ede2b6b587789930415a5e793f366457629d2be770c6f3d"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "commanded__commanded-171",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:01ff1defd8468db94befa4f1f2b76eaa9a6917a7b43550d22f7e6307f84e3c71",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 12.17,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 121,
+          "failed_count": 78,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-171.base.log",
+          "log_sha256": "180be0f9fa633d3c1893541b45be09d4259916a1913abca7dc110461af9c6536"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 11.49,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 177,
+          "failed_count": 22,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-171.gold.log",
+          "log_sha256": "912c2ca2ada2b61627210a290ed4c52443a561fbe986d9429509550495f4f41c"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "100phlecs__tailwind_formatter-33",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:fb1c76da9d799f142260eb70e31a5c6b88f3b225d7d96443e1e9f4577eb29194",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 14.56,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 23,
+          "failed_count": 5,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/100phlecs__tailwind_formatter-33.base.log",
+          "log_sha256": "5420c09d270ecc6198bde023d92a343195e9fdc831cc8031d43795d0a450dd80"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 14.77,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 28,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/100phlecs__tailwind_formatter-33.gold.log",
+          "log_sha256": "bee4ab366361b34ecbb29e74934704c79229aa4d5c71f0e0ec27e38424f6f8a8"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "commanded__commanded-380",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:aac8dcda067755655c6f199b81a95a89d25b5ba093139d76c8b1b8ecc34f33e1",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 36.96,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 343,
+          "failed_count": 6,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-380.base.log",
+          "log_sha256": "a6af5b97b7fcbf850e372a6ed34446ce1fa7b5372fb6835938613fa2c106a34a"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 31.65,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 344,
+          "failed_count": 5,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/commanded__commanded-380.gold.log",
+          "log_sha256": "3fbae21750834e202a041a2a4da22392f0e96c74e2f5ed9d73d35d98d145f954"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "adobe__elixir-styler-155",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:e7f88cf0888a3a468b5a16ad808d2584d4e7f09b7335d8d855d0ba65508a1021",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 8.37,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 207,
+          "failed_count": 2,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/adobe__elixir-styler-155.base.log",
+          "log_sha256": "241eef272b89d12ab4d4f2060c89a2f88d0f1334766909e1d6654b4dacdd9ee3"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 7.79,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 209,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/adobe__elixir-styler-155.gold.log",
+          "log_sha256": "7c66e0c6aa5d4035b548c2e4fcb121c64cfd6d9a05e1aee0887c053002a20850"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "edgurgel__mimic-47",
+      "group": "otp",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:a051bc251461b986d4483c1fad1caeb01083472658752eb8226f1ecab03f189c",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 4.08,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 73,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/edgurgel__mimic-47.base.log",
+          "log_sha256": "1b9376602aff98e3d7fd0a380865934080d4c0753f525a2aab3a5b58daf8c267"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 3.47,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 74,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/edgurgel__mimic-47.gold.log",
+          "log_sha256": "ddfe886c7cfb34e57fc08c137d550edb2038f5657ffc366f9064e4392f75b019"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "elixir-ecto__ecto-2348",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:a63a1f8cf8e526e699008d2b411df6cef13bc640382bfb23ca382f02b97640b3",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 13.61,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 807,
+          "failed_count": 121,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/elixir-ecto__ecto-2348.base.log",
+          "log_sha256": "be9542efaf9397d9d886d2a33062bb4ec26a9faf9a4538a3103f91c7b02b692f"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 13.71,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 808,
+          "failed_count": 120,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/elixir-ecto__ecto-2348.gold.log",
+          "log_sha256": "f9d5e597482861f706284aa12c1bafd916246197d523ac2739ae83b40636473f"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "elixir-protobuf__protobuf-164",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:00833d99a8e1d02a242c11e66f72e6d8560b889e05513f861d27ae9e441a39e0",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 16.66,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 297,
+          "failed_count": 2,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/elixir-protobuf__protobuf-164.base.log",
+          "log_sha256": "c806615943b1809179dba808b90eb09b0dcfbcba5622189d87a01c2179732822"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 16.32,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 298,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/elixir-protobuf__protobuf-164.gold.log",
+          "log_sha256": "2364b94a4ed8efc6abc17896e705823336c406acd0a90cfce9b4f5d34416d629"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "elixir-gettext__gettext-239",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:2a71daefb24918e886f93db0cb80547bf9bfc0e546d8af579622e1aeee9255b5",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 5.56,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 200,
+          "failed_count": 3,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/elixir-gettext__gettext-239.base.log",
+          "log_sha256": "9d73382d9959a44ae8b37a892c17d016a84662ae633b7bfe9762916674de9a4a"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 5.08,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 202,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/elixir-gettext__gettext-239.gold.log",
+          "log_sha256": "5416933c5496eb732c60470dad7eeb064b0e5d9a91f35c600d7ded829b7324dd"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "general-cbic__poolex-127",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:437551fd069dbe8cc96c39c07c3d6da6f64ab2eb974b590e1e58a05ebb0632ea",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 8.1,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 36,
+          "triage_hints": [
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-127.base.log",
+          "log_sha256": "ca0e8364901101360f9949a0fb54122b54bd400233693830274ba3b3fda411f7"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 11.44,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 35,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/general-cbic__poolex-127.gold.log",
+          "log_sha256": "850832ba5353f55b112a951f194c8bbe8961ad1303c3346e6a804b38eb338a21"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "jeregrine__jsonapi-164",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:cff4eabb9c9fadd60413a28ab8b3598eb17ff0ff5cd4ea91d4c92e406510caa9",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 24.14,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 75,
+          "failed_count": 3,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/jeregrine__jsonapi-164.base.log",
+          "log_sha256": "3dab66467e4a4e2633a8eba22c312722fa1f5bc4a2a8bc3f56cd23bd388a30c0"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 25.91,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 76,
+          "failed_count": 2,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/jeregrine__jsonapi-164.gold.log",
+          "log_sha256": "b0ba9a0000755a8b2204e1679c02c965854d778333200d653fd025382900b5cf"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "livebook-dev__kino-231",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:04be4b27876281856c4b7ac0e08862d48972e49f832a88d64f8bf48fd3365a5e",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 13.35,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 114,
+          "failed_count": 5,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/livebook-dev__kino-231.base.log",
+          "log_sha256": "b280c714c19bb8ca47c34c724846dfbc0622788ccfe6121f35a5460822371a6d"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 12.87,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 116,
+          "failed_count": 3,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/livebook-dev__kino-231.gold.log",
+          "log_sha256": "133dfb9ecf81999864d90fbb3c85fdae57e71d7290c04d1a5218f8e9c2b45b56"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "keathley__finch-47",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:4da147acb7017f440b56edb758fa97a27eb1c067c468345ab2cc3d46196f9b12",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 38.72,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 21,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/keathley__finch-47.base.log",
+          "log_sha256": "9499728342660f4d7a2917002ba9dc7d9db7fff3f844a8a8e37a264fca0fb369"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 30.71,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 22,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/keathley__finch-47.gold.log",
+          "log_sha256": "f8b6185c0716113efaa01c922ea30f2563725b9c6c84d94e7aba1c183df6033d"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "newrelic__elixir_agent-37",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:078446dd204fad8d251980ae5cbddfebca7ce660c531cf974a643172cb00da90",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": false,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 33.45,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 100,
+          "failed_count": 18,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/newrelic__elixir_agent-37.base.log",
+          "log_sha256": "eddb90d8e3598e547b4e2265bfb11d23a6a963d715252a06caaca1aced324104"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 32.34,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 101,
+          "failed_count": 17,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/newrelic__elixir_agent-37.gold.log",
+          "log_sha256": "4154b68a42fe0a457cfae8b196cb5327901e7e5fc4ebb2d44173eee5bd1db885"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "keathley__norm-41",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:c8e817f6d719a0cb48c74eb366c6f8edd12b2059ffc0a598e9bd16bfda87e448",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 19.18,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 1,
+          "failed_count": 0,
+          "missing_expected_count": 75,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/keathley__norm-41.base.log",
+          "log_sha256": "91f2135e33c153d15c49936642adc48a8879756aa970079c7d8b5b659b63eda5"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 19.74,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 76,
+          "failed_count": 6,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/keathley__norm-41.gold.log",
+          "log_sha256": "e30c2135ea0de860a0b2163f67c2f5a9f92f01138b7e9a55ead698e88cd71048"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "plataformatec__broadway-40",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:72bd7840614308f08ed490fb7754bfc273f53d41541f8d0b3c58293317a645ff",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 3.87,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 80,
+          "failed_count": 5,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/plataformatec__broadway-40.base.log",
+          "log_sha256": "057d6654eca7eded91903ab70f0249b4ad031259c74d2b8418ae08b32880f0da"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 3.52,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 83,
+          "failed_count": 2,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/plataformatec__broadway-40.gold.log",
+          "log_sha256": "8c1b04c037ddb5188db2480d8483f23bea4c3aa459f7046f9ebb6bbebd85dc0e"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "kraigie__nostrum-377",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:761d872ec3d6ac3c0fcab9c87c3de99baf875b607dfc3f00483a821fe0311617",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 27.63,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 67,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/kraigie__nostrum-377.base.log",
+          "log_sha256": "8be0af95040543031939a19d3d0ad58cedcfe55b99857ba8b5bda7b175c2ce0e"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 27.05,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 68,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/kraigie__nostrum-377.gold.log",
+          "log_sha256": "72fe40d75834dc9116139e3632abfe51c92e5283d97ddbca6c25eef73546feef"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "quantum-elixir__quantum-core-454",
+      "group": "otp",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:96df6a7638b54d424dd5e567ff6bd12bf804a021c73f7316a2a964cf5301faf1",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 48.25,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 85,
+          "failed_count": 2,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/quantum-elixir__quantum-core-454.base.log",
+          "log_sha256": "23af989aca295446379cbbd422f4f04753399e16e82e75c727ddd5bdcd7ee02b"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 47.77,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 87,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/quantum-elixir__quantum-core-454.gold.log",
+          "log_sha256": "44e1b4a3a916c315fc9e1dcaff0a4eea55e9c867fcbe7392e832bdab7c452e04"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "phoenixframework__phoenix_html-263",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:258f551d910b4d447559051a5c3ffb58f886f7972dfbe791476bc2099596f264",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 1.86,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 144,
+          "failed_count": 6,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/phoenixframework__phoenix_html-263.base.log",
+          "log_sha256": "8d6356b25cf21a548004e0381e37e11c7841496c740ce1a40162e65567b28d85"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 1.62,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 145,
+          "failed_count": 5,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/phoenixframework__phoenix_html-263.gold.log",
+          "log_sha256": "79d2481a93d31613d172a89a4ce3a92e640ab49ca0c004556ac3af260db99de3"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "whitfin__cachex-292",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:fb3df37bd451d511d6a85f3526333e79da8cafd74d3f7e9e80af1716fe2c65e0",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 10.06,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 156,
+          "failed_count": 32,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/whitfin__cachex-292.base.log",
+          "log_sha256": "4ed9c3261fe1d1aede9f8699aab1e1696cbedc7f454821cf56d933ed614de83d"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 9.92,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 157,
+          "failed_count": 31,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/whitfin__cachex-292.gold.log",
+          "log_sha256": "dd494185c683166325fe7b1ec42ef2ccedef50b39f4c08b9651f3690aa312728"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "rrrene__credo-1095",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:2bda466109dc74a49689dcf50632acf36782b312044b33bea431e3035e15261f",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 24.8,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1019,
+          "failed_count": 3,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/rrrene__credo-1095.base.log",
+          "log_sha256": "1495f924bdd4480ebcdfe919143cd1f24896b23165ad2e505ca2e7af0c5dbe23"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 25.38,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1021,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/rrrene__credo-1095.gold.log",
+          "log_sha256": "1c6c3038fd38dce8775ff485d25003050343901fce3e389235f06f4e840f6275"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "whitfin__cachex-294",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:51399ade766a558e8b19c34804e855be77459f3091e8a41d79f8f8ee27a50e75",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 7.93,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 158,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/whitfin__cachex-294.base.log",
+          "log_sha256": "de1b7c7f9aa2e1bbfddcfb99cb0c7c6c6394dd22e3fd9458d29f9252646388e7"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 10.46,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 158,
+          "failed_count": 31,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/whitfin__cachex-294.gold.log",
+          "log_sha256": "29369e500c36fcc7d94ce66ae8c0dafe95dc02dce9e418fae56c3e258ec166ba"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "rrrene__credo-1152",
+      "group": "control",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:bd252d56fa4fd778e0a70daca09255e2f16e685a4e3e788428bf222cf3be1f52",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 12.47,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1089,
+          "failed_count": 2,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/rrrene__credo-1152.base.log",
+          "log_sha256": "258e46cc676fbb98656e17fd057f0111ec36efbefd5d237424743b8221d9bd0f"
+        },
+        "gold": {
+          "ok": false,
+          "seconds": 12.3,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 1090,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/rrrene__credo-1152.gold.log",
+          "log_sha256": "d61f8cf088702bb67e5a19a6fcf393a3d92f39c773f1c7da32acac8075f6d113"
+        }
+      },
+      "baseline_category": "unresolved"
+    },
+    {
+      "instance_id": "whitfin__cachex-343",
+      "group": "otp",
+      "status": "needs_investigation",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:146c183415925066782e87ea483dabb7a2c97d8292b240872b7683746aad5ca5",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": false,
+          "seconds": 8.54,
+          "exit_code": 1,
+          "timed_out": false,
+          "passed_count": 0,
+          "failed_count": 0,
+          "missing_expected_count": 194,
+          "triage_hints": [
+            "compilation_error",
+            "expected_test_ids_missing"
+          ],
+          "log": "validation_runs/remaining-56/whitfin__cachex-343.base.log",
+          "log_sha256": "bccdeeeea8a87a02c4795451e943b60a5d8245537daef1a1c9a2ea52d9dc3387"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 55.19,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 194,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/whitfin__cachex-343.gold.log",
+          "log_sha256": "6a01035560e750ada3204f75860d9c3d6f10f0306f8e62921882c70a61baeeb8"
+        }
+      },
+      "baseline_category": "expected_api_compile_failure",
+      "baseline_review_reason": "Tests require the explicitly specified warmer required field."
+    },
+    {
+      "instance_id": "tallarium__reverse_proxy_plug-177",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:c304ca6dcf6ae977b1b38f881e1664bb0846ee6406f7c88cd94f98f98acebf73",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 39.41,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 87,
+          "failed_count": 3,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/tallarium__reverse_proxy_plug-177.base.log",
+          "log_sha256": "1201e1e8843e4e83e7a92758223be7a69852b4011cb765198b0547b54d1c69da"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 43.27,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 90,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/tallarium__reverse_proxy_plug-177.gold.log",
+          "log_sha256": "e27e4b9adee25304394f66a4902979b05e9255f9cca848e4a9a830bf068884e6"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "whitfin__cachex-348",
+      "group": "otp",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:ba6e7fcbadaffb2f0e0ce3552b30c506b47259c2a07315d326ecd1c0ddcfc901",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 54.88,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 194,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/whitfin__cachex-348.base.log",
+          "log_sha256": "f9504e02191792c3e64f6e1ea61e75c2f9bd392c2399e657b5036df223942ce1"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 54.41,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 195,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/whitfin__cachex-348.gold.log",
+          "log_sha256": "6cffff848662c4c715a54ce4f1696c3ae0140564fdc2ab1f2348c74906b3f350"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    },
+    {
+      "instance_id": "woylie__flop_phoenix-221",
+      "group": "control",
+      "status": "validated",
+      "source": "validation_runs/remaining-56/report.json",
+      "image_id": "sha256:9252894d28e6b1564aa0a76cd6caa0eda34aac96eb1308de2aaa355427d233f8",
+      "erl_flags_override": "+JMsingle true",
+      "error": null,
+      "upstream_gold_passed_list_match": true,
+      "strict_gold_ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "seconds": 39.27,
+          "exit_code": 2,
+          "timed_out": false,
+          "passed_count": 178,
+          "failed_count": 1,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/woylie__flop_phoenix-221.base.log",
+          "log_sha256": "1f218a0c0727a6803dff1cf9c0a42116f820fcd6e4278817b135e038465b7bd5"
+        },
+        "gold": {
+          "ok": true,
+          "seconds": 40.13,
+          "exit_code": 0,
+          "timed_out": false,
+          "passed_count": 179,
+          "failed_count": 0,
+          "missing_expected_count": 0,
+          "triage_hints": [],
+          "log": "validation_runs/remaining-56/woylie__flop_phoenix-221.gold.log",
+          "log_sha256": "38fdbd3ba0fa0be6e1ceed589d2761b90a846473bedb96db3ba9c0125ea7fbbd"
+        }
+      },
+      "baseline_category": "strict_transition_verified"
+    }
+  ],
+  "limitations": [
+    "Validation applies to recorded amd64 emulation configuration.",
+    "Triage hints do not establish root cause; investigate logs.",
+    "No agent performance has been measured."
+  ]
+}

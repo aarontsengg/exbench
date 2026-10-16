@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-12",
+  "harness_revision": "c71902a8cf8d2b725f63d51f199f4d3e56f68d2d",
+  "input_sha256": "a8130d857b546ca108b19afd36e9d0a7fc0103e6d543d237a020a3337d077327",
+  "report_sha256": "ad03a298824f1fc50a21cdc116e800b7d612c788b7d24a2414cdbdf0eabfba89",
+  "platform": "linux/amd64",
+  "erl_flags_override": "+JMsingle true",
+  "model_calls": 0,
+  "items": [
+    {
+      "instance_id": "phoenixframework__phoenix-2974",
+      "image_id": "sha256:ffa7b3e7ec651545ec4a118be1a0c21b6a75df54367f4d949c35ca3624971df8",
+      "repo_digests": [
+        "swerebenchv2/phoenixframework-phoenix@sha256:ffa7b3e7ec651545ec4a118be1a0c21b6a75df54367f4d949c35ca3624971df8"
+      ],
+      "ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "exit_code": 1,
+          "seconds": 20.33,
+          "passed_count": 100,
+          "failed_count": 0,
+          "log_sha256": "288dfa2518d7f8be770f5b189cdd515ea1c9a5c5db268b81c795e6ebdc0067d9"
+        },
+        "gold": {
+          "ok": false,
+          "exit_code": 1,
+          "seconds": 16.05,
+          "passed_count": 35,
+          "failed_count": 3,
+          "log_sha256": "865d8c301c79d3094fc5a719994e8bd152242391f470953938511cc6479e75c9"
+        }
+      }
+    },
+    {
+      "instance_id": "elixir-protobuf__protobuf-387",
+      "image_id": "sha256:d03f4c536ed00eed9c69391a8a8974892bb622e33ff73e62715ada9815b410c8",
+      "repo_digests": [
+        "swerebenchv2/elixir-protobuf-protobuf@sha256:d03f4c536ed00eed9c69391a8a8974892bb622e33ff73e62715ada9815b410c8"
+      ],
+      "ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "exit_code": 2,
+          "seconds": 30.65,
+          "passed_count": 476,
+          "failed_count": 5,
+          "log_sha256": "e3ac3f84162bb8ec5dafd8cacfbdd319f2a5199e6e24ffb6f80ef01e106c0573"
+        },
+        "gold": {
+          "ok": true,
+          "exit_code": 0,
+          "seconds": 29.65,
+          "passed_count": 481,
+          "failed_count": 0,
+          "log_sha256": "83b0dcb0afe8cac29b7d6f926f69f4c7d0970b5f74786d6952d08b3c6c0fbd18"
+        }
+      }
+    }
+  ]
+}

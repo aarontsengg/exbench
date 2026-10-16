@@ -1,0 +1,10 @@
+diff --git a/test/application/application_test.exs b/test/application/application_test.exs
+--- a/test/application/application_test.exs
++++ b/test/application/application_test.exs
+@@ -65,5 +65,5 @@
+       Process.flag(:trap_exit, true)
+ 
+-      UnconfiguredApplication.start_link()
++      IO.inspect(UnconfiguredApplication.start_link(), label: "EXBENCH_STARTUP_RETURN", limit: :infinity)
+ 
+       assert_receive {:EXIT, _pid,

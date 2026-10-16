@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "agent_instruction_fields": [
+    "problem_statement",
+    "interface"
+  ],
+  "reference_fields_hidden_from_agent": [
+    "patch",
+    "test_patch"
+  ],
+  "expected_compile_failure_requires_manual_review": true,
+  "reviews": [
+    {
+      "instance_id": "general-cbic__poolex-59",
+      "category": "expected_api_compile_failure",
+      "reason": "Tests require the explicitly specified Poolex.Caller struct.",
+      "interface_sha256": "eef321b0009e90ce5f663c79f3ebb723a40024c992b1c2e8195e05669ca45293",
+      "image_id": "sha256:b2dc80bec3402ae1779560e560cd27c76055de3e075338646be2aab38c7b8aed",
+      "base_log_sha256": "f19d6fe959030a5e24d562adeac176e0b634b59e79fb7c2b3018914ec481a0b4",
+      "gold_log_sha256": "e893cbfdb4b852191d12428b8f4b24f09c2fe497a1c1ca497b95a98d562fec1b"
+    },
+    {
+      "instance_id": "whitfin__cachex-343",
+      "category": "expected_api_compile_failure",
+      "reason": "Tests require the explicitly specified warmer required field.",
+      "interface_sha256": "c8d96f227a0ee3db48254d640707847864c052208bba6cf4eeaff11f5f3456dc",
+      "image_id": "sha256:146c183415925066782e87ea483dabb7a2c97d8292b240872b7683746aad5ca5",
+      "base_log_sha256": "bccdeeeea8a87a02c4795451e943b60a5d8245537daef1a1c9a2ea52d9dc3387",
+      "gold_log_sha256": "6a01035560e750ada3204f75860d9c3d6f10f0306f8e62921882c70a61baeeb8"
+    },
+    {
+      "instance_id": "plataformatec__broadway-31",
+      "category": "expected_api_compile_failure",
+      "reason": "Tests require the explicitly specified Broadway.Message.put_batcher/2 API.",
+      "interface_sha256": "e1a5b0b667deada57935c7880894260545117e217fb2270d187cfa28e6240fcd",
+      "image_id": "sha256:412d82fb1c3ca6a3326bffb66b8903ca0e3f8eaaf148eb926b872f62f96c2596",
+      "base_log_sha256": "182b73b823299dcae048e9564517f1ed4a41f99607746fbc64de0f07d4346812",
+      "gold_log_sha256": "e98511034e1890f6a677eeba91025040d954023a519dd8dd43d28ed2fcd8a0ea"
+    }
+  ]
+}

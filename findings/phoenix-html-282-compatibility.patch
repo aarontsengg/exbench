@@ -1,0 +1,17 @@
+diff --git a/lib/phoenix_html/form.ex b/lib/phoenix_html/form.ex
+--- a/lib/phoenix_html/form.ex
++++ b/lib/phoenix_html/form.ex
+@@ -1500,3 +1500,4 @@
+-        {year, _, _} = :erlang.date()
++        # ExBench diagnostic: stable 2015..2025 selector range for 2020 fixtures.
++        year = 2020
+ 
+         {value, opts} =
+diff --git a/lib/phoenix_html/engine.ex b/lib/phoenix_html/engine.ex
+--- a/lib/phoenix_html/engine.ex
++++ b/lib/phoenix_html/engine.ex
+@@ -77,3 +77,3 @@
+   defp to_safe(ast) do
+-    to_safe(ast, line_from_expr(ast))
++    to_safe(ast, line_from_expr(ast) || 0)
+   end

@@ -331,7 +331,7 @@ report = {
     "limitations": [
         "Tags are provisional regex classifications.",
         "Markers can match documentation or unrelated names and miss OTP code.",
-        "Current repository identities checked; Finch historical fork lineage remains unresolved.",
+        "Current repository identities checked; Finch historical PR/base lineage verified in repository_audit/finch_lineage.json.",
         "OTP capacity is before matching and gold-patch validation.",
         "The eventual repository cap must be shared across OTP and control tasks.",
         "Exact-A filtering uses upstream annotations without overrides.",
@@ -445,7 +445,7 @@ report["matching_feasibility"] = {
     "maximum_pairs_by_repository_cap": matching_capacity,
     "patch_size_buckets": {"small": "1-10", "medium": "11-80", "large": "81+"},
     "control_rule": "Reviewed/effective control and no regex markers anywhere in patch",
-    "limitations": "Before runtime validation; Finch historical fork lineage remains unresolved",
+    "limitations": "Before runtime validation; Finch historical lineage verified",
     "sample_exclusions": sample_exclusions,
 }
 
@@ -612,7 +612,7 @@ for review_file in review_files:
             if hashlib.sha256(patch.encode()).hexdigest() != review["patch_sha256"]:
                 raise ValueError(f"Reviewed patch hash mismatch: {review['instance_id']}")
 saved["status"] = (
-    "labels reviewed; pending runtime validation and historical repository lineage check"
+    "labels reviewed; pending runtime validation"
     if reviewed_selected == len(seen) else "candidate sample; incomplete label review"
 )
 saved["validation"] = {

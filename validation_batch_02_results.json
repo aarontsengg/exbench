@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-12",
+  "report_sha256": "fc691a4cd065cc6b1d47b80a6767047e0a07511df986182eb941aa5c803ce836",
+  "harness_revision": "c71902a8cf8d2b725f63d51f199f4d3e56f68d2d",
+  "input_sha256": "5f162496c8ac3b50bdeff82d3367e4d07e94db950291800333b16e3f5eb842b8",
+  "erl_flags_override": "+JMsingle true",
+  "items": [
+    {
+      "instance_id": "absinthe-graphql__absinthe-1336",
+      "image_id": "sha256:61f7f3b31f6f07cce7b47444c9fdd13d87783b1f8520315253653ba3480d6ac0",
+      "ok": true,
+      "phases": {
+        "base": {
+          "ok": true,
+          "exit_code": 2,
+          "seconds": 16.98,
+          "passed_count": 1300,
+          "failed": [
+            "can unsubscribe from duplicate subscriptions individually"
+          ],
+          "missing_expected": [],
+          "log_sha256": "8ecc4ad7dab6cd6a9d9ad6cb29c6fa388ce5e98336b867487d0dd7716bc9ee29"
+        },
+        "gold": {
+          "ok": true,
+          "exit_code": 0,
+          "seconds": 14.02,
+          "passed_count": 1301,
+          "failed": [],
+          "missing_expected": [],
+          "log_sha256": "5966599b02e82c942066fe762d6badd50931e6cbcec10fa719d174cf5d84d4c9"
+        }
+      }
+    },
+    {
+      "instance_id": "phoenixframework__phoenix_html-282",
+      "image_id": "sha256:f08cf4f893f821e4b617b81f57dae080e4f2aa5421511375ed5b55ae0c38ff29",
+      "ok": false,
+      "phases": {
+        "base": {
+          "ok": false,
+          "exit_code": 2,
+          "seconds": 1.63,
+          "passed_count": 144,
+          "failed": [
+            "content_tag",
+            "date_select/4",
+            "date_select/4 with form",
+            "datetime_select/4",
+            "datetime_select/4 with form",
+            "does not escape safe expressions"
+          ],
+          "missing_expected": [],
+          "log_sha256": "7d193418d9f638fa5ab560397715820a62071fc1e56d7cf1517e916476c2fdf7"
+        },
+        "gold": {
+          "ok": false,
+          "exit_code": 2,
+          "seconds": 1.73,
+          "passed_count": 145,
+          "failed": [
+            "date_select/4",
+            "date_select/4 with form",
+            "datetime_select/4",
+            "datetime_select/4 with form",
+            "does not escape safe expressions"
+          ],
+          "missing_expected": [],
+          "log_sha256": "5330b2b355db20f1988cafbbce9f7fe3930a165c1b562e633d47289cd3031c15"
+        }
+      }
+    }
+  ]
+}

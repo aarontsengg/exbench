@@ -1,0 +1,137 @@
+[
+  {
+    "instance_id": "commanded__commanded-139",
+    "log_sha256": "b0a28365e4547ef2efbf502bdc67e84ab2d1da5582f85af1e33efb18222b24f0",
+    "failure_block_counts": {
+      "missing_pg2_api": 65,
+      "json_string_order": 1,
+      "other_or_cascade": 28
+    },
+    "examples": {
+      "missing_pg2_api": {
+        "test": "test tracker should list tracked processes (Commanded.PubSub.PhoenixPubSubTest)",
+        "excerpt": "test tracker should list tracked processes (Commanded.PubSub.PhoenixPubSubTest)\n     test/pubsub/phoenix_pubsub_test.exs:40\n     ** (EXIT from #PID<0.3385.0>) shutdown: failed to start child: Phoenix.PubSub.PG2\n         ** (EXIT) shutdown: failed to start child: Phoenix.PubSub.PG2Server\n             ** (EXIT) an exception was raised:\n                 ** (UndefinedFunctionError) function :pg2.create/1 is undefined or private\n                     (kernel 9.2.4.10) :pg2.create({:phx, Commanded.PubSub.PhoenixPubSub})\n                     (phoenix_pubsub 1.0.2) lib/phoenix/pubsub/pg2_server.ex:43: Phoenix.PubSub.PG2Server.init/1\n                     (stdlib 5.2.3.5) gen_server.erl:980: :gen_server.init_it/2\n                     (stdlib 5.2.3.5) gen_server.erl:935: :gen_server.init_it/6\n                     (stdlib 5.2.3.5) proc_lib.erl:241: :proc_lib.init_p_do_apply/3\n"
+      },
+      "json_string_order": {
+        "test": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)",
+        "excerpt": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)\n     test/serialization/json_decoder_test.exs:24\n     Assertion with == failed\n     code:  assert JsonSerializer.serialize(event) == @serialized_event_json\n     left:  \"{\\\"date\\\":\\\"2016-09-20T20:01:02\\\",\\\"name\\\":\\\"Ben\\\"}\"\n     right: \"{\\\"name\\\":\\\"Ben\\\",\\\"date\\\":\\\"2016-09-20T20:01:02\\\"}\"\n     stacktrace:\n       test/serialization/json_decoder_test.exs:27: (test)\n\n\nCommanded.ProcessManager.ProcessManagerErrorHandlingStateTest [test/process_managers/process_manager_error_handling_state_test.exs]"
+      },
+      "other_or_cascade": {
+        "test": "test should timeout waiting for strongly consistent event handler to handle event (Commanded.Commands.DispatchConsistencyTest)",
+        "excerpt": "test should timeout waiting for strongly consistent event handler to handle event (Commanded.Commands.DispatchConsistencyTest)\n     test/commands/dispatch_consistency_test.exs:38\n     ** (ArgumentError) unknown registry: Commanded.Registration.LocalRegistry\n     stacktrace:\n       (elixir 1.16.3) lib/registry.ex:1400: Registry.key_info!/1\n       (elixir 1.16.3) lib/registry.ex:237: Registry.whereis_name/2\n       (commanded 0.15.1) lib/commanded/registration/local_registry.ex:48: Commanded.Registration.LocalRegistry.start_link/3\n       test/commands/dispatch_consistency_test.exs:21: Commanded.Commands.DispatchConsistencyTest.__ex_unit_setup_1/1\n       test/commands/dispatch_consistency_test.exs:1: Commanded.Commands.DispatchConsistencyTest.__ex_unit__/2\n"
+      }
+    }
+  },
+  {
+    "instance_id": "commanded__commanded-171",
+    "log_sha256": "912c2ca2ada2b61627210a290ed4c52443a561fbe986d9429509550495f4f41c",
+    "failure_block_counts": {
+      "other_or_cascade": 16,
+      "json_string_order": 1,
+      "missing_pg2_api": 5
+    },
+    "examples": {
+      "other_or_cascade": {
+        "test": "test expire stream acks should expire stale acks (Commanded.SubscriptionsTest)",
+        "excerpt": "test expire stream acks should expire stale acks (Commanded.SubscriptionsTest)\n     test/subscriptions/subscriptions_test.exs:151\n     ** (exit) exited in: GenServer.call(Commanded.Subscriptions, :reset, 5000)\n         ** (EXIT) no process: the process is not alive or there's no process currently associated with the given name, possibly because its application isn't started\n     stacktrace:\n       (elixir 1.16.3) lib/gen_server.ex:1103: GenServer.call/3\n       test/subscriptions/subscriptions_test.exs:1: Commanded.SubscriptionsTest.__ex_unit__/2\n"
+      },
+      "json_string_order": {
+        "test": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)",
+        "excerpt": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)\n     test/serialization/json_decoder_test.exs:24\n     Assertion with == failed\n     code:  assert JsonSerializer.serialize(event) == @serialized_event_json\n     left:  \"{\\\"date\\\":\\\"2016-09-20T20:01:02\\\",\\\"name\\\":\\\"Ben\\\"}\"\n     right: \"{\\\"name\\\":\\\"Ben\\\",\\\"date\\\":\\\"2016-09-20T20:01:02\\\"}\"\n     stacktrace:\n       test/serialization/json_decoder_test.exs:27: (test)\n"
+      },
+      "missing_pg2_api": {
+        "test": "test pub/sub should receive broadcast message (Commanded.PubSub.PhoenixPubSubTest)",
+        "excerpt": "test pub/sub should receive broadcast message (Commanded.PubSub.PhoenixPubSubTest)\n     test/pubsub/phoenix_pubsub_test.exs:26\n     ** (EXIT from #PID<0.7415.0>) shutdown: failed to start child: Phoenix.PubSub.PG2\n         ** (EXIT) shutdown: failed to start child: Phoenix.PubSub.PG2Server\n             ** (EXIT) an exception was raised:\n                 ** (UndefinedFunctionError) function :pg2.create/1 is undefined or private\n                     (kernel 9.2.4.10) :pg2.create({:phx, Commanded.PubSub.PhoenixPubSub})\n                     (phoenix_pubsub 1.0.2) lib/phoenix/pubsub/pg2_server.ex:43: Phoenix.PubSub.PG2Server.init/1\n                     (stdlib 5.2.3.5) gen_server.erl:980: :gen_server.init_it/2\n                     (stdlib 5.2.3.5) gen_server.erl:935: :gen_server.init_it/6\n                     (stdlib 5.2.3.5) proc_lib.erl:241: :proc_lib.init_p_do_apply/3\n"
+      }
+    }
+  },
+  {
+    "instance_id": "commanded__commanded-290",
+    "log_sha256": "04e88d23d02e32189b9a7b0cf4586622d8b94e5e086fe37212bbde3388017d01",
+    "failure_block_counts": {
+      "json_string_order": 1,
+      "other_or_cascade": 8,
+      "missing_pg2_api": 20
+    },
+    "examples": {
+      "json_string_order": {
+        "test": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)",
+        "excerpt": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)\n     test/serialization/json_decoder_test.exs:24\n     Assertion with == failed\n     code:  assert JsonSerializer.serialize(event) == @serialized_event_json\n     left:  \"{\\\"date\\\":\\\"2016-09-20T20:01:02\\\",\\\"name\\\":\\\"Ben\\\"}\"\n     right: \"{\\\"name\\\":\\\"Ben\\\",\\\"date\\\":\\\"2016-09-20T20:01:02\\\"}\"\n     stacktrace:\n       test/serialization/json_decoder_test.exs:27: (test)\n"
+      },
+      "other_or_cascade": {
+        "test": "test register event handler should be registered (Commanded.SubscriptionsTest)",
+        "excerpt": "test register event handler should be registered (Commanded.SubscriptionsTest)\n     test/subscriptions/subscriptions_test.exs:8\n     Assertion with == failed\n     code:  assert Subscriptions.all() == [{\"handler3\", self()}, {\"handler1\", self()}]\n     left:  [{\"handler1\", #PID<0.3400.0>}, {\"handler3\", #PID<0.3400.0>}]\n     right: [{\"handler3\", #PID<0.3400.0>}, {\"handler1\", #PID<0.3400.0>}]\n     stacktrace:\n       test/subscriptions/subscriptions_test.exs:13: (test)\n"
+      },
+      "missing_pg2_api": {
+        "test": "test pub/sub should receive broadcast message (Commanded.PubSub.PhoenixPubSubTest)",
+        "excerpt": "test pub/sub should receive broadcast message (Commanded.PubSub.PhoenixPubSubTest)\n     test/pubsub/phoenix_pubsub_test.exs:6\n     ** (EXIT from #PID<0.7557.0>) shutdown: failed to start child: Phoenix.PubSub.PG2\n         ** (EXIT) shutdown: failed to start child: Phoenix.PubSub.PG2Server\n             ** (EXIT) an exception was raised:\n                 ** (UndefinedFunctionError) function :pg2.create/1 is undefined or private\n                     (kernel 9.2.4.10) :pg2.create({:phx, Commanded.PubSub.PhoenixPubSub})\n                     (phoenix_pubsub 1.1.1) lib/phoenix/pubsub/pg2_server.ex:43: Phoenix.PubSub.PG2Server.init/1\n                     (stdlib 5.2.3.5) gen_server.erl:980: :gen_server.init_it/2\n                     (stdlib 5.2.3.5) gen_server.erl:935: :gen_server.init_it/6\n                     (stdlib 5.2.3.5) proc_lib.erl:241: :proc_lib.init_p_do_apply/3\n"
+      }
+    }
+  },
+  {
+    "instance_id": "commanded__commanded-335",
+    "log_sha256": "41069effe54ddaff7025d78cebe50273e4ba800d0c8feee184c6023dcc4d05ef",
+    "failure_block_counts": {
+      "other_or_cascade": 2,
+      "json_string_order": 1,
+      "missing_pg2_api": 4,
+      "invalid_process_callback_return": 1,
+      "missing_expected_exit_message": 1
+    },
+    "examples": {
+      "other_or_cascade": {
+        "test": "test register event handler should be registered (Commanded.SubscriptionsTest)",
+        "excerpt": "test register event handler should be registered (Commanded.SubscriptionsTest)\n     test/subscriptions/subscriptions_test.exs:14\n     Assertion with == failed\n     code:  assert Subscriptions.all(DefaultApp) == [{\"handler3\", self()}, {\"handler1\", self()}]\n     left:  [{\"handler1\", #PID<0.4543.0>}, {\"handler3\", #PID<0.4543.0>}]\n     right: [{\"handler3\", #PID<0.4543.0>}, {\"handler1\", #PID<0.4543.0>}]\n     stacktrace:\n       test/subscriptions/subscriptions_test.exs:19: (test)\n"
+      },
+      "json_string_order": {
+        "test": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)",
+        "excerpt": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)\n     test/serialization/json_decoder_test.exs:24\n     Assertion with == failed\n     code:  assert JsonSerializer.serialize(event) == @serialized_event_json\n     left:  \"{\\\"name\\\":\\\"Ben\\\",\\\"datetime\\\":\\\"2016-09-20T20:01:02Z\\\"}\"\n     right: \"{\\\"datetime\\\":\\\"2016-09-20T20:01:02Z\\\",\\\"name\\\":\\\"Ben\\\"}\"\n     stacktrace:\n       test/serialization/json_decoder_test.exs:28: (test)\n"
+      },
+      "missing_pg2_api": {
+        "test": "test tracker should ignore duplicate tracks for existing process (Commanded.PubSub.PhoenixPubSubTest)",
+        "excerpt": "test tracker should ignore duplicate tracks for existing process (Commanded.PubSub.PhoenixPubSubTest)\n     test/pubsub/phoenix_pubsub_test.exs:25\n     ** (RuntimeError) failed to start child with the spec %{id: Phoenix.PubSub.PG2, start: {Phoenix.PubSub.PG2, :start_link, [[name: Commanded.PubSub.PhoenixPubSub.PhoenixPubSub, pool_size: 1]]}, type: :supervisor}.\n     Reason: shutdown: failed to start child: Phoenix.PubSub.PG2Server\n         ** (EXIT) an exception was raised:\n             ** (UndefinedFunctionError) function :pg2.create/1 is undefined or private\n                 (kernel 9.2.4.10) :pg2.create({:phx, Commanded.PubSub.PhoenixPubSub.PhoenixPubSub})\n                 (phoenix_pubsub 1.1.2) lib/phoenix/pubsub/pg2_server.ex:43: Phoenix.PubSub.PG2Server.init/1\n                 (stdlib 5.2.3.5) gen_server.erl:980: :gen_server.init_it/2\n                 (stdlib 5.2.3.5) gen_server.erl:935: :gen_server.init_it/6\n                 (stdlib 5.2.3.5) proc_lib.erl:241: :proc_lib.init_p_do_apply/3\n     stacktrace:\n       (ex_unit 1.16.3) lib/ex_unit/callbacks.ex:570: ExUnit.Callbacks.start_supervised!/2\n       test/pubsub/phoenix_pubsub_test.exs:10: anonymous fn/2 in Commanded.PubSub.PhoenixPubSubTest.__ex_unit_setup_0/1\n       (elixir 1.16.3) lib/enum.ex:2528: Enum.\"-reduce/3-lists^foldl/2-0-\"/3\n       test/pubsub/phoenix_pubsub_test.exs:10: Commanded.PubSub.PhoenixPubSubTest.__ex_unit_setup_0/1\n       test/pubsub/phoenix_pubsub_test.exs:1: Commanded.PubSub.PhoenixPubSubTest.__ex_unit__/2\n"
+      },
+      "invalid_process_callback_return": {
+        "test": "test aggregate lifespan should adhere to aggregate lifespan after taking snapshot (Commanded.Aggregates.AggregateLifespanTest)",
+        "excerpt": "test aggregate lifespan should adhere to aggregate lifespan after taking snapshot (Commanded.Aggregates.AggregateLifespanTest)\n     test/aggregates/aggregate_lifespan_test.exs:247\n     Assertion failed, no matching message after 1000ms\n     The following variables were pinned:\n       ref = #Reference<0.2931577944.2108424197.61868>\n     Showing 1 of 1 message in the mailbox\n     code: assert_receive {:DOWN, ^ref, :process, _, :normal}\n     mailbox:\n       pattern: {:DOWN, ^ref, :process, _, :normal}\n       value:   {:DOWN, #Reference<0.2931577944.2108424197.61868>, :process,\n                 #PID<0.11428.0>,\n                 {:bad_return_value,\n                  {:noreply,\n                   %Commanded.Aggregates.Aggregate{\n                     application: Commanded.DefaultApp,\n                     aggregate_module: Commanded.Aggregates.LifespanAggregate,\n                     aggregate_uuid: \"157481e3-7d0b-4362-8733-5f0ceaeb17e2\",\n                     aggregate_state: %Commanded.Aggregates.LifespanAggregate{\n                       uuid: \"157481e3-7d0b-4362-8733-5f0ceaeb17e2\",\n                       reply_to: nil,\n                       lifespan: :stop\n                     },\n                     snapshotting: %Commanded.Snapshotting{\n                       application: Commanded.DefaultApp,\n                       source_uuid: \"157481e3-7d0b-4362-8733-5f0ceaeb17e2\",\n                       snapshot_every: 2,\n                       snapshot_module_version: 1,\n                       snapshot_version: 0\n                     },\n                     aggregate_version: 2,\n                     lifespan_timeout: :stop\n                   }, :stop}}}\n     stacktrace:\n       test/aggregates/aggregate_lifespan_test.exs:268: (test)\n\n     The following output was logged:\n     [debug] L"
+      },
+      "missing_expected_exit_message": {
+        "test": "test a Commanded application should fail to start unconfigured application (Commanded.ApplicationTest)",
+        "excerpt": "test a Commanded application should fail to start unconfigured application (Commanded.ApplicationTest)\n     test/application/application_test.exs:64\n     Assertion failed, no matching message after 1000ms\n     The process mailbox is empty.\n     code: assert_receive {:EXIT, _pid,\n            {%ArgumentError{\n               message: \"missing :event_store config for application Commanded.UnconfiguredApplication\"\n             }, _}}\n     stacktrace:\n       test/application/application_test.exs:69: (test)\n"
+      }
+    }
+  },
+  {
+    "instance_id": "commanded__commanded-380",
+    "log_sha256": "3fbae21750834e202a041a2a4da22392f0e96c74e2f5ed9d73d35d98d145f954",
+    "failure_block_counts": {
+      "json_string_order": 1,
+      "missing_expected_exit_message": 1,
+      "other_or_cascade": 1,
+      "distribution_startup": 1,
+      "invalid_process_callback_return": 1
+    },
+    "examples": {
+      "json_string_order": {
+        "test": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)",
+        "excerpt": "test should serialize value to JSON (Commanded.Serialization.JsonDecoderTest)\n     test/serialization/json_decoder_test.exs:24\n     Assertion with == failed\n     code:  assert JsonSerializer.serialize(event) == @serialized_event_json\n     left:  \"{\\\"name\\\":\\\"Ben\\\",\\\"datetime\\\":\\\"2016-09-20T20:01:02Z\\\"}\"\n     right: \"{\\\"datetime\\\":\\\"2016-09-20T20:01:02Z\\\",\\\"name\\\":\\\"Ben\\\"}\"\n     stacktrace:\n       test/serialization/json_decoder_test.exs:28: (test)\n\n\nCommanded.PubSub.PhoenixPubSubTest [test/pubsub/phoenix_pubsub_test.exs]"
+      },
+      "missing_expected_exit_message": {
+        "test": "test a Commanded application should fail to start unconfigured application (Commanded.ApplicationTest)",
+        "excerpt": "test a Commanded application should fail to start unconfigured application (Commanded.ApplicationTest)\n     test/application/application_test.exs:64\n     Assertion failed, no matching message after 1000ms\n     The process mailbox is empty.\n     code: assert_receive {:EXIT, _pid,\n            {%ArgumentError{\n               message: \"missing :event_store config for application Commanded.UnconfiguredApplication\"\n             }, _}}\n     stacktrace:\n       test/application/application_test.exs:69: (test)\n"
+      },
+      "other_or_cascade": {
+        "test": "test register subscription should be registered (Commanded.SubscriptionsTest)",
+        "excerpt": "test register subscription should be registered (Commanded.SubscriptionsTest)\n     test/subscriptions/subscriptions_test.exs:14\n     Assertion with == failed\n     code:  assert Subscriptions.all(DefaultApp) == [{\"handler3\", self()}, {\"handler1\", self()}]\n     left:  [{\"handler1\", #PID<0.7385.0>}, {\"handler3\", #PID<0.7385.0>}]\n     right: [{\"handler3\", #PID<0.7385.0>}, {\"handler1\", #PID<0.7385.0>}]\n     stacktrace:\n       test/subscriptions/subscriptions_test.exs:19: (test)\n"
+      },
+      "distribution_startup": {
+        "test": "test distributed subscriptions should be registered on all nodes (Commanded.DistributedSubscriptionsTest)",
+        "excerpt": "test distributed subscriptions should be registered on all nodes (Commanded.DistributedSubscriptionsTest)\n     test/subscriptions/distributed_subscriptions_test.exs:17\n     ** (MatchError) no match of right hand side value: {:error, {{:shutdown, {:failed_to_start_child, :net_kernel, {:EXIT, :nodistribution}}}, {:child, :undefined, :net_sup_dynamic, {:erl_distribution, :start_link, [%{name: :\"manager@127.0.0.1\", supervisor: :net_sup_dynamic, net_tickintensity: 4, net_ticktime: 60, name_domain: :longnames, clean_halt: false}]}, :permanent, false, 1000, :supervisor, [:erl_distribution]}}}\n     stacktrace:\n       test/subscriptions/distributed_subscriptions_test.exs:9: Commanded.DistributedSubscriptionsTest.__ex_unit_setup_0/1\n       test/subscriptions/distributed_subscriptions_test.exs:1: Commanded.DistributedSubscriptionsTest.__ex_unit__/2\n\n     The following output was logged:\n     [notice] Protocol 'inet_tcp': register/listen error: econnrefused\n     \n     \n\nCommanded.ProcessManagers.ProcessManagerTimeoutTest [test/process_managers/process_manager_timeout_test.exs]"
+      },
+      "invalid_process_callback_return": {
+        "test": "test aggregate lifespan should adhere to aggregate lifespan after taking snapshot (Commanded.Aggregates.AggregateLifespanTest)",
+        "excerpt": "test aggregate lifespan should adhere to aggregate lifespan after taking snapshot (Commanded.Aggregates.AggregateLifespanTest)\n     test/aggregates/aggregate_lifespan_test.exs:247\n     Assertion failed, no matching message after 1000ms\n     The following variables were pinned:\n       ref = #Reference<0.2460560213.1066139650.184545>\n     Showing 1 of 1 message in the mailbox\n     code: assert_receive {:DOWN, ^ref, :process, _pid, :normal}\n     mailbox:\n       pattern: {:DOWN, ^ref, :process, _pid, :normal}\n       value:   {:DOWN, #Reference<0.2460560213.1066139650.184545>, :process,\n                 #PID<0.9285.0>,\n                 {:bad_return_value,\n                  {:noreply,\n                   %Commanded.Aggregates.Aggregate{\n                     application: Commanded.DefaultApp,\n                     aggregate_module: Commanded.Aggregates.LifespanAggregate,\n                     aggregate_uuid: \"c7d022bc-5b36-4700-8f95-46a0c1bbb4cc\",\n                     aggregate_state: %Commanded.Aggregates.LifespanAggregate{\n                       uuid: \"c7d022bc-5b36-4700-8f95-46a0c1bbb4cc\",\n                       reply_to: nil,\n                       lifespan: :stop\n                     },\n                     snapshotting: %Commanded.Snapshotting{\n                       application: Commanded.DefaultApp,\n                       source_uuid: \"c7d022bc-5b36-4700-8f95-46a0c1bbb4cc\",\n                       snapshot_every: 2,\n                       snapshot_module_version: 1,\n                       snapshot_version: 0\n                     },\n                     aggregate_version: 2,\n                     lifespan_timeout: {:stop, :normal}\n                   }, {:stop, :normal}}}}\n     stacktrace:\n       test/aggregates/aggregate_lifespan_test.exs:268: (test)\n\n     The following outp"
+      }
+    }
+  }
+]

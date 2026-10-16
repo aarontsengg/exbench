@@ -25,7 +25,7 @@
   },
   "seed": 42,
   "selection_method": "MILP with seeded random task costs",
-  "status": "labels reviewed; pending runtime validation and historical repository lineage check",
+  "status": "draft blocked: contains quarantined phoenixframework__phoenix-2974; not eligible for scoring",
   "pairs": [
     {
       "difficulty": "easy",
@@ -856,5 +856,8 @@
         "count": 13
       }
     ]
-  }
+  },
+  "quarantined_instance_ids": [
+    "phoenixframework__phoenix-2974"
+  ]
 }

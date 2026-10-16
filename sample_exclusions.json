@@ -1,3 +1,4 @@
 {
-  "phoenixframework__phoenix-4309": "Changes JavaScript heartbeat timers, reconnect handling and browser event ordering; incidental Elixir float-to-param support and documentation. Non-OTP, but excluded from sample because the reported bug and primary fix are browser JavaScript, not Elixir."
+  "phoenixframework__phoenix-4309": "Changes JavaScript heartbeat timers, reconnect handling and browser event ordering; incidental Elixir float-to-param support and documentation. Non-OTP, but excluded from sample because the reported bug and primary fix are browser JavaScript, not Elixir.",
+  "phoenixframework__phoenix-2974": "Quarantined from scoring: sole FAIL_TO_PASS test to_param for binaries passes on base in recorded smoke run; test patch does not directly test Ecto-free fallback generation. Gold includes the generator fix plus unrelated OTP changes. Both phases also encounter EEx.Engine incompatibility. See SMOKE_RESULTS.md."
 }

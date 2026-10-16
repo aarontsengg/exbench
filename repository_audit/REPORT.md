@@ -19,3 +19,7 @@ Results: 60 distinct current repository IDs. The only duplicated ID is 54749959:
 `keathley/finch` currently resolves to repository ID 804509115, a fork of `sneako/finch` (ID 217153245). The current-name check does not establish which repository hosted the historical task. Verify the selected Finch task’s base commit and PR lineage before runtime validation. No other dataset name currently resolves to either Finch ID, so this does not create an additional identified cap collision.
 
 These checks establish current GitHub identities, not complete historical lineage or absence of shared code across independent repositories. The 30 pairs remain provisional pending control reviews and runtime validation. No paid model calls.
+
+## Finch lineage resolved — 5 October 2026
+
+PR https://github.com/sneako/finch/pull/47 has the exact dataset base commit 5aa06f16f54841b138625791cb22c2da63865367, title and creation timestamp. Historical repository ID is 217153245 (now sneako/finch), not the newer fork currently at keathley/finch. Preserve the dataset repo name for image/workdir resolution. No other selected task refers to that original repository, so the cap remains valid. Evidence: finch_lineage.json.
