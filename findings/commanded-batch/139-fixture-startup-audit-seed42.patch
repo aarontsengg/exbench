@@ -1,0 +1,32 @@
+--- a/test/subscriptions/subscriptions_test.exs
++++ b/test/subscriptions/subscriptions_test.exs
+@@ -5,6 +5,7 @@
+   alias Commanded.Subscriptions
+ 
+   setup do
++    {:ok, _} = Application.ensure_all_started(:commanded)
+     Subscriptions.reset()
+   end
+ 
+--- a/test/pubsub/local_pubsub_test.exs
++++ b/test/pubsub/local_pubsub_test.exs
+@@ -7,6 +7,7 @@
+ 
+   setup do
+     Application.put_env(:commanded, :pubsub, :local)
++    {:ok, _} = Application.ensure_all_started(:commanded)
+ 
+     on_exit(fn ->
+       Application.delete_env(:commanded, :pubsub)
+--- a/test/aggregates/aggregate_lifespan_test.exs
++++ b/test/aggregates/aggregate_lifespan_test.exs
+@@ -81,7 +81,8 @@
+             use Commanded.Commands.Router
+ 
+             dispatch [OpenAccount],
+-              to: BankAccount,
++              to: Commanded.ExampleDomain.OpenAccountHandler,
++              aggregate: BankAccount,
+               lifespan: BankAccountLifespan,
+               identity: :account_number
+           end

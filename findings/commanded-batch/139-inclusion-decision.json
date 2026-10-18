@@ -1,0 +1,23 @@
+{
+  "instance_id": "commanded__commanded-139",
+  "decision": "hold_for_specification_mismatch",
+  "date": "2026-10-17",
+  "original_status_unchanged": true,
+  "sample_membership_unchanged": true,
+  "reason": "Exact exception messages are asserted but not specified verbatim by the issue or supplemental interface. The repaired handler fixture addresses wrong-cause failure, not this separate fairness concern.",
+  "affected_assertions": [
+    "should prevent duplicate registrations for a command",
+    "should prevent registration for a command handler without a `handle/2` function",
+    "deprecated `after_command/1` callback should fail to compile when missing `after_event/1` function"
+  ],
+  "interface_sha256": "0b118fad0a39eedbdc8e2d26b0f1fd09f5b700624af18687daf1177419c307a2",
+  "audit": {
+    "path": "findings/commanded-batch/TEST_ALIGNMENT_AUDIT.md",
+    "sha256": "83c9e568b3bf4e2be72eb046f98304aa6ff30215cdff233acb2bb459df319eb3"
+  },
+  "resolution_options": [
+    "Version an explicit error-message contract in agent-facing requirements consistently with the benchmark prompt policy.",
+    "Version tests against documented error behavior with a justified, consistently applied assertion policy."
+  ],
+  "model_calls": 0
+}

@@ -1,0 +1,26 @@
+--- a/test/subscriptions/subscriptions_test.exs
++++ b/test/subscriptions/subscriptions_test.exs
+@@ -5,6 +5,7 @@
+   alias Commanded.Subscriptions
+ 
+   setup do
++    {:ok, _} = Application.ensure_all_started(:commanded)
+     Subscriptions.reset()
+   end
+ 
+--- a/test/pubsub/phoenix_pubsub_test.exs
++++ b/test/pubsub/phoenix_pubsub_test.exs
+@@ -15,9 +15,12 @@
+       ]
+     )
+ 
+-    {:ok, _pid} = Supervisor.start_link(PhoenixPubSub.child_spec(), strategy: :one_for_one)
++    {:ok, pid} = Supervisor.start_link(PhoenixPubSub.child_spec(), strategy: :one_for_one)
++
++    Process.unlink(pid)
+ 
+     on_exit(fn ->
++      Supervisor.stop(pid)
+       Application.delete_env(:commanded, :pubsub)
+     end)
+   end
