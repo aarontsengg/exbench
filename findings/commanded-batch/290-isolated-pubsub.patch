@@ -1,0 +1,44 @@
+--- a/test/pubsub/local_pubsub_test.exs
++++ b/test/pubsub/local_pubsub_test.exs
+@@ -4,13 +4,14 @@
+   use PubSubTestCase, pubsub: LocalPubSub
+ 
+   setup do
++    Application.stop(:commanded)
+     Application.put_env(:commanded, :pubsub, :local)
+ 
+-    if Process.whereis(Commanded.PubSub.LocalPubSub) == nil do
+-      {:ok, _pid} = Supervisor.start_link(LocalPubSub.child_spec(), strategy: :one_for_one)
+-    end
++    {:ok, pid} = Supervisor.start_link(LocalPubSub.child_spec(), strategy: :one_for_one)
++    Process.unlink(pid)
+ 
+     on_exit(fn ->
++      Supervisor.stop(pid)
+       Application.delete_env(:commanded, :pubsub)
+     end)
+   end
+--- a/test/pubsub/phoenix_pubsub_test.exs
++++ b/test/pubsub/phoenix_pubsub_test.exs
+@@ -4,6 +4,7 @@
+   use PubSubTestCase, pubsub: PhoenixPubSub
+ 
+   setup do
++    Application.stop(:commanded)
+     Application.put_env(
+       :commanded,
+       :pubsub,
+@@ -13,9 +14,12 @@
+       ]
+     )
+ 
+-    {:ok, _pid} = Supervisor.start_link(PhoenixPubSub.child_spec(), strategy: :one_for_one)
++    {:ok, pid} = Supervisor.start_link(PhoenixPubSub.child_spec(), strategy: :one_for_one)
++
++    Process.unlink(pid)
+ 
+     on_exit(fn ->
++      Supervisor.stop(pid)
+       Application.delete_env(:commanded, :pubsub)
+     end)
+   end

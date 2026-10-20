@@ -1,0 +1,13 @@
+--- a/test/process_managers/process_manager_subscription_test.exs
++++ b/test/process_managers/process_manager_subscription_test.exs
+@@ -65,6 +65,10 @@
+ 
+     assert_receive {:subscribed, ^subscription}
+ 
++    # Wait for the router to finish installing its subscription monitor.
++    %{subscription_ref: ref} = :sys.get_state(pid)
++    assert is_reference(ref)
++
+     {:ok, pid}
+   end
+ 

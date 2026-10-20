@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-19",
+  "model_calls": 0,
+  "selected_for_final_sample": false,
+  "tasks": {
+    "139": {
+      "variant": "evaluation_variants/commanded__commanded-139--integration-v1.json",
+      "sha256": "03b21b786e2c0300a3300f4a095f75e19a9122a2c345840b370bd7fb99c0c820",
+      "tests": 179,
+      "expected_base_failures": 7,
+      "gold_failures": 0,
+      "seeds": [
+        42,
+        7
+      ],
+      "status": "local_controls_verified",
+      "evidence": {
+        "path": "findings/grader/all-commanded-integration.json",
+        "sha256": "e6082944942f3ae0425f533fd2443a963f88c9f3570aeaf271fd239e9d308ff9"
+      }
+    },
+    "171": {
+      "variant": "evaluation_variants/commanded__commanded-171--integration-v3.json",
+      "sha256": "cd640193b5f76bfc514db7285e1e83b7018b2f14605390a32a4ac8a500bf1596",
+      "tests": 202,
+      "expected_base_failures": 1,
+      "gold_failures": 0,
+      "seeds": [
+        42,
+        7
+      ],
+      "status": "local_controls_verified",
+      "evidence": {
+        "path": "findings/grader/all-commanded-integration-final-171.json",
+        "sha256": "5281889136efb2ca0fdd9ffe9e7fdcd1b6795221f42c538e59cfe0b9098605b6"
+      }
+    },
+    "290": {
+      "variant": "evaluation_variants/commanded__commanded-290--integration-v2.json",
+      "sha256": "7fb578518e7633fe57663665fbfec13d72235e7fd933618d2c65a9ce540f21a9",
+      "tests": 212,
+      "expected_base_failures": 5,
+      "gold_failures": 0,
+      "seeds": [
+        42,
+        7
+      ],
+      "status": "local_controls_verified",
+      "evidence": {
+        "path": "findings/grader/all-commanded-integration-followups.json",
+        "sha256": "2a0aa5b97d34673528e9a9472bf39913f60fa755629811fca5c45fe0b2333d05"
+      }
+    },
+    "335": {
+      "variant": "evaluation_variants/commanded__commanded-335--integration-v2.json",
+      "sha256": "e57d24adf9bc5102925886a809cfad851fa33188b3e4b6cdcfce397cd1b61114",
+      "tests": 340,
+      "expected_base_failures": 18,
+      "gold_failures": 0,
+      "seeds": [
+        42,
+        7
+      ],
+      "status": "local_controls_verified",
+      "evidence": {
+        "path": "findings/grader/all-commanded-integration-followups.json",
+        "sha256": "2a0aa5b97d34673528e9a9472bf39913f60fa755629811fca5c45fe0b2333d05"
+      }
+    },
+    "380": {
+      "variant": "evaluation_variants/commanded__commanded-380--integration-v3.json",
+      "sha256": "ba8bbb8a52483722c8c733bc8b1ad788269963aa83b22da737895ca8eab77e47",
+      "tests": 360,
+      "expected_base_failures": 1,
+      "gold_failures": 0,
+      "seeds": [
+        42,
+        7
+      ],
+      "status": "local_controls_verified",
+      "evidence": {
+        "path": "findings/grader/all-commanded-integration-final-380.json",
+        "sha256": "ccd33b14780649564661eb04889c3175ab0cc34eb5327080d7b321e8354eb455"
+      }
+    }
+  },
+  "known_caveat": "The historical #171 deposit timeout has not been causally explained; repaired fixture checks do not prove absence of all intermittent failures."
+}

@@ -1,0 +1,1841 @@
+{
+  "variant_id": "commanded__commanded-380--historical-reviewed-v1",
+  "upstream_instance_id": "commanded__commanded-380",
+  "dataset": {
+    "dataset": "nebius/SWE-rebench-V2",
+    "revision": "475dd5e8703bb5fb22dd3c60b5d038b019eba1e0",
+    "sha256": "0e0bf9355f892ad74ae98d4e1c404f39fd6654a8e351ee3e6ab162e4a64cd3ad",
+    "size_bytes": 428839266
+  },
+  "status": "two_seed_diagnostic_transition_verified",
+  "selected_for_final_sample": false,
+  "image_id": "sha256:632341a24c4a5de42b131930b3595be4ddaf11a8e88b695d35ac1af092eb2570",
+  "base_commit": "4a6df4a3fc3e318805574ca9cab5cef0a83617e3",
+  "platform": "linux/amd64",
+  "network": "none",
+  "start_epmd": true,
+  "shared_patch": null,
+  "parser": {
+    "path": "findings/commanded-batch/parse_qualified_historical.py",
+    "sha256": "e275a1aae43523c9ec2412df65ab8dfab07eab7cda7b8941990837cbce70d206",
+    "identity": [
+      "module",
+      "test"
+    ],
+    "requires_serial_trace": true
+  },
+  "prompt_fields": [
+    "problem_statement",
+    "interface"
+  ],
+  "interface_sha256": "078f213d2c846427c496b17837c6d6ef105753a3dd63944e70bc5a3ddbd5fa4c",
+  "upstream_expected": {
+    "FAIL_TO_PASS": [
+      "process manager event applying error should call `error/3` callback on exception"
+    ],
+    "PASS_TO_PASS": [
+      "aggregate case `assert_error/2`",
+      "aggregate case `assert_error/3` with `Commanded.Aggregate.Multi` command function",
+      "aggregate case `assert_events/3` with `Commanded.Aggregate.Multi` command function",
+      "aggregate case `assert_state/2`",
+      "aggregate case `assert_error/3`",
+      "aggregate case `assert_events/2`",
+      "aggregate case `assert_events/3` with list of historical events",
+      "aggregate case `assert_state/3`",
+      "aggregate case `assert_events/3` with single historical event",
+      "subscribe to single stream should skip existing events when subscribing from current position",
+      "subscribe to all streams should receive events already appended to any stream",
+      "delete subscription should create new subscription after deletion",
+      "subscribe to all streams should receive events appended to any stream",
+      "subscribe to single stream should prevent duplicate subscriptions",
+      "subscribe to single stream should receive `:subscribed` message once subscribed",
+      "subscribe to single stream should receive events appended to stream",
+      "subscribe to all streams should skip existing events when subscribing from current position",
+      "subscribe to single stream should receive events already apended to stream",
+      "subscription process should stop subscription process when subscriber down",
+      "unsubscribe from all streams should resume subscription when subscribing again",
+      "transient subscription to single stream should receive events appended to the stream",
+      "delete subscription should be deleted",
+      "unsubscribe from all streams should not receive further events appended to any stream",
+      "transient subscription to all streams should receive events appended to any stream",
+      "subscribe to single stream should not receive events appended to another stream",
+      "subscription process should not stop subscriber process when subscription down",
+      "transient subscription to single stream should not receive events appended to another stream",
+      "resume subscription should remember last seen event number when subscription resumes",
+      "subscribe to all streams should receive `:subscribed` message once subscribed",
+      "subscribe to all streams should prevent duplicate subscriptions",
+      "single stream event handler should be only be notified of events appended to subscribed stream",
+      "append events to a stream should fail with `:stream_exists` parameter when stream does not exist",
+      "stream events from an existing stream should read from single stream",
+      "stream events from an existing stream should read events",
+      "append events to a stream should fail to append to a stream because of wrong expected version",
+      "append events to a stream should append events with `:no_stream` parameter",
+      "append events to a stream should fail when stream aleady exists with `:no_stream` parameter",
+      "stream events from an existing stream should read events in batches",
+      "append events to a stream should fail to append to a stream because of wrong expected version when no stream",
+      "event store adapter should implement `Commanded.EventStore.Adapter` behaviour",
+      "append events to a stream should append events with `:any_version` without checking expected version",
+      "append events to a stream should append events with `:stream_exists` parameter",
+      "append events to a stream should append events",
+      "stream events from an unknown stream should return stream not found error",
+      "should accept :infinity as timeout option",
+      "should allow timeout to be specified during command registration",
+      "should succeed when timeout is overridden during dispatch",
+      "should succeed when handler completes within configured timeout",
+      "pub/sub should receive broadcast message",
+      "tracker should ignore duplicate tracks for existing process",
+      "tracker should list tracked processes",
+      "process manager `:infinity` idle timeout should stop instance on demand",
+      "process manager idle timeout should shutdown instance after inactivity",
+      "process manager `:infinity` idle timeout should not shutdown instance",
+      "process manager idle timeout should stop instance on demand",
+      "should allow decoding of nested JSON data",
+      "should allow decoding of deserialized value from JSON",
+      "should start a process manager in response to an event",
+      "open aggregate should ensure a string identity",
+      "open aggregate should not allow an integer, float, or atom as aggregate identity",
+      "optional `:strong` consistency should timeout waiting for strongly consistent event handler to handle event",
+      "aggregate identity prefix should append events to stream using prefixed aggregate uuid",
+      "event handlers should allow strongly consistent event handler to dispatch a command",
+      "event handlers should timeout waiting for strongly consistent handler dispatching a command",
+      "aggregate identity prefix should wait for strongly consistent event handler to handle event",
+      "event handlers should wait for strongly consistent event handler to handle event",
+      "event handlers should not wait when command creates no events",
+      "optional `:strong` consistency should only wait for opt-in strongly consistent event handler to handle event",
+      "event handlers should timeout waiting for strongly consistent event handler to handle event",
+      "process manager consistency should successfully dispatch command",
+      "should serialize event to JSON",
+      "should deserialize to event type module name",
+      "should deserialize event from JSON",
+      "process manager strict routing should start instance on `:start!`",
+      "process manager strict routing should continue processing events after `:skip` error",
+      "process manager strict routing should rescue `interested?` errors",
+      "process manager strict routing should continue instance on `:continue!`",
+      "process manager routing should start instance on `:continue`",
+      "process manager routing should stop instance on `:stop`",
+      "process manager strict routing should error on `:start!` when instance already started",
+      "process manager routing should start instance on `:start`",
+      "process manager routing should continue instance on `:continue`",
+      "process manager routing should ignore an empty list returned on `:start`",
+      "process manager routing should continue existing instance on `:start`",
+      "process manager strict routing should error on `:continue` when instance not already started",
+      "refute_receive_event/1 should succeed when event not received",
+      "refute_receive_event/1 should fail when event received on stream",
+      "refute_receive_event/1 should fail when event received",
+      "refute_receive_event/1 should ignore events appending to another stream",
+      "assert_receive_event/2 should fail when unknown event type",
+      "assert_receive_event/3 should succeed when event received",
+      "refute_receive_event/1 should fail when event received matching predicate",
+      "refute_receive_event/1 should succeed when event not received matching predicate",
+      "assert_receive_event/2 should succeed when event received",
+      "assert_receive_event/2 should fail when event not received",
+      "assert_receive_event/3 should fail when event not received",
+      "assert_receive_event/2 should fail when no events received",
+      "refute_receive_event/1 should ignore events previously appended to stream",
+      "should execute middleware failure callback when aggregate process dies",
+      "should let a middleware update the metadata",
+      "should call middleware for each command dispatch",
+      "should execute middleware failure callback when aggregate process errors",
+      "should execute middleware failure callback when aggregate process returns an error tagged tuple",
+      "`whereis_name/1` should return `PID` when process registered",
+      "`start_link/3` should return existing process when already started",
+      "`whereis_name/1` should return `:undefined` when not registered",
+      "`supervisor_child_spec/2` should return a valid child_spec",
+      "`start_child/3` should return child process PID on success",
+      "`start_link/3` should return process PID on success",
+      "`whereis_name/1` should return `PID` when child registered",
+      "`start_child/3` should return existing child process when already started",
+      "event handler macro should provide `__name__/0` function",
+      "event handler should handle published events",
+      "appending handler should receive events created before the event handler's subscription when starting from `:origin`",
+      "event handler name should error when parsing empty string",
+      "event handler name should parse tuple to string",
+      "event handler name should parse string",
+      "reset event handler should be reset when starting from `:origin`",
+      "reset event handler should be reset when starting from `:current`",
+      "event handler name should error when parsing `nil`",
+      "appending handler should ignore already seen events",
+      "should allow using event handler module as name",
+      "event handling should handle received events",
+      "Mix task must be able to reset Can reset an event handler",
+      "should ensure an event handler name is provided",
+      "event handling should ignore unexpected messages",
+      "appending handler should ignore events created before the event handler's subscription when starting from `:current`",
+      "event handling should ignore uninterested events",
+      "event handler name should parse atom to string",
+      "should ensure an application is provided",
+      "concurrency error should retry command",
+      "concurrency error should error after too many attempts",
+      "aggregate lifespan should shutdown after `after_command/1` timeout",
+      "aggregate lifespan should reopen the aggregate to execute command if it is stopped by an error",
+      "aggregate lifespan should reopen the aggregate to execute command if it is stopped by the previous command",
+      "aggregate lifespan should shutdown after `after_error/1` timeout",
+      "aggregate lifespan should call `after_event/1` callback function",
+      "aggregate lifespan should shutdown after `after_event/1` timeout",
+      "aggregate lifespan should stop process when requested",
+      "aggregate lifespan should call `after_error/1` callback function on error",
+      "aggregate lifespan should use `:infinity` lifespan by default",
+      "aggregate lifespan should use default `after_event/1` lifespan when none specified'",
+      "aggregate lifespan should adhere to aggregate lifespan when receiving published events after taking snapshot",
+      "aggregate lifespan should use default `after_error/1` lifespan when none specified'",
+      "aggregate lifespan should call `after_command/1` callback function when no domain events",
+      "aggregate lifespan should use default `after_command/1` lifespan when none specified'",
+      "aggregate lifespan should not shutdown if another command executed",
+      "upcast events received by aggregate should receive upcasted events",
+      "upcast events received by event handler will receive upcasted events",
+      "upcast events from event store stream forward will not upcast an event without an upcaster",
+      "upcast events from event store stream forward can adapt new event from old event",
+      "upcast events received by process manager will receive upcasted events",
+      "upcast events from event store stream forward will upcast using defined upcaster",
+      "identify aggregate using `String.Chars` protocol should dispatch command to aggregate instance",
+      "invalid identity should error",
+      "dispatch return execution result should return created events",
+      "application dispatch return aggregate state should allow default to be overridden during dispatch",
+      "application dispatch return aggregate state should return aggregate's updated version",
+      "dispatch include aggregate version should return aggregate's updated version",
+      "dispatch return aggregate state should return an error on failure",
+      "dispatch return aggregate version should return aggregate's updated version",
+      "dispatch return execution result should return an error on failure",
+      "dispatch return disabled should return `:ok`",
+      "dispatch return aggregate state should return aggregate's updated state",
+      "dispatch return aggregate version should return an error on failure",
+      "dispatch return disabled should return an error on failure",
+      "dispatch include execution result should return created events",
+      "should stop event handler when invalid error response returned",
+      "should retry event handler after delay on error",
+      "event handler `error/3` callback function should call on exception",
+      "should call `error/3` callback function on invalid `handle/2` return value",
+      "should retry event handler on error",
+      "event handling exception handling should print the stack trace",
+      "event handler `error/3` callback function should call on error",
+      "should stop event handler on error by default",
+      "event handling exception handling should include the stack trace in failure context",
+      "should skip event on error",
+      "should reload persisted events when restarting aggregate process",
+      "should reload persisted events in batches when restarting aggregate process",
+      "should persist pending events in order applied",
+      "should persist event metadata",
+      "should prefix stream UUID with aggregate identity prefix",
+      "should not persist events when command returns no events",
+      "process manager dispatch command error should retry command with specified delay between attempts",
+      "process manager dispatch command exception should stop process manager",
+      "process manager dispatch command error should continue with modified command",
+      "process manager event handling error should call `error/3` callback on exception",
+      "process manager dispatch command error should skip the event when error reply is `{:skip, :continue_pending}`",
+      "process manager event handling exception should print the stack trace",
+      "process manager event handling error should call `error/3` callback on error",
+      "process manager dispatch command error should retry the event until process manager requests stop",
+      "process manager event handling exception should include the stack trace in failure context",
+      "process manager dispatch command error should stop process manager on error by default",
+      "identify aggregate prefix by string should dispatch command to registered handler",
+      "identify aggregate using function should append events to stream",
+      "should allow multiple module registrations for different command handlers",
+      "identify aggregate using function should dispatch command to registered handler",
+      "identify aggregate prefix by function should dispatch command to registered handler",
+      "routing to aggregate should dispatch command to registered handler",
+      "routing to aggregate should fail to dispatch unregistered command",
+      "should ensure identity field is present",
+      "identify aggregate prefix by string should append events to stream using identity prefix",
+      "should show a helpful message when bad argument given to a `dispatch/2` function",
+      "routing to command handler should dispatch command to registered handler",
+      "should allow multiple module registrations for multiple commands in a single dispatch",
+      "should prevent duplicate registrations for a command",
+      "routing to command handler should fail to dispatch command with `nil` identity",
+      "routing to aggregate should allow dispatching to a function other than execute/2",
+      "routing to command handler should fail to dispatch unregistered command",
+      "should allow setting metadata",
+      "identify aggregate prefix by function should append events to stream using identity prefix",
+      "should prevent duplicate identity for an aggregate",
+      "config provided to `child_spec` should use overriden config when provided",
+      "config provided to `start_link/1` should use overriden config when provided",
+      "config provided to `start_link/1` should use default config when not provided",
+      "should validate provided config",
+      "should default to `:eventual` consistency and start from `:origin`",
+      "config provided to `start_link/1` should use config defined in handler",
+      "config provided to `child_spec` should use config defined in handler",
+      "global config change to default consistency should default to `:eventual` consistency and start from `:origin`",
+      "should create process instance for each identifier returned by `interested?/2`",
+      "composite router composed of composite router should dispatch command to registered handler",
+      "composite router should fail to dispatch unregistered command",
+      "composite router should fail to compile when duplicate commands registered",
+      "composite router should register all commands",
+      "composite router should dispatch command to registered handler with options",
+      "composite router composed of composite router should register all commands",
+      "composite router should dispatch command to registered handler",
+      "process manager subscription should monitor subscription and terminate process manager on shutdown",
+      "should retry subscription on error",
+      "`correlation_id` should be set on all created events",
+      "event handler dispatch command should copy `correlation_id` from handled event",
+      "`causation_id` should be copied onto commands/events by process manager",
+      "`correlation_id` should default to a generated UUID when not provided",
+      "`correlation_id` should be copied onto commands/events by process manager",
+      "`causation_id` should be `nil` when not provided",
+      "`causation_id` should be set from `command_uuid` on created event",
+      "`correlation_id` should be copied to dispatched command",
+      "`causation_id` should be copied to dispatched command",
+      "event handler dispatch command should copy `causation_id` from handled event",
+      "should execute command using `Commanded.Aggregate.Multi` and return any error",
+      "nested `Commanded.Aggregate.Multi` should be supported",
+      "should return `Commanded.Aggregate.Multi` from command",
+      "should execute command using `Commanded.Aggregate.Multi` and return events",
+      "nested `Commanded.Aggregate.Multi` should reduce enum",
+      "should return errors encountered by `Commanded.Aggregate.Multi`",
+      "should convert an event to its type",
+      "should convert module struct to type",
+      "should convert a type to its struct",
+      "reset!/0 wipes all data from memory",
+      "should stop process router when handling event errors",
+      "should stop process router when handling event exception",
+      "process manager instance should allow using process manager module as name",
+      "process manager instance should provide `__name__/0` function",
+      "process manager instance should ensure a process manager application is provided",
+      "process manager instance handles an event and dispatches a command",
+      "process manager instance ignore unexpected messages",
+      "process manager instance should ensure a process manager name is provided",
+      "process manager instance get current process identity",
+      "dynamic application process manager should only receive events from named application",
+      "aggregate process ignore unexpected messages",
+      "aggregate process log exception",
+      "dynamic application event handler should only receive events from named application",
+      "dynamic Commanded applications should allow the same application to be started multiple times with dynamic names",
+      "dynamic application command dispatch should dispatch to named application",
+      "dynamic Commanded applications should ensure name is an atom",
+      "dynamic Commanded applications should not allow an application to be started more than once with the same name",
+      "dynamic application command dispatch should error without application name",
+      "dynamic Commanded applications should allow name to be provided when starting an application",
+      "notify subscribers should immediately succeed when no registered handlers",
+      "notify subscribers should wait for all subscriptions to ack event",
+      "notify subscribers should ignore events before requested",
+      "notify subscribers should immediately succeed when excluding handler process",
+      "register subscription should ack event",
+      "register subscription should require all subscriptions to ack event",
+      "notify subscribers should allow subscriptions to skip events when ack",
+      "notify subscribers should immediately succeed when waited event has already been ack'd",
+      "expire stream acks should expire stale acks",
+      "expire stream acks should not expire fresh acks",
+      "notify subscribers should wait for each configured handler consistency",
+      "register subscription should replace registered subscription PID",
+      "register subscription should ignore current process as handler",
+      "register subscription should not remove PID when process terminates",
+      "notify subscribers should succeed when waited event is ack'd",
+      "notify subscribers should allow per-handler consistency",
+      "event store prefix should append events to named event store",
+      "with snapshotting configured should shapshot again when interval reached",
+      "decode snapshot data should parse datetime",
+      "mismatched snapshot versions should ignore older snapshot versions",
+      "restore snapshot should restore state from snapshot when present",
+      "with snapshotting configured should not shapshot when fewer snapshot interval",
+      "with snapshotting configured should shapshot when exactly snapshot interval",
+      "restore snapshot should restore state from events when no snapshot",
+      "with snapshotting disabled should not shapshot",
+      "with zero shapshot interval should not shapshot when set to 0",
+      "with snapshotting configured should shapshot when more than snapshot interval",
+      "with snapshotting disabled should ignore existing snapshot",
+      "restore snapshot should restore state from snapshot and any newer events when present",
+      "event handler `init/0` callback should be called",
+      "event handler `init/0` callback after subscribed should be called after subscription subscribed",
+      "event handler subscription should monitor subscription and terminate handler on shutdown",
+      "event handler subscription should retry subscription on error",
+      "should not timeout and shutdown process manager by default",
+      "should timeout and shutdown process manager when `event_timeout` configured",
+      "should start process manager instance and successfully dispatch command",
+      "should ignore past events when starting subscription from current",
+      "should ignore uninteresting events",
+      "append event directly to aggregate stream should notify aggregate and mutate its state",
+      "append event directly to aggregate stream should stop aggregate process when unexpected event received",
+      "append event directly to aggregate stream should ignore already seen events",
+      "delete a snapshot should delete the snapshot",
+      "record a snapshot should record the snapshot",
+      "read a snapshot should error when snapshot does not exist",
+      "read a snapshot should read the snapshot",
+      "should resume a process manager with same state when process restarts",
+      "command dispatch return should allow single events return value",
+      "command dispatch return should allow `{:ok, event}` tagged tuple return value",
+      "command dispatch return should allow `:ok` return value",
+      "command dispatch return should allow `nil` return value",
+      "command dispatch return should allow event list return value",
+      "execute command against an aggregate",
+      "aggregate raising an exception should not persist pending events or state",
+      "command dispatch return should allow `[]` return value",
+      "execute command via a command handler",
+      "command dispatch return should allow `{:ok, [event]}` tagged tuple return value",
+      "should not dispatch the command when middleware halts pipeline",
+      "should allow middleware to set dispatch response",
+      "dispatch command to dynamic application set in middleware",
+      "raise `RuntimeError` when application not started",
+      "a Commanded application should expose a pubsub adapter",
+      "a Commanded application should expose a registry adapter",
+      "a Commanded application should register process using application name",
+      "a Commanded application should expose an event store adapter",
+      "a Commanded application should allow application config to be provided by `init/1` callback function",
+      "a Commanded application should not allow an application to be started more than once",
+      "should stop event handler on error",
+      "should receive the aggregate state in the context",
+      "dispatch command should be dispatched via an application",
+      "dispatch command should be dispatched via a router",
+      "a Commanded application should remove config when application stopped",
+      "a Commanded application should get application event store config",
+      "a Commanded application should get application registry config",
+      "a Commanded application should get application pubsub config"
+    ]
+  },
+  "variant_expected": {
+    "FAIL_TO_PASS": [
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager event applying error should call `error/3` callback on exception"
+      }
+    ],
+    "PASS_TO_PASS": [
+      {
+        "module": "Commanded.Aggregate.MultiTest",
+        "test": "nested `Commanded.Aggregate.Multi` should be supported"
+      },
+      {
+        "module": "Commanded.Aggregate.MultiTest",
+        "test": "nested `Commanded.Aggregate.Multi` should reduce enum"
+      },
+      {
+        "module": "Commanded.Aggregate.MultiTest",
+        "test": "should execute command using `Commanded.Aggregate.Multi` and return any error"
+      },
+      {
+        "module": "Commanded.Aggregate.MultiTest",
+        "test": "should execute command using `Commanded.Aggregate.Multi` and return events"
+      },
+      {
+        "module": "Commanded.Aggregate.MultiTest",
+        "test": "should return `Commanded.Aggregate.Multi` from command"
+      },
+      {
+        "module": "Commanded.Aggregate.MultiTest",
+        "test": "should return errors encountered by `Commanded.Aggregate.Multi`"
+      },
+      {
+        "module": "Commanded.AggregateCaseTest",
+        "test": "aggregate case `assert_error/2`"
+      },
+      {
+        "module": "Commanded.AggregateCaseTest",
+        "test": "aggregate case `assert_error/3`"
+      },
+      {
+        "module": "Commanded.AggregateCaseTest",
+        "test": "aggregate case `assert_error/3` with `Commanded.Aggregate.Multi` command function"
+      },
+      {
+        "module": "Commanded.AggregateCaseTest",
+        "test": "aggregate case `assert_events/2`"
+      },
+      {
+        "module": "Commanded.AggregateCaseTest",
+        "test": "aggregate case `assert_events/3` with `Commanded.Aggregate.Multi` command function"
+      },
+      {
+        "module": "Commanded.AggregateCaseTest",
+        "test": "aggregate case `assert_events/3` with list of historical events"
+      },
+      {
+        "module": "Commanded.AggregateCaseTest",
+        "test": "aggregate case `assert_events/3` with single historical event"
+      },
+      {
+        "module": "Commanded.AggregateCaseTest",
+        "test": "aggregate case `assert_state/2`"
+      },
+      {
+        "module": "Commanded.AggregateCaseTest",
+        "test": "aggregate case `assert_state/3`"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateConcurrencyTest",
+        "test": "concurrency error should error after too many attempts"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateConcurrencyTest",
+        "test": "concurrency error should retry command"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should adhere to aggregate lifespan after taking snapshot"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should adhere to aggregate lifespan when receiving published events after taking snapshot"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should call `after_command/1` callback function when no domain events"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should call `after_error/1` callback function on error"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should call `after_event/1` callback function"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should not shutdown if another command executed"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should reopen the aggregate to execute command if it is stopped by an error"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should reopen the aggregate to execute command if it is stopped by the previous command"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should shutdown after `after_command/1` timeout"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should shutdown after `after_error/1` timeout"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should shutdown after `after_event/1` timeout"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should stop process when requested"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should use `:infinity` lifespan by default"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should use default `after_command/1` lifespan when none specified'"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should use default `after_error/1` lifespan when none specified'"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateLifespanTest",
+        "test": "aggregate lifespan should use default `after_event/1` lifespan when none specified'"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateSubscriptionTest",
+        "test": "append event directly to aggregate stream should ignore already seen events"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateSubscriptionTest",
+        "test": "append event directly to aggregate stream should notify aggregate and mutate its state"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateSubscriptionTest",
+        "test": "append event directly to aggregate stream should stop aggregate process when unexpected event received"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateTest",
+        "test": "aggregate process ignore unexpected messages"
+      },
+      {
+        "module": "Commanded.Aggregates.AggregateTest",
+        "test": "aggregate process log exception"
+      },
+      {
+        "module": "Commanded.Aggregates.EventPersistenceTest",
+        "test": "should not persist events when command returns no events"
+      },
+      {
+        "module": "Commanded.Aggregates.EventPersistenceTest",
+        "test": "should persist event metadata"
+      },
+      {
+        "module": "Commanded.Aggregates.EventPersistenceTest",
+        "test": "should persist pending events in order applied"
+      },
+      {
+        "module": "Commanded.Aggregates.EventPersistenceTest",
+        "test": "should prefix stream UUID with aggregate identity prefix"
+      },
+      {
+        "module": "Commanded.Aggregates.EventPersistenceTest",
+        "test": "should reload persisted events in batches when restarting aggregate process"
+      },
+      {
+        "module": "Commanded.Aggregates.EventPersistenceTest",
+        "test": "should reload persisted events when restarting aggregate process"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "aggregate raising an exception should not persist pending events or state"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "command dispatch return should allow `:ok` return value"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "command dispatch return should allow `[]` return value"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "command dispatch return should allow `nil` return value"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "command dispatch return should allow `{:ok, [event]}` tagged tuple return value"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "command dispatch return should allow `{:ok, event}` tagged tuple return value"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "command dispatch return should allow event list return value"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "command dispatch return should allow single events return value"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "execute command against an aggregate"
+      },
+      {
+        "module": "Commanded.Aggregates.ExecuteCommandTest",
+        "test": "execute command via a command handler"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "decode snapshot data should parse datetime"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "mismatched snapshot versions should ignore older snapshot versions"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "restore snapshot should restore state from events when no snapshot"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "restore snapshot should restore state from snapshot and any newer events when present"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "restore snapshot should restore state from snapshot when present"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "with snapshotting configured should not shapshot when fewer snapshot interval"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "with snapshotting configured should shapshot again when interval reached"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "with snapshotting configured should shapshot when exactly snapshot interval"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "with snapshotting configured should shapshot when more than snapshot interval"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "with snapshotting disabled should ignore existing snapshot"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "with snapshotting disabled should not shapshot"
+      },
+      {
+        "module": "Commanded.Aggregates.SnapshottingTest",
+        "test": "with zero shapshot interval should not shapshot when set to 0"
+      },
+      {
+        "module": "Commanded.Aggregates.SupervisorTest",
+        "test": "open aggregate should ensure a string identity"
+      },
+      {
+        "module": "Commanded.Aggregates.SupervisorTest",
+        "test": "open aggregate should not allow an integer, float, or atom as aggregate identity"
+      },
+      {
+        "module": "Commanded.Application.ConfigTest",
+        "test": "a Commanded application should get application event store config"
+      },
+      {
+        "module": "Commanded.Application.ConfigTest",
+        "test": "a Commanded application should get application pubsub config"
+      },
+      {
+        "module": "Commanded.Application.ConfigTest",
+        "test": "a Commanded application should get application registry config"
+      },
+      {
+        "module": "Commanded.Application.ConfigTest",
+        "test": "a Commanded application should remove config when application stopped"
+      },
+      {
+        "module": "Commanded.ApplicationTest",
+        "test": "a Commanded application should allow application config to be provided by `init/1` callback function"
+      },
+      {
+        "module": "Commanded.ApplicationTest",
+        "test": "a Commanded application should expose a pubsub adapter"
+      },
+      {
+        "module": "Commanded.ApplicationTest",
+        "test": "a Commanded application should expose a registry adapter"
+      },
+      {
+        "module": "Commanded.ApplicationTest",
+        "test": "a Commanded application should expose an event store adapter"
+      },
+      {
+        "module": "Commanded.ApplicationTest",
+        "test": "a Commanded application should fail to start unconfigured application"
+      },
+      {
+        "module": "Commanded.ApplicationTest",
+        "test": "a Commanded application should not allow an application to be started more than once"
+      },
+      {
+        "module": "Commanded.ApplicationTest",
+        "test": "a Commanded application should register process using application name"
+      },
+      {
+        "module": "Commanded.Commands.CommandTimeoutTest",
+        "test": "should accept :infinity as timeout option"
+      },
+      {
+        "module": "Commanded.Commands.CommandTimeoutTest",
+        "test": "should allow timeout to be specified during command registration"
+      },
+      {
+        "module": "Commanded.Commands.CommandTimeoutTest",
+        "test": "should succeed when handler completes within configured timeout"
+      },
+      {
+        "module": "Commanded.Commands.CommandTimeoutTest",
+        "test": "should succeed when timeout is overridden during dispatch"
+      },
+      {
+        "module": "Commanded.Commands.CompositeRouterTest",
+        "test": "composite router composed of composite router should dispatch command to registered handler"
+      },
+      {
+        "module": "Commanded.Commands.CompositeRouterTest",
+        "test": "composite router composed of composite router should register all commands"
+      },
+      {
+        "module": "Commanded.Commands.CompositeRouterTest",
+        "test": "composite router should dispatch command to registered handler"
+      },
+      {
+        "module": "Commanded.Commands.CompositeRouterTest",
+        "test": "composite router should dispatch command to registered handler with options"
+      },
+      {
+        "module": "Commanded.Commands.CompositeRouterTest",
+        "test": "composite router should fail to compile when duplicate commands registered"
+      },
+      {
+        "module": "Commanded.Commands.CompositeRouterTest",
+        "test": "composite router should fail to dispatch unregistered command"
+      },
+      {
+        "module": "Commanded.Commands.CompositeRouterTest",
+        "test": "composite router should register all commands"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "`causation_id` should be `nil` when not provided"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "`causation_id` should be copied onto commands/events by process manager"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "`causation_id` should be copied to dispatched command"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "`causation_id` should be set from `command_uuid` on created event"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "`correlation_id` should be copied onto commands/events by process manager"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "`correlation_id` should be copied to dispatched command"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "`correlation_id` should be set on all created events"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "`correlation_id` should default to a generated UUID when not provided"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "event handler dispatch command should copy `causation_id` from handled event"
+      },
+      {
+        "module": "Commanded.Commands.CorrelationCasuationTest",
+        "test": "event handler dispatch command should copy `correlation_id` from handled event"
+      },
+      {
+        "module": "Commanded.Commands.CustomIdentityRoutingTest",
+        "test": "identify aggregate using `String.Chars` protocol should dispatch command to aggregate instance"
+      },
+      {
+        "module": "Commanded.Commands.CustomIdentityRoutingTest",
+        "test": "invalid identity should error"
+      },
+      {
+        "module": "Commanded.Commands.DispatchCommandTest",
+        "test": "dispatch command should be dispatched via a router"
+      },
+      {
+        "module": "Commanded.Commands.DispatchCommandTest",
+        "test": "dispatch command should be dispatched via an application"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "aggregate identity prefix should append events to stream using prefixed aggregate uuid"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "aggregate identity prefix should wait for strongly consistent event handler to handle event"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "event handlers should allow strongly consistent event handler to dispatch a command"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "event handlers should not wait when command creates no events"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "event handlers should timeout waiting for strongly consistent event handler to handle event"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "event handlers should timeout waiting for strongly consistent handler dispatching a command"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "event handlers should wait for strongly consistent event handler to handle event"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "optional `:strong` consistency should only wait for opt-in strongly consistent event handler to handle event"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "optional `:strong` consistency should timeout waiting for strongly consistent event handler to handle event"
+      },
+      {
+        "module": "Commanded.Commands.DispatchConsistencyTest",
+        "test": "process manager consistency should successfully dispatch command"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "application dispatch return aggregate state should allow default to be overridden during dispatch"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "application dispatch return aggregate state should return aggregate's updated version"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch include aggregate version should return aggregate's updated version"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch include execution result should return created events"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch return aggregate state should return aggregate's updated state"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch return aggregate state should return an error on failure"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch return aggregate version should return aggregate's updated version"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch return aggregate version should return an error on failure"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch return disabled should return `:ok`"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch return disabled should return an error on failure"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch return execution result should return an error on failure"
+      },
+      {
+        "module": "Commanded.Commands.DispatchReturnTest",
+        "test": "dispatch return execution result should return created events"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "identify aggregate prefix by function should append events to stream using identity prefix"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "identify aggregate prefix by function should dispatch command to registered handler"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "identify aggregate prefix by string should append events to stream using identity prefix"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "identify aggregate prefix by string should dispatch command to registered handler"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "identify aggregate using function should append events to stream"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "identify aggregate using function should dispatch command to registered handler"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "routing to aggregate should allow dispatching to a function other than execute/2"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "routing to aggregate should dispatch command to registered handler"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "routing to aggregate should fail to dispatch unregistered command"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "routing to command handler should dispatch command to registered handler"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "routing to command handler should fail to dispatch command with `nil` identity"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "routing to command handler should fail to dispatch unregistered command"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "should allow multiple module registrations for different command handlers"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "should allow multiple module registrations for multiple commands in a single dispatch"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "should allow setting metadata"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "should ensure identity field is present"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "should prevent duplicate identity for an aggregate"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "should prevent duplicate registrations for a command"
+      },
+      {
+        "module": "Commanded.Commands.RoutingCommandsTest",
+        "test": "should show a helpful message when bad argument given to a `dispatch/2` function"
+      },
+      {
+        "module": "Commanded.DistributedSubscriptionsTest",
+        "test": "distributed subscriptions should be registered on all nodes"
+      },
+      {
+        "module": "Commanded.DynamicApplicationsTest",
+        "test": "dynamic Commanded applications should allow name to be provided when starting an application"
+      },
+      {
+        "module": "Commanded.DynamicApplicationsTest",
+        "test": "dynamic Commanded applications should allow the same application to be started multiple times with dynamic names"
+      },
+      {
+        "module": "Commanded.DynamicApplicationsTest",
+        "test": "dynamic Commanded applications should ensure name is an atom"
+      },
+      {
+        "module": "Commanded.DynamicApplicationsTest",
+        "test": "dynamic Commanded applications should not allow an application to be started more than once with the same name"
+      },
+      {
+        "module": "Commanded.DynamicApplicationsTest",
+        "test": "dynamic application command dispatch should dispatch to named application"
+      },
+      {
+        "module": "Commanded.DynamicApplicationsTest",
+        "test": "dynamic application command dispatch should error without application name"
+      },
+      {
+        "module": "Commanded.DynamicApplicationsTest",
+        "test": "dynamic application event handler should only receive events from named application"
+      },
+      {
+        "module": "Commanded.Event.DefaultEventHandlerErrorHandlingTest",
+        "test": "should stop event handler on error"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "event handler `error/3` callback function should call on error"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "event handler `error/3` callback function should call on exception"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "event handling exception handling should include the stack trace in failure context"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "event handling exception handling should print the stack trace"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "should call `error/3` callback function on invalid `handle/2` return value"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "should retry event handler after delay on error"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "should retry event handler on error"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "should skip event on error"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "should stop event handler on error by default"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerErrorHandlingTest",
+        "test": "should stop event handler when invalid error response returned"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerMacroTest",
+        "test": "event handler macro should provide `__name__/0` function"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerMacroTest",
+        "test": "event handler should handle published events"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerSubscribeToStreamTest",
+        "test": "single stream event handler should be only be notified of events appended to subscribed stream"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerSubscriptionTest",
+        "test": "event handler subscription should monitor subscription and terminate handler on shutdown"
+      },
+      {
+        "module": "Commanded.Event.EventHandlerSubscriptionTest",
+        "test": "event handler subscription should retry subscription on error"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "Mix task must be able to reset Can reset an event handler"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "appending handler should ignore already seen events"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "appending handler should ignore events created before the event handler's subscription when starting from `:current`"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "appending handler should receive events created before the event handler's subscription when starting from `:origin`"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "event handler name should error when parsing `nil`"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "event handler name should error when parsing empty string"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "event handler name should parse atom to string"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "event handler name should parse string"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "event handler name should parse tuple to string"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "event handling should handle received events"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "event handling should ignore unexpected messages"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "event handling should ignore uninterested events"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "reset event handler should be reset when starting from `:current`"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "reset event handler should be reset when starting from `:origin`"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "should allow using event handler module as name"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "should ensure an application is provided"
+      },
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "should ensure an event handler name is provided"
+      },
+      {
+        "module": "Commanded.Event.HandlerConfigTest",
+        "test": "config provided to `child_spec` should use config defined in handler"
+      },
+      {
+        "module": "Commanded.Event.HandlerConfigTest",
+        "test": "config provided to `child_spec` should use overriden config when provided"
+      },
+      {
+        "module": "Commanded.Event.HandlerConfigTest",
+        "test": "config provided to `start_link/1` should use config defined in handler"
+      },
+      {
+        "module": "Commanded.Event.HandlerConfigTest",
+        "test": "config provided to `start_link/1` should use default config when not provided"
+      },
+      {
+        "module": "Commanded.Event.HandlerConfigTest",
+        "test": "config provided to `start_link/1` should use overriden config when provided"
+      },
+      {
+        "module": "Commanded.Event.HandlerConfigTest",
+        "test": "global config change to default consistency should default to `:eventual` consistency and start from `:origin`"
+      },
+      {
+        "module": "Commanded.Event.HandlerConfigTest",
+        "test": "should default to `:eventual` consistency and start from `:origin`"
+      },
+      {
+        "module": "Commanded.Event.HandlerConfigTest",
+        "test": "should validate provided config"
+      },
+      {
+        "module": "Commanded.Event.HandlerInitTest",
+        "test": "event handler `init/0` callback after subscribed should be called after subscription subscribed"
+      },
+      {
+        "module": "Commanded.Event.HandlerInitTest",
+        "test": "event handler `init/0` callback should be called"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "assert_receive_event/2 should fail when event not received"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "assert_receive_event/2 should fail when no events received"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "assert_receive_event/2 should fail when unknown event type"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "assert_receive_event/2 should succeed when event received"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "assert_receive_event/3 should fail when event not received"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "assert_receive_event/3 should succeed when event received"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "refute_receive_event/1 should fail when event received"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "refute_receive_event/1 should fail when event received matching predicate"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "refute_receive_event/1 should fail when event received on stream"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "refute_receive_event/1 should ignore events appending to another stream"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "refute_receive_event/1 should ignore events previously appended to stream"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "refute_receive_event/1 should succeed when event not received"
+      },
+      {
+        "module": "Commanded.EventAssertionsTest",
+        "test": "refute_receive_event/1 should succeed when event not received matching predicate"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "append events to a stream should append events"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "append events to a stream should append events with `:any_version` without checking expected version"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "append events to a stream should append events with `:no_stream` parameter"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "append events to a stream should append events with `:stream_exists` parameter"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "append events to a stream should fail to append to a stream because of wrong expected version"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "append events to a stream should fail to append to a stream because of wrong expected version when no stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "append events to a stream should fail when stream aleady exists with `:no_stream` parameter"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "append events to a stream should fail with `:stream_exists` parameter when stream does not exist"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "event store adapter should implement `Commanded.EventStore.Adapter` behaviour"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "stream events from an existing stream should read events"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "stream events from an existing stream should read events in batches"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "stream events from an existing stream should read from single stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.AppendEventsTest",
+        "test": "stream events from an unknown stream should return stream not found error"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.EventStorePrefixTest",
+        "test": "event store prefix should append events to named event store"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SnapshotTest",
+        "test": "delete a snapshot should delete the snapshot"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SnapshotTest",
+        "test": "read a snapshot should error when snapshot does not exist"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SnapshotTest",
+        "test": "read a snapshot should read the snapshot"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SnapshotTest",
+        "test": "record a snapshot should record the snapshot"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "delete subscription should be deleted"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "delete subscription should create new subscription after deletion"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "resume subscription should remember last seen event number when subscription resumes"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to all streams should prevent duplicate subscriptions"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to all streams should receive `:subscribed` message once subscribed"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to all streams should receive events already appended to any stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to all streams should receive events appended to any stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to all streams should skip existing events when subscribing from current position"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to single stream should not receive events appended to another stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to single stream should prevent duplicate subscriptions"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to single stream should receive `:subscribed` message once subscribed"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to single stream should receive events already apended to stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to single stream should receive events appended to stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscribe to single stream should skip existing events when subscribing from current position"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscription process should not stop subscriber process when subscription down"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "subscription process should stop subscription process when subscriber down"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "transient subscription to all streams should receive events appended to any stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "transient subscription to single stream should not receive events appended to another stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "transient subscription to single stream should receive events appended to the stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "unsubscribe from all streams should not receive further events appended to any stream"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemory.SubscriptionTest",
+        "test": "unsubscribe from all streams should resume subscription when subscribing again"
+      },
+      {
+        "module": "Commanded.EventStore.Adapters.InMemoryTest",
+        "test": "reset!/0 wipes all data from memory"
+      },
+      {
+        "module": "Commanded.GlobalRegistryTest",
+        "test": "`start_child/3` should return child process PID on success"
+      },
+      {
+        "module": "Commanded.GlobalRegistryTest",
+        "test": "`start_child/3` should return existing child process when already started"
+      },
+      {
+        "module": "Commanded.GlobalRegistryTest",
+        "test": "`start_link/3` should return existing process when already started"
+      },
+      {
+        "module": "Commanded.GlobalRegistryTest",
+        "test": "`start_link/3` should return process PID on success"
+      },
+      {
+        "module": "Commanded.GlobalRegistryTest",
+        "test": "`supervisor_child_spec/2` should return a valid child_spec"
+      },
+      {
+        "module": "Commanded.GlobalRegistryTest",
+        "test": "`whereis_name/1` should return `:undefined` when not registered"
+      },
+      {
+        "module": "Commanded.GlobalRegistryTest",
+        "test": "`whereis_name/1` should return `PID` when child registered"
+      },
+      {
+        "module": "Commanded.GlobalRegistryTest",
+        "test": "`whereis_name/1` should return `PID` when process registered"
+      },
+      {
+        "module": "Commanded.LocalRegistryTest",
+        "test": "`start_child/3` should return child process PID on success"
+      },
+      {
+        "module": "Commanded.LocalRegistryTest",
+        "test": "`start_child/3` should return existing child process when already started"
+      },
+      {
+        "module": "Commanded.LocalRegistryTest",
+        "test": "`start_link/3` should return existing process when already started"
+      },
+      {
+        "module": "Commanded.LocalRegistryTest",
+        "test": "`start_link/3` should return process PID on success"
+      },
+      {
+        "module": "Commanded.LocalRegistryTest",
+        "test": "`supervisor_child_spec/2` should return a valid child_spec"
+      },
+      {
+        "module": "Commanded.LocalRegistryTest",
+        "test": "`whereis_name/1` should return `:undefined` when not registered"
+      },
+      {
+        "module": "Commanded.LocalRegistryTest",
+        "test": "`whereis_name/1` should return `PID` when child registered"
+      },
+      {
+        "module": "Commanded.LocalRegistryTest",
+        "test": "`whereis_name/1` should return `PID` when process registered"
+      },
+      {
+        "module": "Commanded.Middleware.ApplicationMiddlewareTest",
+        "test": "dispatch command to dynamic application set in middleware"
+      },
+      {
+        "module": "Commanded.Middleware.ApplicationMiddlewareTest",
+        "test": "raise `RuntimeError` when application not started"
+      },
+      {
+        "module": "Commanded.Middleware.HaltingMiddlewareTest",
+        "test": "should allow middleware to set dispatch response"
+      },
+      {
+        "module": "Commanded.Middleware.HaltingMiddlewareTest",
+        "test": "should not dispatch the command when middleware halts pipeline"
+      },
+      {
+        "module": "Commanded.Middleware.MiddlewareTest",
+        "test": "should call middleware for each command dispatch"
+      },
+      {
+        "module": "Commanded.Middleware.MiddlewareTest",
+        "test": "should execute middleware failure callback when aggregate process dies"
+      },
+      {
+        "module": "Commanded.Middleware.MiddlewareTest",
+        "test": "should execute middleware failure callback when aggregate process errors"
+      },
+      {
+        "module": "Commanded.Middleware.MiddlewareTest",
+        "test": "should execute middleware failure callback when aggregate process returns an error tagged tuple"
+      },
+      {
+        "module": "Commanded.Middleware.MiddlewareTest",
+        "test": "should let a middleware update the metadata"
+      },
+      {
+        "module": "Commanded.ProcessManager.DynamicProcessManagerApplicationTest",
+        "test": "dynamic application process manager should only receive events from named application"
+      },
+      {
+        "module": "Commanded.ProcessManager.MultiRoutingTest",
+        "test": "should create process instance for each identifier returned by `interested?/2`"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingStateTest",
+        "test": "should receive the aggregate state in the context"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager dispatch command error should continue with modified command"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager dispatch command error should retry command with specified delay between attempts"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager dispatch command error should retry the event until process manager requests stop"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager dispatch command error should skip the event when error reply is `{:skip, :continue_pending}`"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager dispatch command error should stop process manager on error by default"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager dispatch command exception should stop process manager"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager event handling error should call `error/3` callback on error"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager event handling error should call `error/3` callback on exception"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager event handling exception should include the stack trace in failure context"
+      },
+      {
+        "module": "Commanded.ProcessManager.ProcessManagerErrorHandlingTest",
+        "test": "process manager event handling exception should print the stack trace"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager `:infinity` idle timeout should not shutdown instance"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager `:infinity` idle timeout should stop instance on demand"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager idle timeout should shutdown instance after inactivity"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager idle timeout should stop instance on demand"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerInstanceExceptionTest",
+        "test": "should stop process router when handling event errors"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerInstanceExceptionTest",
+        "test": "should stop process router when handling event exception"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerInstanceTest",
+        "test": "process manager instance get current process identity"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerInstanceTest",
+        "test": "process manager instance handles an event and dispatches a command"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerInstanceTest",
+        "test": "process manager instance ignore unexpected messages"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerInstanceTest",
+        "test": "process manager instance should allow using process manager module as name"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerInstanceTest",
+        "test": "process manager instance should ensure a process manager application is provided"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerInstanceTest",
+        "test": "process manager instance should ensure a process manager name is provided"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerInstanceTest",
+        "test": "process manager instance should provide `__name__/0` function"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIntegrationTest",
+        "test": "should start a process manager in response to an event"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should continue existing instance on `:start`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should continue instance on `:continue`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should ignore an empty list returned on `:start`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should start instance on `:continue`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should start instance on `:start`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should stop instance on `:stop`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should continue instance on `:continue!`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should continue processing events after `:skip` error"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should error on `:continue` when instance not already started"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should error on `:start!` when instance already started"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should rescue `interested?` errors"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should start instance on `:start!`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerSubscriptionTest",
+        "test": "process manager subscription should monitor subscription and terminate process manager on shutdown"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerSubscriptionTest",
+        "test": "should retry subscription on error"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerTimeoutTest",
+        "test": "should not timeout and shutdown process manager by default"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerTimeoutTest",
+        "test": "should timeout and shutdown process manager when `event_timeout` configured"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessRouterProcessPendingEventsTest",
+        "test": "should ignore past events when starting subscription from current"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessRouterProcessPendingEventsTest",
+        "test": "should ignore uninteresting events"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessRouterProcessPendingEventsTest",
+        "test": "should start process manager instance and successfully dispatch command"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ResumeProcessManagerTest",
+        "test": "should resume a process manager with same state when process restarts"
+      },
+      {
+        "module": "Commanded.PubSub.LocalPubSubTest",
+        "test": "pub/sub should receive broadcast message"
+      },
+      {
+        "module": "Commanded.PubSub.LocalPubSubTest",
+        "test": "tracker should ignore duplicate tracks for existing process"
+      },
+      {
+        "module": "Commanded.PubSub.LocalPubSubTest",
+        "test": "tracker should list tracked processes"
+      },
+      {
+        "module": "Commanded.PubSub.PhoenixPubSubTest",
+        "test": "pub/sub should receive broadcast message"
+      },
+      {
+        "module": "Commanded.PubSub.PhoenixPubSubTest",
+        "test": "tracker should ignore duplicate tracks for existing process"
+      },
+      {
+        "module": "Commanded.PubSub.PhoenixPubSubTest",
+        "test": "tracker should list tracked processes"
+      },
+      {
+        "module": "Commanded.Serialization.JsonDecoderTest",
+        "test": "should allow decoding of deserialized value from JSON"
+      },
+      {
+        "module": "Commanded.Serialization.JsonDecoderTest",
+        "test": "should allow decoding of nested JSON data"
+      },
+      {
+        "module": "Commanded.Serialization.JsonDecoderTest",
+        "test": "should serialize value to JSON"
+      },
+      {
+        "module": "Commanded.Serialization.JsonSerializerTest",
+        "test": "should deserialize event from JSON"
+      },
+      {
+        "module": "Commanded.Serialization.JsonSerializerTest",
+        "test": "should deserialize to event type module name"
+      },
+      {
+        "module": "Commanded.Serialization.JsonSerializerTest",
+        "test": "should serialize event to JSON"
+      },
+      {
+        "module": "Commanded.Serialization.ModuleNameTypeProviderTest",
+        "test": "should convert a type to its struct"
+      },
+      {
+        "module": "Commanded.Serialization.ModuleNameTypeProviderTest",
+        "test": "should convert an event to its type"
+      },
+      {
+        "module": "Commanded.Serialization.ModuleNameTypeProviderTest",
+        "test": "should convert module struct to type"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "expire stream acks should expire stale acks"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "expire stream acks should not expire fresh acks"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "notify subscribers should allow per-handler consistency"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "notify subscribers should allow subscriptions to skip events when ack"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "notify subscribers should ignore events before requested"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "notify subscribers should immediately succeed when excluding handler process"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "notify subscribers should immediately succeed when no registered handlers"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "notify subscribers should immediately succeed when waited event has already been ack'd"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "notify subscribers should succeed when waited event is ack'd"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "notify subscribers should wait for all subscriptions to ack event"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "notify subscribers should wait for each configured handler consistency"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "register subscription should ack event"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "register subscription should be registered"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "register subscription should ignore current process as handler"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "register subscription should not remove PID when process terminates"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "register subscription should replace registered subscription PID"
+      },
+      {
+        "module": "Commanded.SubscriptionsTest",
+        "test": "register subscription should require all subscriptions to ack event"
+      },
+      {
+        "module": "Event.UpcasterTest",
+        "test": "upcast events from event store stream forward can adapt new event from old event"
+      },
+      {
+        "module": "Event.UpcasterTest",
+        "test": "upcast events from event store stream forward will not upcast an event without an upcaster"
+      },
+      {
+        "module": "Event.UpcasterTest",
+        "test": "upcast events from event store stream forward will upcast using defined upcaster"
+      },
+      {
+        "module": "Event.UpcasterTest",
+        "test": "upcast events received by aggregate should receive upcasted events"
+      },
+      {
+        "module": "Event.UpcasterTest",
+        "test": "upcast events received by event handler will receive upcasted events"
+      },
+      {
+        "module": "Event.UpcasterTest",
+        "test": "upcast events received by process manager will receive upcasted events"
+      }
+    ]
+  },
+  "moved_to_regression_after_fixture_review": [],
+  "raw_test_count": 360,
+  "evidence": {
+    "path": "findings/commanded-batch/remaining-three-results.json",
+    "sha256": "a8fcf4edd5f39a6225d81921da8f864774c5df39f4c866532f24e3e78eb9d489"
+  },
+  "audit": "findings/commanded-batch/REMAINING_THREE_AUDIT.md",
+  "limitations": [
+    "Post-hoc historical runtime variant, not unchanged upstream validation.",
+    "Two seed runs under amd64 emulation do not establish a flakiness rate.",
+    "Failure assertions reviewed; retained complete regression inventory not exhaustively audited for fairness.",
+    "Local patch grader currently supports #171 only; this variant is not yet integrated."
+  ]
+}

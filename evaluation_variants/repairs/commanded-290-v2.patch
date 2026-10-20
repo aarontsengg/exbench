@@ -1,0 +1,70 @@
+--- a/test/process_managers/process_manager_idle_timeout_test.exs
++++ b/test/process_managers/process_manager_idle_timeout_test.exs
+@@ -31,9 +31,9 @@
+ 
+       instance = wait_for_process_instance(pm, aggregate_uuid)
+ 
++      ref = Process.monitor(instance)
++
+       :ok = ExampleRouter.dispatch(%Stop{aggregate_uuid: aggregate_uuid})
+-
+-      ref = Process.monitor(instance)
+       assert_receive {:DOWN, ^ref, :process, ^instance, :normal}
+     end
+   end
+@@ -61,9 +61,9 @@
+ 
+       instance = wait_for_process_instance(pm, aggregate_uuid)
+ 
++      ref = Process.monitor(instance)
++
+       :ok = ExampleRouter.dispatch(%Stop{aggregate_uuid: aggregate_uuid})
+-
+-      ref = Process.monitor(instance)
+       assert_receive {:DOWN, ^ref, :process, ^instance, :normal}
+     end
+   end
+--- a/test/pubsub/local_pubsub_test.exs
++++ b/test/pubsub/local_pubsub_test.exs
+@@ -4,13 +4,14 @@
+   use PubSubTestCase, pubsub: LocalPubSub
+ 
+   setup do
++    Application.stop(:commanded)
+     Application.put_env(:commanded, :pubsub, :local)
+ 
+-    if Process.whereis(Commanded.PubSub.LocalPubSub) == nil do
+-      {:ok, _pid} = Supervisor.start_link(LocalPubSub.child_spec(), strategy: :one_for_one)
+-    end
++    {:ok, pid} = Supervisor.start_link(LocalPubSub.child_spec(), strategy: :one_for_one)
++    Process.unlink(pid)
+ 
+     on_exit(fn ->
++      Supervisor.stop(pid)
+       Application.delete_env(:commanded, :pubsub)
+     end)
+   end
+--- a/test/pubsub/phoenix_pubsub_test.exs
++++ b/test/pubsub/phoenix_pubsub_test.exs
+@@ -4,6 +4,7 @@
+   use PubSubTestCase, pubsub: PhoenixPubSub
+ 
+   setup do
++    Application.stop(:commanded)
+     Application.put_env(
+       :commanded,
+       :pubsub,
+@@ -13,9 +14,12 @@
+       ]
+     )
+ 
+-    {:ok, _pid} = Supervisor.start_link(PhoenixPubSub.child_spec(), strategy: :one_for_one)
++    {:ok, pid} = Supervisor.start_link(PhoenixPubSub.child_spec(), strategy: :one_for_one)
++
++    Process.unlink(pid)
+ 
+     on_exit(fn ->
++      Supervisor.stop(pid)
+       Application.delete_env(:commanded, :pubsub)
+     end)
+   end

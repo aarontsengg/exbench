@@ -125,6 +125,8 @@ No one has published construct-level (OTP / macros / Ecto / Phoenix) agent resul
 
 ## Log
 
+- **19 Oct 2026 — Commanded grader repairs verified:** All five selected Commanded tasks (#139, #171, #290, #335, #380) now reproduce their recorded base failures and pass every reference test at seeds 42 and 7 in the versioned local grader. Repairs address test isolation, asynchronous setup/reset races, module-qualified test identity, and three unspecified literal-message assertions in #139. No production fixes were injected into the base controls. See [repair report](findings/grader/COMMANDED_REPAIRS.md) and [verified summary](findings/grader/commanded-integration-summary.json). The earlier one-off #171 deposit timeout remains causally unresolved. Original validation totals and final sample membership are unchanged; no model calls, commits, or pushes. This is a commit checkpoint before broader harness/eligibility work.
+
 - **20 Sep 2026:** Completed an AI-assisted patch audit of the existing 40-task sample (20 exact-A automatic OTP, 20 control). Preserved the first two user labels and reviewed the remaining 38. Results: 16 OTP, 22 control, 2 uncertain; 4 definite disagreements with the automatic tags. See [tag_audit/AUDIT.md](tag_audit/AUDIT.md). This is not independent human validation. Resolve uncertainty and recompute eligibility before sampling; automatic capacity 32 remains provisional. No paid model calls or task execution.
 
 - **15 Sep 2026 (a):** Dropped Kalshi. Chose an Elixir coding-agent benchmark. Web audit found no repo-level Elixir benchmark.

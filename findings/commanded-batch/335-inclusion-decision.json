@@ -1,0 +1,177 @@
+{
+  "instance_id": "commanded__commanded-335",
+  "date": "2026-10-18",
+  "decision": "hold_for_inconsistent_regression",
+  "sample_membership_unchanged": true,
+  "fixture": {
+    "path": "findings/commanded-batch/335-subscription-barrier.patch",
+    "sha256": "e4d9f748f2637f522686e988a612f3a8c150f1ba79bb1b9b1d27c17c543609a3"
+  },
+  "evidence": {
+    "path": "findings/commanded-batch/remaining-three-fixtures-results.json",
+    "sha256": "fa4af5d14f8447feec50b4b81832b8a8f0b159f6c2cc23ea9419a97af1ad9605"
+  },
+  "base_failures_by_seed": {
+    "42": [
+      {
+        "module": "Commanded.ProcessManager.DynamicProcessManagerApplicationTest",
+        "test": "dynamic application process manager should only receive events from named application"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager `:infinity` idle timeout should not shutdown instance"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager `:infinity` idle timeout should stop instance on demand"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager idle timeout should shutdown instance after inactivity"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager idle timeout should stop instance on demand"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should continue existing instance on `:start`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should continue instance on `:continue`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should ignore an empty list returned on `:start`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should start instance on `:continue`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should start instance on `:start`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should stop instance on `:stop`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should continue instance on `:continue!`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should continue processing events after `:skip` error"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should start instance on `:start!`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerTimeoutTest",
+        "test": "should not timeout and shutdown process manager by default"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerTimeoutTest",
+        "test": "should timeout and shutdown process manager when `event_timeout` configured"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessRouterProcessPendingEventsTest",
+        "test": "should ignore past events when starting subscription from current"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ResumeProcessManagerTest",
+        "test": "should resume a process manager with same state when process restarts"
+      }
+    ],
+    "7": [
+      {
+        "module": "Commanded.Event.HandleEventTest",
+        "test": "reset event handler should be reset when starting from `:current`"
+      },
+      {
+        "module": "Commanded.ProcessManager.DynamicProcessManagerApplicationTest",
+        "test": "dynamic application process manager should only receive events from named application"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager `:infinity` idle timeout should not shutdown instance"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager `:infinity` idle timeout should stop instance on demand"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager idle timeout should shutdown instance after inactivity"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerIdleTimeoutTest",
+        "test": "process manager idle timeout should stop instance on demand"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should continue existing instance on `:start`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should continue instance on `:continue`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should ignore an empty list returned on `:start`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should start instance on `:continue`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should start instance on `:start`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager routing should stop instance on `:stop`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should continue instance on `:continue!`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should continue processing events after `:skip` error"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerRoutingTest",
+        "test": "process manager strict routing should start instance on `:start!`"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerTimeoutTest",
+        "test": "should not timeout and shutdown process manager by default"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessManagerTimeoutTest",
+        "test": "should timeout and shutdown process manager when `event_timeout` configured"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ProcessRouterProcessPendingEventsTest",
+        "test": "should ignore past events when starting subscription from current"
+      },
+      {
+        "module": "Commanded.ProcessManagers.ResumeProcessManagerTest",
+        "test": "should resume a process manager with same state when process restarts"
+      }
+    ]
+  },
+  "additional_seed7_failure": [
+    {
+      "module": "Commanded.Event.HandleEventTest",
+      "test": "reset event handler should be reset when starting from `:current`"
+    }
+  ],
+  "gold_tests": 340,
+  "gold_failures_both_seeds": 0,
+  "note": "Subscription monitor barrier repaired one setup race; reset-from-current regression remains inconsistent. No scored variant created."
+}

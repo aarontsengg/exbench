@@ -1,0 +1,368 @@
+{
+  "image_id": "sha256:b148c7e9bb65de26b8193463e05645e10ec67be1cce61e30ac2c428a867bfc1f",
+  "model_calls": 0,
+  "assertions_changed": false,
+  "runs": [
+    {
+      "phase": "base",
+      "seed": 42,
+      "command": "mix test test/commands/correlation_causation_test.exs --trace --max-cases 1 --seed 42",
+      "log": "validation_runs/171-timeout-repeats/base-42.log",
+      "exit_code": 0,
+      "tests": [
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be `nil` when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be set from `command_uuid` on created event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be set on all created events",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should default to a generated UUID when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `causation_id` from handled event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `correlation_id` from handled event",
+          "status": "PASSED"
+        }
+      ],
+      "log_sha256": "987d1536adf0227eb578a1ec8852f6f4b07152db1f3b97fb73df4117440a2bcc"
+    },
+    {
+      "phase": "base",
+      "seed": 7,
+      "command": "mix test test/commands/correlation_causation_test.exs --trace --max-cases 1 --seed 7",
+      "log": "validation_runs/171-timeout-repeats/base-7.log",
+      "exit_code": 0,
+      "tests": [
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be `nil` when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be set from `command_uuid` on created event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be set on all created events",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should default to a generated UUID when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `causation_id` from handled event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `correlation_id` from handled event",
+          "status": "PASSED"
+        }
+      ],
+      "log_sha256": "b875790f969eb1b1efdeb30af301c23adc22d0d968fa7410cbf44fb02d5b519e"
+    },
+    {
+      "phase": "base",
+      "seed": 123,
+      "command": "mix test test/commands/correlation_causation_test.exs --trace --max-cases 1 --seed 123",
+      "log": "validation_runs/171-timeout-repeats/base-123.log",
+      "exit_code": 0,
+      "tests": [
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be `nil` when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be set from `command_uuid` on created event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be set on all created events",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should default to a generated UUID when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `causation_id` from handled event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `correlation_id` from handled event",
+          "status": "PASSED"
+        }
+      ],
+      "log_sha256": "57becc0435057e12d6ecf8847d296d804aa568fdbf218538b518178c309cebe5"
+    },
+    {
+      "phase": "gold",
+      "seed": 42,
+      "command": "mix test test/commands/correlation_causation_test.exs --trace --max-cases 1 --seed 42",
+      "log": "validation_runs/171-timeout-repeats/gold-42.log",
+      "exit_code": 0,
+      "tests": [
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be `nil` when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be set from `command_uuid` on created event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be set on all created events",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should default to a generated UUID when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `causation_id` from handled event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `correlation_id` from handled event",
+          "status": "PASSED"
+        }
+      ],
+      "log_sha256": "0a491b8010208056b63b51e912eb5e16a1b25aaaa88fe4117598189d38ebdc30"
+    },
+    {
+      "phase": "gold",
+      "seed": 7,
+      "command": "mix test test/commands/correlation_causation_test.exs --trace --max-cases 1 --seed 7",
+      "log": "validation_runs/171-timeout-repeats/gold-7.log",
+      "exit_code": 0,
+      "tests": [
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be `nil` when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be set from `command_uuid` on created event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be set on all created events",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should default to a generated UUID when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `causation_id` from handled event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `correlation_id` from handled event",
+          "status": "PASSED"
+        }
+      ],
+      "log_sha256": "22e996ac12034749f5b1ea405092ae15f707e14c76fc5c3563c07fcc55586e9d"
+    },
+    {
+      "phase": "gold",
+      "seed": 123,
+      "command": "mix test test/commands/correlation_causation_test.exs --trace --max-cases 1 --seed 123",
+      "log": "validation_runs/171-timeout-repeats/gold-123.log",
+      "exit_code": 0,
+      "tests": [
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be `nil` when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`causation_id` should be set from `command_uuid` on created event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied onto commands/events by process manager",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be copied to dispatched command",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should be set on all created events",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "`correlation_id` should default to a generated UUID when not provided",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `causation_id` from handled event",
+          "status": "PASSED"
+        },
+        {
+          "module": "Commanded.Commands.CorrelationCasuationTest",
+          "test": "event handler dispatch command should copy `correlation_id` from handled event",
+          "status": "PASSED"
+        }
+      ],
+      "log_sha256": "58fb2cb721d745f3c4e056c2183e04f2a2de2fa0a51ad5e9dfaec6644fc4f9f8"
+    }
+  ],
+  "complete": true
+}

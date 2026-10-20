@@ -42,3 +42,23 @@ sample. No automatic sample replacement or expansion is authorized by this file.
 
 `validation_policy.json` stores the reviewed evidence. `summarize_validation.py`
 checks that evidence before annotating the report, preserving original statuses.
+
+## Versioned test repairs (Commanded integration, 2026-10-18)
+
+For separately named evaluation variants, assert documented behavior and public
+error types. Exact error-message wording is required only when supplied by the
+agent-facing specification. Removing an unspecified literal-message check must
+retain the invalid-input case, expected exception type, and positive/regression
+coverage. Apply the same rule to OTP and control tasks. Preserve the original
+tests and results as upstream evidence.
+
+Test fixtures may synchronize on completion of the operation they intend to
+observe: subscription installation, acknowledgement delivery, reset completion,
+or monitoring before requesting shutdown. They must not implement the target
+production fix, skip a failing behavioral assertion, or silently increase a
+timeout to erase unexplained failures. Every repair is versioned and applied
+identically to empty/reference/candidate runs.
+
+Passing local integration checks do not automatically authorize final sample
+inclusion, imply all timing-sensitive behavior is stable, or establish complete
+issue coverage. Historical failures remain part of the evidence.

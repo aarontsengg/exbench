@@ -1,0 +1,47 @@
+--- a/test/event/event_handler_subscription_test.exs
++++ b/test/event/event_handler_subscription_test.exs
+@@ -106,6 +106,9 @@
+ 
+     assert_receive {:subscribed, ^subscription}
+ 
++    %{subscription: %{subscription_ref: ref}} = :sys.get_state(pid)
++    assert is_reference(ref)
++
+     {:ok, pid}
+   end
+ 
+--- a/test/event/handle_event_test.exs
++++ b/test/event/handle_event_test.exs
+@@ -102,6 +102,9 @@
+ 
+       send(handler, :reset)
+ 
++      # Same-sender system request runs after reset/resubscription completes.
++      :sys.get_state(handler)
++
+       Wait.until(fn ->
+         assert BankAccountHandler.current_accounts() == ["PREF_ACC123"]
+       end)
+@@ -123,6 +126,9 @@
+       :ok = BankAccountHandler.change_prefix("PREF_")
+ 
+       send(handler, :reset)
++
++      # Same-sender system request runs after reset/resubscription completes.
++      :sys.get_state(handler)
+ 
+       new_event = [%BankAccountOpened{account_number: "ACC1234", initial_balance: 1_000}]
+       :ok = EventStore.append_to_stream(BankApp, stream_uuid, 1, to_event_data(new_event))
+--- a/test/process_managers/process_manager_subscription_test.exs
++++ b/test/process_managers/process_manager_subscription_test.exs
+@@ -108,6 +108,10 @@
+ 
+     assert_receive {:subscribed, ^subscription}
+ 
++    # Wait for the router to finish installing its subscription monitor.
++    %{subscription: %{subscription_ref: ref}} = :sys.get_state(pid)
++    assert is_reference(ref)
++
+     {:ok, pid}
+   end
+ 

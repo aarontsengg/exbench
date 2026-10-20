@@ -4,6 +4,21 @@ These are separate from original upstream validation and the selected sample.
 Each variant records exact adjustments, original and revised expectations, and
 evidence. A successful variant is not automatically included in agent evaluation.
 
+## Current Commanded integration variants — 2026-10-18
+
+The current grader configurations are #139 integration-v1, #171 integration-v3,
+#290 integration-v2, #335 integration-v2, and #380 integration-v3. The sections
+below preserve earlier findings; these newer variants address the specific
+wording/fixture/parser problems recorded there. They do not amend upstream data
+or select tasks for the final sample.
+
+See `../GRADER.md` for usage and `../findings/grader/COMMANDED_REPAIRS.md` for
+repair rationale. Verified local controls are recorded separately in
+`../findings/grader/commanded-integration-summary.json`; manifest status remains
+the preparation-time candidate status so recorded manifest hashes stay stable.
+All failed intermediate runs remain in the findings. The one-off #171 deposit
+timeout is still an unresolved reliability caveat.
+
 ## Phoenix HTML #282 compatibility v1
 
 `phoenixframework__phoenix_html-282--compatibility-v1.json` records a verified
@@ -84,3 +99,16 @@ The new parser requires serial trace output and rejects missing summaries,
 inconsistent counts, orphan completions, and repeated completed identities.
 It is a diagnostic adapter, not yet integrated into the agent grader. Sample
 membership and original upstream validation results remain unchanged.
+
+## Remaining Commanded historical variants
+
+#290 and #380 now have `--historical-reviewed-v1` manifests with qualified
+identities and two-seed evidence. #290 uses an isolated PubSub test fixture and
+has five failures before the fix / all 212 passing after. #380 needs no fixture
+repair and has one failure before / all 360 passing after. These are diagnostic
+variants pending grader integration and final eligibility review.
+
+Run `.harness-venv/bin/python evaluation_variants/record_remaining_commanded.py`
+to verify saved results and regenerate them. #335 remains on hold: its repaired
+subscription-monitor fixture works, but a separate reset-from-current regression
+failed in one order. See `findings/commanded-batch/REMAINING_THREE_AUDIT.md`.

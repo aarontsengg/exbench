@@ -15,6 +15,11 @@ class GradingTests(unittest.TestCase):
         rows[1]['status'] = 'FAILED'
         self.assertFalse(assess(rows, self.expected, 0)['resolved'])
 
+    def test_duplicate_identity_rejected(self):
+        row = {'module': 'A', 'test': 'same', 'status': 'PASSED'}
+        with self.assertRaises(ValueError):
+            assess([row, row], self.expected, 0)
+
     def test_unexpected_test_is_not_silently_accepted(self):
         rows = [{'module': r['module'], 'test': r['test'], 'status': 'PASSED'}
                 for group in self.expected.values() for r in group]

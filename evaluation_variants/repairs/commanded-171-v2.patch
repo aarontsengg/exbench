@@ -1,0 +1,51 @@
+--- a/test/pubsub/phoenix_pubsub_test.exs
++++ b/test/pubsub/phoenix_pubsub_test.exs
+@@ -15,9 +15,12 @@
+       ]
+     )
+ 
+-    {:ok, _pid} = Supervisor.start_link(PhoenixPubSub.child_spec(), strategy: :one_for_one)
++    {:ok, pid} = Supervisor.start_link(PhoenixPubSub.child_spec(), strategy: :one_for_one)
++
++    Process.unlink(pid)
+ 
+     on_exit(fn ->
++      Supervisor.stop(pid)
+       Application.delete_env(:commanded, :pubsub)
+     end)
+   end
+--- a/test/subscriptions/subscriptions_test.exs
++++ b/test/subscriptions/subscriptions_test.exs
+@@ -5,6 +5,7 @@
+   alias Commanded.Subscriptions
+ 
+   setup do
++    {:ok, _} = Application.ensure_all_started(:commanded)
+     Subscriptions.reset()
+   end
+ 
+@@ -20,6 +21,7 @@
+     test "should ack event" do
+       :ok = Subscriptions.register("handler1", :strong)
+       :ok = Subscriptions.ack_event("handler1", :strong, %RecordedEvent{stream_id: "stream1", stream_version: 2})
++      assert :ok = Subscriptions.wait_for("stream1", 2, consistency: ["handler1"])
+ 
+       assert Subscriptions.handled?("stream1", 1)
+       assert Subscriptions.handled?("stream1", 2)
+@@ -30,13 +32,16 @@
+       :ok = Subscriptions.register("handler2", :strong)
+ 
+       :ok = Subscriptions.ack_event("handler1", :strong, %RecordedEvent{stream_id: "stream1", stream_version: 2})
++      assert :ok = Subscriptions.wait_for("stream1", 2, consistency: ["handler1"])
+       refute Subscriptions.handled?("stream1", 1)
+ 
+       :ok = Subscriptions.ack_event("handler2", :strong, %RecordedEvent{stream_id: "stream1", stream_version: 1})
++      assert :ok = Subscriptions.wait_for("stream1", 1, consistency: ["handler2"])
+       assert Subscriptions.handled?("stream1", 1)
+       refute Subscriptions.handled?("stream1", 2)
+ 
+       :ok = Subscriptions.ack_event("handler2", :strong, %RecordedEvent{stream_id: "stream1", stream_version: 2})
++      assert :ok = Subscriptions.wait_for("stream1", 2, consistency: ["handler2"])
+       assert Subscriptions.handled?("stream1", 1)
+       assert Subscriptions.handled?("stream1", 2)
+     end
