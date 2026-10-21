@@ -1,0 +1,35 @@
+{
+  "complete": true,
+  "model_calls": 0,
+  "image_id": "sha256:74945f8a23e48fcb1cd48a1c58c80a51de6776725b6cd989be4cd8ea699759ec",
+  "base_commit": "ec377ca3ed62fd805907b117f4c6c13c3bd31cdf",
+  "patch_hashes": {
+    "gold.patch": "a72255579460da44f46fd2cf0e9286da144ff68e202f5546e861d2d7a946e15b",
+    "trace.patch": "dd6755b94f66ad7ad57e0ba800967971aec5fa869880b19393a05a96975bd073",
+    "fixture.patch": "77978822ede26af4c32c7c479332f9c455e40079914f0b8b05d6398cf338683a",
+    "tests.patch": "0a78416c88ccd2c9ed538d88690b815b1591ae7394b844787fc8a18cfda72ff5"
+  },
+  "runs": {
+    "1": {
+      "exit_code": 2,
+      "files": {
+        "test.log": "7331b49302f81d14fcf7a99f7d529c200c1fa53eb4412df3f5b0ec9eaf5544fa",
+        "events.log": "bc7dee803a92f46784eb5c8ce63f62fedab7f5b950a80dd11e4003240f05edcd"
+      }
+    },
+    "2": {
+      "exit_code": 2,
+      "files": {
+        "test.log": "a12988bdb2a359cac6e386a81f0ebcbb30df88cd6a7904525feb48d04e54fb6f",
+        "events.log": "f6638bbd96ab82eebb5a6e01516763a1d6e317979397ed41e512707046dbdaa2"
+      }
+    },
+    "3": {
+      "exit_code": 0,
+      "files": {
+        "test.log": "f79acf6251b62d886af3490d44b0a05cba1f598ecb3d284d92c6feb0a957ce7d",
+        "events.log": "b4df168d71487350a2bc67bf31a2a24666d4fc9859d6f885e52bb9d627921124"
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-"""Local patch grader for versioned Commanded variants (no model calls).
+"""Local patch grader for versioned repository evaluations (no model calls).
 
 This first integration accepts production lib/ changes only. It is not an agent
 execution harness; prompts, model execution, and final sampling remain separate.
@@ -47,8 +47,8 @@ def main():
     evidence_refs = v.get('evidence', [])
     if isinstance(evidence_refs, dict):
         evidence_refs = [evidence_refs]
-    references = [v['parser'], *evidence_refs]
-    for key in ['shared_patch', 'qualified_evidence']:
+    references = [v['parser'], *v.get('parser_dependencies', []), *evidence_refs]
+    for key in ['shared_patch', 'production_patch', 'qualified_evidence']:
         if v.get(key): references.append(v[key])
     for item in references:
         assert sha((ROOT / item['path']).read_bytes()) == item['sha256'], item['path']
@@ -85,19 +85,28 @@ def main():
         Path(tmp, 'tests.patch').write_text(task['test_patch'])
         if v.get('shared_patch'):
             Path(tmp, 'fixture.patch').write_bytes((ROOT / v['shared_patch']['path']).read_bytes())
+        if v.get('production_patch'):
+            Path(tmp, 'production.patch').write_bytes((ROOT / v['production_patch']['path']).read_bytes())
         commands = ['set -e']
+        if v.get('production_patch'):
+            commands += [f'test "$(git rev-parse HEAD)" = {v["base_commit"]}',
+                         'git apply /patches/production.patch']
         if patch.strip():
             commands += ['git apply --check /patches/candidate.patch', 'git apply /patches/candidate.patch']
         commands += ['git apply /patches/tests.patch']
         if v.get('shared_patch'):
             commands.append('git apply /patches/fixture.patch')
-        commands += ['epmd -daemon', 'echo ' + marker, f'mix test --trace --include distributed --max-cases 1 --seed {args.seed}']
+        distributed = ' --include distributed' if v.get('include_distributed', True) else ''
+        commands += ['epmd -daemon', 'echo ' + marker, f'mix test --trace{distributed} --max-cases 1 --seed {args.seed}']
         result['test_command'] = commands[-1]
         try:
+            runtime_env = []
+            if v.get('erl_flags_override'):
+                runtime_env = ['-e', 'ERL_FLAGS=' + v['erl_flags_override']]
             with (out / 'test.log').open('w') as log:
                 run = subprocess.run([docker, 'run', '--rm', '--name', name, '--platform', 'linux/amd64',
-                                      '--network', 'none', '-v', tmp + ':/patches:ro', '-w', '/commanded',
-                                      v['image_id'], 'bash', '-c', '\n'.join(commands)],
+                                      '--network', 'none', '-v', tmp + ':/patches:ro', '-w', v.get('workdir', '/commanded'),
+                                      *runtime_env, v['image_id'], 'bash', '-c', '\n'.join(commands)],
                                      stdout=log, stderr=subprocess.STDOUT, timeout=300)
             result['exit_code'] = run.returncode
             text = (out / 'test.log').read_text()

@@ -4,6 +4,14 @@ Working name: **ExBench** (placeholder) Started: 15 Sep 2026
 
 ## Goal
 
+Latest diagnostic (20 Oct 2026): Broadway #95's cancellation test passes in
+both base/reference phases at seeds 42 and 7 after a test-only readiness batch.
+Base failures are consistently 19; reference passes all 101 checks. This
+changes the scenario from immediate shutdown to shutdown after successful
+processing, so it remains a diagnostic candidate pending explicit evaluation
+contract review. No sample/grader promotion or model calls. See
+`findings/broadway-repairs/REPORT.md` for evidence and limitations.
+
 Find out *which parts of Elixir* coding agents struggle with in real codebases, starting with OTP, and publish it as an open evaluation plus write-up. Build in public on Twitter and Substack.
 
 Success bar: a credible, reproducible finding the Elixir community shares and argues about, e.g. "agents handle functional Elixir but break on OTP" (or a clean null result).
@@ -125,6 +133,16 @@ No one has published construct-level (OTP / macros / Ecto / Phoenix) agent resul
 
 ## Log
 
+- **20 Oct 2026 — Broadway #40/#95 diagnostic repairs:** Replaced unspecified error-message suffix checks with exception-type checks and repaired #95 shutdown test exit handling, retaining message assertions. #95 reference passes 100 tests plus one doctest at seeds 42/7; its baseline has a specified missing API outside the upstream failure list and a variable cancellation failure. #40 reference passes seed 42 but has a batch-message mismatch at seed 7, plus a task-scope concern. Neither promoted to scoring. See [report](findings/broadway-repairs/REPORT.md). No model calls.
+
+- **20 Oct 2026 — Cachex #341 timing review:** Original hook-duration assertion exceeded its 35 ms upper bound by 0.746 ms. Two unchanged reference reruns on the same image pass all 200 qualified tests (seeds 42/7); both baseline runs cannot compile the explicitly requested warmer `name` field. Retain the original intermittent failure and a reliability caveat; no timeout relaxation, automatic inclusion, or status rewrite. See [report](findings/cachex-341/REPORT.md). No model calls.
+
+- **20 Oct 2026 — Cachex grader integration:** Added separately versioned #292/#294 manifests and repository-directory/parser-dependency support to the shared grader. At seed 42, empty submissions are rejected and reference submissions pass all 194/195 tests. #294 uses a required passing inventory without claiming observed individual baseline failures. Seven grader/adapter unit tests pass. See [integration report](findings/cachex-cluster/GRADER_INTEGRATION.md). No model calls or sample changes. Commit checkpoint before remaining task eligibility work.
+
+- **20 Oct 2026 — Cachex historical comparison:** Elixir 1.13.4 / OTP 24 with recorded emulation workaround and unchanged copied dependencies yields #292 base one intended failure / gold 194 passes, and #294 base missing-API compilation failure / gold 195 passes, each at seeds 42 and 7. Qualified parser recovers six identities merged by the upstream name-only parser. See [historical report](findings/cachex-cluster/HISTORICAL.md). No assertion changes, model calls, automatic sample inclusion, or original-status rewrites. Next: versioned Cachex grader integration. Suitable commit checkpoint.
+
+- **19 Oct 2026 — Cachex cluster diagnostic:** Reran #292/#294 with epmd started in both phases and verified unchanged image IDs. Cluster-startup errors disappeared. Reference #292 still fails memory-size and TTL assertions; #294 fails the memory-size assertion and its base cannot compile the requested `async` warmer API. Raw totals exceed upstream parsed-name counts by six in both suites. See [report](findings/cachex-cluster/REPORT.md). No sample/policy changes or model calls.
+
 - **19 Oct 2026 — Commanded grader repairs verified:** All five selected Commanded tasks (#139, #171, #290, #335, #380) now reproduce their recorded base failures and pass every reference test at seeds 42 and 7 in the versioned local grader. Repairs address test isolation, asynchronous setup/reset races, module-qualified test identity, and three unspecified literal-message assertions in #139. No production fixes were injected into the base controls. See [repair report](findings/grader/COMMANDED_REPAIRS.md) and [verified summary](findings/grader/commanded-integration-summary.json). The earlier one-off #171 deposit timeout remains causally unresolved. Original validation totals and final sample membership are unchanged; no model calls, commits, or pushes. This is a commit checkpoint before broader harness/eligibility work.
 
 - **20 Sep 2026:** Completed an AI-assisted patch audit of the existing 40-task sample (20 exact-A automatic OTP, 20 control). Preserved the first two user labels and reviewed the remaining 38. Results: 16 OTP, 22 control, 2 uncertain; 4 definite disagreements with the automatic tags. See [tag_audit/AUDIT.md](tag_audit/AUDIT.md). This is not independent human validation. Resolve uncertainty and recompute eligibility before sampling; automatic capacity 32 remains provisional. No paid model calls or task execution.
@@ -179,3 +197,38 @@ Before model evaluation, raised the shared repository cap from four to five. Rev
 - **12 Oct 2026 — second diagnostic batch:** Absinthe #1336 validated; Phoenix HTML #282 has the expected target transition but five persistent suite failures (date selection and EEx compatibility). Saved validation_batch_02_results.json. Added explicit subset exports to continue validation without finalizing the blocked draft. Drafted an X post and upstream issue report under findings/; neither published.
 
 - **14 Oct 2026 — full first validation pass completed:** All 60 draft tasks attempted across three batches. 23 pass strict base/gold checks (8 OTP, 15 control); 36 need investigation; Phoenix #2974 remains quarantined. 28 gold runs pass strict checks, including 5 with unresolved base compilation behavior. Separately, 47 match the official evaluator passing-test list; 19 of these still have failed tests/nonzero exit and fail our stricter gold rule. These are validation criteria differences, not agent scores. Only 4 original pairs have both members strictly validated. Total recorded test-phase wall time ~37.1 minutes excluding pulls. Reports: VALIDATION_RESULTS.md, validation_summary.json, findings/validation-triage.md. No paid model calls; no new exclusions, cap changes, or expectation rewrites. Next: settle/document baseline compilation handling and upstream-vs-strict grading, then investigate runtime compatibility/distributed-node setup on native amd64.
+
+
+Broadway #95 integration update (20 Oct 2026): a separately versioned readiness
+repair is documented, but actual grader integration remains on hold. Empty
+patches have 19 failures in both orders; reference seed 42 misses an
+acknowledgement in the separate no-batcher shutdown test, while seed 7 passes
+101 checks. No final selection or paid calls. See
+`findings/broadway-repairs/REPORT.md` and `grader-results-v1.json`.
+
+
+20 Oct 2026, Broadway #95 follow-up: a diagnostic no-batcher readiness check
+passes its target, but the seed-42 reference now fails incomplete-batch shutdown;
+seed 7 passes. Preserve the hold for broader shutdown variability. Additional
+repair remains diagnostic only. See findings/broadway-repairs/REPORT.md.
+
+20 Oct 2026, Broadway #95 trace: captured an incomplete-batch failure where the
+terminator exits without sending drain instructions. Source sends an async
+trap-exit request immediately before supervisor shutdown, with no completion
+handshake. Strong evidence of a production shutdown race; readiness patches
+are not a demonstrated root-cause fix. #95 stays on hold. See the Broadway
+report and trace-analysis-v3.json. No production fix or paid calls.
+
+20 Oct 2026, Broadway shutdown fix: synchronous terminator readiness handshake
+plus already-dead supervisor handling passes the reference's 101 checks at
+seeds 42, 7 and 123 without readiness warm-ups. Base retains identical 19
+failures. Focused regression fails before/passes after. Saved as a separately
+versioned production diagnostic, findings/broadway-repairs/95-handshake-v2.patch.
+Old grader manifest remains on hold pending a new integration version. No paid calls.
+
+20 Oct 2026, Broadway #95 grader v2 verified: applies a hashed production shutdown
+repair before candidate patches, without readiness workarounds. Empty fixes
+have exactly 19 failures and reference fixes pass 101 checks at seeds 42 and 7.
+Eight grader/parser unit tests pass. Future agent checkout must include the same
+repair. No final sample promotion, paid calls, commits or pushes. See
+findings/broadway-repairs/GRADER_V2.md. This is a progress-commit checkpoint.

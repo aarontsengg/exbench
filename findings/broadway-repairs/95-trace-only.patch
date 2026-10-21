@@ -1,0 +1,40 @@
+--- a/test/broadway_test.exs
++++ b/test/broadway_test.exs
+@@ -1203,6 +1203,37 @@
+ 
+     test "shutting down broadway waits until all events are processed even on incomplete batches",
+          %{broadway: broadway} do
++      # Diagnostic tracing only; no waits or readiness messages before shutdown.
++      {:registered_name, registered} = Process.info(broadway, :registered_name)
++      prefix = Atom.to_string(registered) <> "."
++      targets = for name <- Process.registered(),
++                    name == registered or String.starts_with?(Atom.to_string(name), prefix),
++                    pid = Process.whereis(name), do: {name, pid}
++      trace_path = System.fetch_env!("EXBENCH_TRACE_FILE")
++      {:ok, device} = File.open(trace_path, [:write])
++      IO.write(device, "TARGETS " <> inspect([{ :test, self()} | targets], limit: :infinity) <> "\n")
++      tracer = spawn(fn ->
++        loop = fn loop ->
++          receive do
++            {:finish, caller} -> File.close(device); send(caller, :trace_saved)
++            event ->
++              IO.write(device, inspect(event, limit: :infinity, printable_limit: :infinity, width: :infinity) <> "\n")
++              loop.(loop)
++          end
++        end
++        loop.(loop)
++      end)
++      traced = [self() | Enum.map(targets, &elem(&1, 1))]
++      Enum.each(traced, &:erlang.trace(&1, true, [:send, :receive, :procs, :monotonic_timestamp, {:tracer, tracer}]))
++      on_exit(fn ->
++        Enum.each(traced, fn pid ->
++          if Process.alive?(pid), do: :erlang.trace(pid, false, [:all])
++        end)
++        delivered = :erlang.trace_delivered(:all)
++        receive do {:trace_delivered, :all, ^delivered} -> :ok end
++        send(tracer, {:finish, self()})
++        receive do :trace_saved -> :ok after 5000 -> raise "trace flush failed" end
++      end)
+       ref = Broadway.test_messages(broadway, [1, 2], batch_mode: :bulk)
+       Process.exit(broadway, :shutdown)
+       assert_receive {:ack, ^ref, [%{data: 1}, %{data: 2}], []}

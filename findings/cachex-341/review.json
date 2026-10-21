@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-20",
+  "original_gold_log": "validation_runs/remaining-56/whitfin__cachex-341.gold.log",
+  "original_gold_sha256": "207bc3434d0257940b391468cdad4643efadf2daaad0d5ed45fc7b6b79f7a996",
+  "timing_source_url": "https://raw.githubusercontent.com/whitfin/cachex/b22cb1ffcd0763f011f1ed3868b8589147050052/test/cachex/services/informant_test.exs",
+  "timing_source_sha256": "65fef9b47d995f9e16657063c3dcbae2778171879681a8317a7a684792985985",
+  "repeat_report_sha256": "8470e6f1b07fb24c6773f33e7e47fd21f7f4741074d65dcdbe56b1c2553723a1",
+  "assessment": "reference passes two repeated orders; original intermittent timing failure retained; final eligibility pending",
+  "model_calls": 0
+}

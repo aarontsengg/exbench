@@ -1,0 +1,86 @@
+[
+  {
+    "task": "whitfin__cachex-292",
+    "path": ".travis.yml",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/6263cea1409fdf49cf9ae782a3c7ea8b2afc0d7b/.travis.yml",
+    "status": 404
+  },
+  {
+    "task": "whitfin__cachex-292",
+    "path": ".github/workflows/main.yml",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/6263cea1409fdf49cf9ae782a3c7ea8b2afc0d7b/.github/workflows/main.yml",
+    "status": 404
+  },
+  {
+    "task": "whitfin__cachex-292",
+    "path": "mix.exs",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/6263cea1409fdf49cf9ae782a3c7ea8b2afc0d7b/mix.exs",
+    "sha256": "8c7ff9fb9b1c17549e34e0e70029e7303a6aa0d56b09d855e004a5fbc7fb266b"
+  },
+  {
+    "task": "whitfin__cachex-292",
+    "path": "mix.lock",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/6263cea1409fdf49cf9ae782a3c7ea8b2afc0d7b/mix.lock",
+    "status": 404
+  },
+  {
+    "task": "whitfin__cachex-292",
+    "path": "test/cachex/actions/inspect_test.exs",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/6263cea1409fdf49cf9ae782a3c7ea8b2afc0d7b/test/cachex/actions/inspect_test.exs",
+    "sha256": "1263d3d685c934b0065f35abba6aa1e9c550819ac0d0f46abfe5fc8d4c533440"
+  },
+  {
+    "task": "whitfin__cachex-292",
+    "path": "test/cachex/actions/refresh_test.exs",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/6263cea1409fdf49cf9ae782a3c7ea8b2afc0d7b/test/cachex/actions/refresh_test.exs",
+    "sha256": "360033048916b0b38d859025fe6abbd991f533f3d5deb41c25ea84a0268e8572"
+  },
+  {
+    "task": "whitfin__cachex-294",
+    "path": ".travis.yml",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/e2f9338e8075127f4a9aec69eb2c19f547050969/.travis.yml",
+    "status": 404
+  },
+  {
+    "task": "whitfin__cachex-294",
+    "path": ".github/workflows/main.yml",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/e2f9338e8075127f4a9aec69eb2c19f547050969/.github/workflows/main.yml",
+    "status": 404
+  },
+  {
+    "task": "whitfin__cachex-294",
+    "path": "mix.exs",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/e2f9338e8075127f4a9aec69eb2c19f547050969/mix.exs",
+    "sha256": "0dcc09d60dd8471f748662df98c9a8a836438b5acc51a9f3875ebbd768741674"
+  },
+  {
+    "task": "whitfin__cachex-294",
+    "path": "mix.lock",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/e2f9338e8075127f4a9aec69eb2c19f547050969/mix.lock",
+    "status": 404
+  },
+  {
+    "task": "whitfin__cachex-294",
+    "path": "test/cachex/actions/inspect_test.exs",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/e2f9338e8075127f4a9aec69eb2c19f547050969/test/cachex/actions/inspect_test.exs",
+    "sha256": "99ecd1dad9ca2e7e987ffeae6c35f99b95d2405b0c907d0e8efbd260daad32da"
+  },
+  {
+    "task": "whitfin__cachex-294",
+    "path": "test/cachex/actions/refresh_test.exs",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/e2f9338e8075127f4a9aec69eb2c19f547050969/test/cachex/actions/refresh_test.exs",
+    "sha256": "fce4f8a8feed98ab1447ad36bb2896eaa1474c9b5f62ce6db8396a562daa57c3"
+  },
+  {
+    "task": "whitfin__cachex-292",
+    "path": ".github/workflows/ci.yml",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/6263cea1409fdf49cf9ae782a3c7ea8b2afc0d7b/.github/workflows/ci.yml",
+    "sha256": "5f158be9dd391ef79ad41b02f12d7cf09c5e8f5aff2e19b6ee1e01f3967abb6c"
+  },
+  {
+    "task": "whitfin__cachex-294",
+    "path": ".github/workflows/ci.yml",
+    "url": "https://raw.githubusercontent.com/whitfin/cachex/e2f9338e8075127f4a9aec69eb2c19f547050969/.github/workflows/ci.yml",
+    "sha256": "d4da226b18f0e13015bd1fc5d5f7933057b6c5ba5f858f6dbff97b0925f89863"
+  }
+]

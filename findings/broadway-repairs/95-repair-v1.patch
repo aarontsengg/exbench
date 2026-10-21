@@ -1,0 +1,37 @@
+--- a/test/broadway_test.exs
++++ b/test/broadway_test.exs
+@@ -424,7 +424,7 @@
+       assert capture_log(fn ->
+                Broadway.push_messages(broadway, [one, raise, four])
+                assert_receive {:ack, _, [%{data: 1}, %{data: 4}], []}
+-             end) =~ "[error] ** (UndefinedFunctionError) function Unknown.ack/3 is undefined"
++             end) =~ "[error] ** (UndefinedFunctionError)"
+ 
+       refute_received {:EXIT, _, ^processor}
+     end
+@@ -489,6 +489,8 @@
+ 
+     test "shutting down broadway waits until all events are processed",
+          %{broadway: broadway, producer: producer} do
++      Process.flag(:trap_exit, true)
++
+       # We suspend the producer to make sure that it doesn't process the messages early on
+       :sys.suspend(producer)
+       async_push_messages(producer, [1, 2, 3, 4])
+@@ -499,6 +501,7 @@
+       assert_receive {:ack, _, [%{data: 2}], []}
+       assert_receive {:ack, _, [%{data: 3}], []}
+       assert_receive {:ack, _, [%{data: 4}], []}
++      assert_receive {:EXIT, ^broadway, :shutdown}
+     end
+   end
+ 
+@@ -1112,7 +1115,7 @@
+                Broadway.push_messages(broadway, [one, two, raise, three])
+                ref = Broadway.test_messages(broadway, [1, 2, 3, 4], batch_mode: :bulk)
+                assert_receive {:ack, ^ref, [%{data: 1}, %{data: 2}, %{data: 3}, %{data: 4}], []}
+-             end) =~ "[error] ** (UndefinedFunctionError) function Unknown.ack/3 is undefined"
++             end) =~ "[error] ** (UndefinedFunctionError)"
+ 
+       refute_received {:EXIT, _, ^consumer}
+     end

@@ -1,0 +1,105 @@
+{
+  "model_calls": 0,
+  "runs": {
+    "1": {
+      "tests": 101,
+      "failed": [
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers shutting down broadway waits until all events are processed",
+          "status": "FAILED"
+        }
+      ],
+      "trace_sha256": "bc7dee803a92f46784eb5c8ce63f62fedab7f5b950a80dd11e4003240f05edcd",
+      "test_log_sha256": "7331b49302f81d14fcf7a99f7d529c200c1fa53eb4412df3f5b0ec9eaf5544fa"
+    },
+    "2": {
+      "tests": 101,
+      "failed": [
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "FAILED"
+        }
+      ],
+      "trace_sha256": "f6638bbd96ab82eebb5a6e01516763a1d6e317979397ed41e512707046dbdaa2",
+      "test_log_sha256": "a12988bdb2a359cac6e386a81f0ebcbb30df88cd6a7904525feb48d04e54fb6f"
+    },
+    "3": {
+      "tests": 101,
+      "failed": [],
+      "trace_sha256": "b4df168d71487350a2bc67bf31a2a24666d4fc9859d6f885e52bb9d627921124",
+      "test_log_sha256": "f79acf6251b62d886af3490d44b0a05cba1f598ecb3d284d92c6feb0a957ce7d"
+    }
+  },
+  "caution": "Trace receive events do not prove callback completion. No production repair applied.",
+  "failure_excerpt": [
+    {
+      "line": 23,
+      "event": "{:trace_ts, #PID<0.1558.0>, :send, {:ack, #PID<0.1558.0>, {:ok, #PID<0.1558.0>}}, #PID<0.1557.0>, -576460749528068582}"
+    },
+    {
+      "line": 26,
+      "event": "{:trace_ts, #PID<0.1557.0>, :send, {:ack, #PID<0.1557.0>, {:ok, #PID<0.1557.0>}}, #PID<0.1556.0>, -576460749527206499}"
+    },
+    {
+      "line": 39,
+      "event": "{:trace_ts, #PID<0.1560.0>, :send, {:ack, #PID<0.1560.0>, {:ok, #PID<0.1560.0>}}, #PID<0.1559.0>, -576460749527088207}"
+    },
+    {
+      "line": 45,
+      "event": "{:trace_ts, #PID<0.1559.0>, :send, {:ack, #PID<0.1559.0>, {:ok, #PID<0.1559.0>}}, #PID<0.1556.0>, -576460749527056999}"
+    },
+    {
+      "line": 64,
+      "event": "{:trace_ts, #PID<0.1563.0>, :send, {:ack, #PID<0.1563.0>, {:ok, #PID<0.1563.0>}}, #PID<0.1562.0>, -576460749526957291}"
+    },
+    {
+      "line": 82,
+      "event": "{:trace_ts, #PID<0.1565.0>, :send, {:ack, #PID<0.1565.0>, {:ok, #PID<0.1565.0>}}, #PID<0.1564.0>, -576460749526601374}"
+    },
+    {
+      "line": 86,
+      "event": "{:trace_ts, #PID<0.1564.0>, :send, {:ack, #PID<0.1564.0>, {:ok, #PID<0.1564.0>}}, #PID<0.1562.0>, -576460749526588166}"
+    },
+    {
+      "line": 91,
+      "event": "{:trace_ts, #PID<0.1562.0>, :send, {:ack, #PID<0.1562.0>, {:ok, #PID<0.1562.0>}}, #PID<0.1561.0>, -576460749526567124}"
+    },
+    {
+      "line": 93,
+      "event": "{:trace_ts, #PID<0.1561.0>, :send, {:ack, #PID<0.1561.0>, {:ok, #PID<0.1561.0>}}, #PID<0.1556.0>, -576460749526551707}"
+    },
+    {
+      "line": 99,
+      "event": "{:trace_ts, #PID<0.1566.0>, :register, Broadway27.Broadway.Terminator, -576460749526524582}"
+    },
+    {
+      "line": 100,
+      "event": "{:trace_ts, #PID<0.1566.0>, :send, {:ack, #PID<0.1566.0>, {:ok, #PID<0.1566.0>}}, #PID<0.1556.0>, -576460749526521791}"
+    },
+    {
+      "line": 102,
+      "event": "{:trace_ts, #PID<0.1556.0>, :send, {:ack, #PID<0.1556.0>, {:ok, #PID<0.1556.0>}}, #PID<0.1555.0>, -576460749526515749}"
+    },
+    {
+      "line": 104,
+      "event": "{:trace_ts, #PID<0.1555.0>, :send, {:ack, #PID<0.1555.0>, {:ok, #PID<0.1555.0>}}, #PID<0.1549.0>, -576460749526502707}"
+    },
+    {
+      "line": 121,
+      "event": "{:trace_ts, #PID<0.1555.0>, :send, {:\"$gen_cast\", :trap_exit}, Broadway27.Broadway.Terminator, -576460749525790999}"
+    },
+    {
+      "line": 123,
+      "event": "{:trace_ts, #PID<0.1566.0>, :receive, {:\"$gen_cast\", :trap_exit}, -576460749525767624}"
+    },
+    {
+      "line": 124,
+      "event": "{:trace_ts, #PID<0.1566.0>, :exit, :shutdown, -576460749525756874}"
+    }
+  ],
+  "failure_drain_signal_count": 0,
+  "95-server.ex_sha256": "5c82d909000b476b7a0fcec5f17bc1e32d51fafe7ee851d8e3b5a808f0bd3107",
+  "95-terminator.ex_sha256": "64a3b0fc15079c35ef8ddca5ae510867153a1886cdbea2ec8b0e54c5f4a5316c"
+}

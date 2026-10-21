@@ -9,6 +9,13 @@ Original validation statuses, sample membership, and grading rules are unchanged
 
 ## elixir-plug__plug-1245 — unrelated changes block the baseline
 
+**19 Oct follow-up:** the supplemental interface does specify both cookie
+accessors, so their absence is explained under issue-plus-interface prompting.
+However, additional SSL `certs_keys` requirements are not specified. The task
+remains on hold for this broader scope mismatch. See
+[the scope audit](plug-1245/REPORT.md); the bullets below preserve the initial
+issue-only review.
+
 - Issue: a router match using a functional plug (`to: :foo`) incorrectly calls `:foo.init/1`.
 - Base: `test/plug/session_test.exs` cannot compile because `get_resp_cookies/1` is undefined.
 - Test patch migrates many cookie assertions to `get_resp_cookies/1` and `get_cookies/1`.

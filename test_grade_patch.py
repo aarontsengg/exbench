@@ -6,6 +6,14 @@ class GradingTests(unittest.TestCase):
     expected = {'FAIL_TO_PASS': [{'module': 'A', 'test': 'same'}],
                 'PASS_TO_PASS': [{'module': 'B', 'test': 'same'}]}
 
+    def test_required_inventory_does_not_accept_compile_failure(self):
+        expected = {'REQUIRED_PASS': [{'module': 'A', 'test': 'new API'}]}
+        self.assertFalse(assess([], expected, 1)['resolved'])
+        self.assertFalse(assess([], expected, 0)['resolved'])
+        rows = [{'module': 'A', 'test': 'new API', 'status': 'PASSED'}]
+        self.assertTrue(assess(rows, expected, 0)['resolved'])
+        self.assertFalse(assess(rows, expected, 1)['resolved'])
+
     def test_both_qualified_tests_required(self):
         rows = [{'module': 'A', 'test': 'same', 'status': 'PASSED'},
                 {'module': 'B', 'test': 'same', 'status': 'PASSED'}]

@@ -1,0 +1,20 @@
+--- a/test/broadway_test.exs
++++ b/test/broadway_test.exs
+@@ -448,7 +448,7 @@
+       assert capture_log(fn ->
+                Producer.push_messages(producer, [one, raise, four])
+                assert_receive {:ack, [%{data: 1}, %{data: 4}], []}
+-             end) =~ "[error] ** (UndefinedFunctionError) function Unknown.ack/2 is undefined"
++             end) =~ "[error] ** (UndefinedFunctionError)"
+ 
+       refute_received {:EXIT, _, ^processor}
+     end
+@@ -934,7 +934,7 @@
+                push_messages(producer, [1, 2, 3, 4])
+                assert_receive {:ack, [%{data: 1}, %{data: 2}, %{data: 3}, %{data: 4}], []}
+              end) =~
+-               "[error] ** (UndefinedFunctionError) function Unknown.ack/2 is undefined"
++               "[error] ** (UndefinedFunctionError)"
+ 
+       refute_received {:EXIT, _, ^consumer}
+     end

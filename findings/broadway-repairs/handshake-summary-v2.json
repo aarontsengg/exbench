@@ -1,0 +1,349 @@
+{
+  "complete": true,
+  "model_calls": 0,
+  "evidence_sha256": "c0bdd13098518ebc9a340defbe9a50ac0b00d3481c22be3fb6524302264a1282",
+  "runs": {
+    "regression-old": {
+      "exit_code": 2,
+      "total": 1,
+      "failures": [
+        {
+          "module": "TerminatorHandshakeTest",
+          "test": "trap_exit returns only after exit trapping is enabled",
+          "status": "FAILED"
+        }
+      ],
+      "log_sha256": "95f4c00990d19109d07f36fc04fba329b67a6ff8d1e52a6001ce822c53c0c110"
+    },
+    "regression-fixed": {
+      "exit_code": 0,
+      "total": 1,
+      "failures": [],
+      "log_sha256": "8076579a57d6d61df3ee05b1e5a342f20d0bd7d18cec53e61335629a6cebd4fd"
+    },
+    "42-base": {
+      "exit_code": 2,
+      "total": 101,
+      "failures": [
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} when an error is raised",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on bad acknowledger",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher will be restarted in order to handle other messages",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash only the messages in the crashing batcher are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash batches are created normally (without the lost messages)",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash only the messages in the crashing processor are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are not forwarded to the batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} when an error is raised while processing",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor successful messages are marked as :ok",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode bulk",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode flush by default",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "FAILED"
+        }
+      ],
+      "log_sha256": "2219ed5ab7a7aa4fc10371dba6df2b6d382f106b86e5224db1e0b8b3634be9ba"
+    },
+    "42-gold": {
+      "exit_code": 0,
+      "total": 101,
+      "failures": [],
+      "log_sha256": "1ce5cca95c58ab0708bdc3eb4a4ab1d9c2366b0cdc0a09f7e5849406e300d2a8"
+    },
+    "7-base": {
+      "exit_code": 2,
+      "total": 101,
+      "failures": [
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} when an error is raised",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on bad acknowledger",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher will be restarted in order to handle other messages",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash only the messages in the crashing batcher are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash batches are created normally (without the lost messages)",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash only the messages in the crashing processor are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are not forwarded to the batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} when an error is raised while processing",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor successful messages are marked as :ok",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode bulk",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode flush by default",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "FAILED"
+        }
+      ],
+      "log_sha256": "abf187bea85a643d7d19dbda196652e1208744871f5a5b7f9670f040b0c83861"
+    },
+    "7-gold": {
+      "exit_code": 0,
+      "total": 101,
+      "failures": [],
+      "log_sha256": "fc13a753b77937dc401c26ddd04753e9ebfee771b56cf0f829998bf0ba05d06d"
+    },
+    "123-base": {
+      "exit_code": 2,
+      "total": 101,
+      "failures": [
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} when an error is raised",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on bad acknowledger",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher will be restarted in order to handle other messages",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash only the messages in the crashing batcher are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash batches are created normally (without the lost messages)",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash only the messages in the crashing processor are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are not forwarded to the batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} when an error is raised while processing",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor successful messages are marked as :ok",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode bulk",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode flush by default",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "FAILED"
+        }
+      ],
+      "log_sha256": "6b9259097da8fa2563f7e6b2f21ac9d58ac171a31d1029679d9d0017d448e91f"
+    },
+    "123-gold": {
+      "exit_code": 0,
+      "total": 101,
+      "failures": [],
+      "log_sha256": "f5dc84bdbc583a000e7e0a47d9243dcbdae38896c26a77fe778da14bd9b5d665"
+    }
+  }
+}

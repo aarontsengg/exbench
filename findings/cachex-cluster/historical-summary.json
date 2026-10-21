@@ -1,0 +1,80 @@
+{
+  "model_calls": 0,
+  "sample_changed": false,
+  "date": "2026-10-20",
+  "tasks": {
+    "whitfin__cachex-292": {
+      "runtime": "Erlang/OTP 24 [erts-12.3.2.17] [source] [64-bit] [smp:10:10] [ds:10:10:10] [async-threads:1] [jit]\n\nElixir 1.13.4 (compiled with Erlang/OTP 24)\n",
+      "image_id": "sha256:fba6fba273d1978cf742c4319c869efe30234dcbb51f2c143ef65180acafd434",
+      "runs": {
+        "42-base": {
+          "raw_test_count": 194,
+          "failed": [
+            {
+              "module": "Cachex.Services.CourierTest",
+              "test": "gracefully handling crashes inside tasks",
+              "status": "FAILED"
+            }
+          ],
+          "exit_code": 2,
+          "log_sha256": "22e2eb4779d5bea0b9b36e1ab26e99ed3100210eccb70140d8535a1c8b7fe780"
+        },
+        "42-gold": {
+          "raw_test_count": 194,
+          "failed": [],
+          "exit_code": 0,
+          "log_sha256": "80339cc4fd0283fdc7d6df4bf0d16db5bdf4a3a085d9e898123759dbe0d37383"
+        },
+        "7-base": {
+          "raw_test_count": 194,
+          "failed": [
+            {
+              "module": "Cachex.Services.CourierTest",
+              "test": "gracefully handling crashes inside tasks",
+              "status": "FAILED"
+            }
+          ],
+          "exit_code": 2,
+          "log_sha256": "d71cdca0e4416952a529fe57c37d8a80cadc7d70dae1299e225f7317e6632947"
+        },
+        "7-gold": {
+          "raw_test_count": 194,
+          "failed": [],
+          "exit_code": 0,
+          "log_sha256": "74b65b69b1c940874f12d308786985feff75b7bf0bbe4fa8ccf61fbac3a40b49"
+        }
+      },
+      "build_log_sha256": "5ed3a096b5e76a6f76e9602f4008cd517081d682923ca2b914e0bbb0819e0177"
+    },
+    "whitfin__cachex-294": {
+      "runtime": "Erlang/OTP 24 [erts-12.3.2.17] [source] [64-bit] [smp:10:10] [ds:10:10:10] [async-threads:1] [jit]\n\nElixir 1.13.4 (compiled with Erlang/OTP 24)\n",
+      "image_id": "sha256:45acd6899c67607baf38b10fe303b9928eb0a39a5e032ffda27cd558036a28dc",
+      "runs": {
+        "42-base": {
+          "base_compilation_failure": "missing warmer async field",
+          "exit_code": 1,
+          "log_sha256": "6c69de9f779975bd300860867aefe03d930ab659054b4fc2788fb5ce686a084a"
+        },
+        "42-gold": {
+          "raw_test_count": 195,
+          "failed": [],
+          "exit_code": 0,
+          "log_sha256": "f87c93a06fff3585579dc1b8cd79122b5df1768cbe9795541e6841d0410c2f98"
+        },
+        "7-base": {
+          "base_compilation_failure": "missing warmer async field",
+          "exit_code": 1,
+          "log_sha256": "6c69de9f779975bd300860867aefe03d930ab659054b4fc2788fb5ce686a084a"
+        },
+        "7-gold": {
+          "raw_test_count": 195,
+          "failed": [],
+          "exit_code": 0,
+          "log_sha256": "b0e61697258bad1ffadc5c0bec770775cca3d3509af99e9d17b9bb3a070f315e"
+        }
+      },
+      "build_log_sha256": "638841a670508041877b60a698f89b551c122a56429488519471b2f84715143b"
+    }
+  },
+  "report_sha256": "848393fe05ea66b929f0791015bfd97de8c02fc90b6e9739861e396aadff2985"
+}

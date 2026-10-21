@@ -2,12 +2,13 @@
   "dataset_revision": "475dd5e8703bb5fb22dd3c60b5d038b019eba1e0",
   "sample_sha256": "b9133cdf77ce918f45839dcd9e3676ca8e69dfeb26574ddfc78b4438ecd793ad",
   "harness_revision": "c71902a8cf8d2b725f63d51f199f4d3e56f68d2d",
-  "task_count": 1,
+  "task_count": 2,
   "smoke_ids": [
-    "commanded__commanded-380"
+    "whitfin__cachex-292",
+    "whitfin__cachex-294"
   ],
   "input_sha256": {
-    "diagnostic.json": "eb938d34fa48864c8cc9ededbbd892cfb149f3ba25d177b7437d22fdb1312a59"
+    "diagnostic.json": "e2400e3d67b517808515be31c4227a99757957ddfc001b6376ada0a0a211dfb5"
   },
   "purpose": "diagnostic subset; not finalized sample",
   "docker_cli_available": true,

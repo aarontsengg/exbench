@@ -4,6 +4,16 @@ These are separate from original upstream validation and the selected sample.
 Each variant records exact adjustments, original and revised expectations, and
 evidence. A successful variant is not automatically included in agent evaluation.
 
+## Cachex historical integration — 20 October 2026
+
+`whitfin__cachex-292--historical-integration-v1.json` and
+`whitfin__cachex-294--historical-integration-v1.json` target the retained historical
+images with unchanged upstream tests. #292 records observed baseline transitions;
+#294 records only the required passing inventory because its baseline cannot
+compile the explicitly requested warmer API. Neither category permits compilation
+failure to pass grading. `prepare_cachex_integration.py` generates the definitions
+from the recorded historical evidence. See `../GRADER.md` for usage.
+
 ## Current Commanded integration variants — 2026-10-18
 
 The current grader configurations are #139 integration-v1, #171 integration-v3,
@@ -112,3 +122,17 @@ Run `.harness-venv/bin/python evaluation_variants/record_remaining_commanded.py`
 to verify saved results and regenerate them. #335 remains on hold: its repaired
 subscription-monitor fixture works, but a separate reset-from-current regression
 failed in one order. See `findings/commanded-batch/REMAINING_THREE_AUDIT.md`.
+
+
+Broadway #95 integration update (20 Oct 2026): a separately versioned readiness
+repair is documented, but actual grader integration remains on hold. Empty
+patches have 19 failures in both orders; reference seed 42 misses an
+acknowledgement in the separate no-batcher shutdown test, while seed 7 passes
+101 checks. No final selection or paid calls. See
+`findings/broadway-repairs/REPORT.md` and `grader-results-v1.json`.
+
+Broadway #95 integration-v2 now passes local empty/reference checks with the
+versioned production handshake repair. V1 remains held and preserved. V2's
+manifest is the immutable pre-check candidate specification; the separate
+`findings/broadway-repairs/grader-results-v2.json` records successful integration.
+Final sample selection remains false. See `findings/broadway-repairs/GRADER_V2.md`.

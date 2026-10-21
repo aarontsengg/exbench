@@ -1,0 +1,828 @@
+{
+  "variant_id": "whitfin__cachex-292--historical-integration-v1",
+  "upstream_instance_id": "whitfin__cachex-292",
+  "status": "candidate_pending_integration_checks",
+  "selected_for_final_sample": false,
+  "dataset": {
+    "dataset": "nebius/SWE-rebench-V2",
+    "revision": "475dd5e8703bb5fb22dd3c60b5d038b019eba1e0",
+    "sha256": "0e0bf9355f892ad74ae98d4e1c404f39fd6654a8e351ee3e6ab162e4a64cd3ad",
+    "size_bytes": 428839266
+  },
+  "base_commit": "6263cea1409fdf49cf9ae782a3c7ea8b2afc0d7b",
+  "image_id": "sha256:fba6fba273d1978cf742c4319c869efe30234dcbb51f2c143ef65180acafd434",
+  "workdir": "/cachex",
+  "include_distributed": false,
+  "platform": "linux/amd64",
+  "network": "none",
+  "start_epmd": true,
+  "erl_flags_in_image": "+JPperf true",
+  "parser": {
+    "path": "findings/cachex-cluster/audit_identities.py",
+    "sha256": "1569c20eb740860a65b6af9d698b47662909c7fda77caf04a8401012ea8cab31"
+  },
+  "parser_dependencies": [
+    {
+      "path": "findings/commanded-batch/parse_qualified_historical.py",
+      "sha256": "e275a1aae43523c9ec2412df65ab8dfab07eab7cda7b8941990837cbce70d206"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "findings/cachex-cluster/historical-results.json",
+      "sha256": "848393fe05ea66b929f0791015bfd97de8c02fc90b6e9739861e396aadff2985"
+    }
+  ],
+  "baseline_category": "behavioral_transition_verified",
+  "test_patch_sha256": "57539695d86a9c5072d89c92944d07837416128a89fb7928675d688ba156f2f7",
+  "reference_patch_sha256": "3711a0ede6e46ec38b2027ca48be42d277cff892aceb010cc3e462bc1465ee74",
+  "prompt_fields": [
+    "problem_statement",
+    "interface"
+  ],
+  "interface_sha256": "6da76d3916c5413cd621bc17b85f7fb1d8b85c529ac8e88d693268ea1208702b",
+  "variant_expected": {
+    "FAIL_TO_PASS": [
+      {
+        "module": "Cachex.Services.CourierTest",
+        "test": "gracefully handling crashes inside tasks"
+      }
+    ],
+    "PASS_TO_PASS": [
+      {
+        "module": "Cachex.Actions.ClearTest",
+        "test": "clearing a cache cluster of all items"
+      },
+      {
+        "module": "Cachex.Actions.ClearTest",
+        "test": "clearing a cache of all items"
+      },
+      {
+        "module": "Cachex.Actions.CountTest",
+        "test": "counting items in a cache"
+      },
+      {
+        "module": "Cachex.Actions.CountTest",
+        "test": "counting items in a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.DecrTest",
+        "test": "decrementing a non-numeric value"
+      },
+      {
+        "module": "Cachex.Actions.DecrTest",
+        "test": "decrementing cache items"
+      },
+      {
+        "module": "Cachex.Actions.DecrTest",
+        "test": "decrementing items in a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.DelTest",
+        "test": "removing entries from a cache"
+      },
+      {
+        "module": "Cachex.Actions.DelTest",
+        "test": "removing entries from a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.DumpTest",
+        "test": "backing up a cache cluster to a local disk"
+      },
+      {
+        "module": "Cachex.Actions.DumpTest",
+        "test": "backing up a cache to a local disk"
+      },
+      {
+        "module": "Cachex.Actions.EmptyTest",
+        "test": "checking if a cache cluster is empty"
+      },
+      {
+        "module": "Cachex.Actions.EmptyTest",
+        "test": "checking if a cache is empty"
+      },
+      {
+        "module": "Cachex.Actions.ExecuteTest",
+        "test": "execution blocks can carry out many actions"
+      },
+      {
+        "module": "Cachex.Actions.ExistsTest",
+        "test": "checking if a key exists"
+      },
+      {
+        "module": "Cachex.Actions.ExistsTest",
+        "test": "checking if a key exists in a cluster"
+      },
+      {
+        "module": "Cachex.Actions.ExpireAtTest",
+        "test": "setting a key to expire at a given time"
+      },
+      {
+        "module": "Cachex.Actions.ExpireAtTest",
+        "test": "setting a key to expire at a given time in a cluster"
+      },
+      {
+        "module": "Cachex.Actions.ExpireTest",
+        "test": "setting a key to expire after a given period"
+      },
+      {
+        "module": "Cachex.Actions.ExpireTest",
+        "test": "setting a key to expire after a given period in a cluster"
+      },
+      {
+        "module": "Cachex.Actions.ExportTest",
+        "test": "exporting records from a cache"
+      },
+      {
+        "module": "Cachex.Actions.ExportTest",
+        "test": "exporting records from a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.FetchTest",
+        "test": "fetching and committing the same key simultaneously from a fallback"
+      },
+      {
+        "module": "Cachex.Actions.FetchTest",
+        "test": "fetching keys from a cache"
+      },
+      {
+        "module": "Cachex.Actions.FetchTest",
+        "test": "fetching keys from a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.GetAndUpdateTest",
+        "test": "retrieving and updated cache records"
+      },
+      {
+        "module": "Cachex.Actions.GetAndUpdateTest",
+        "test": "retrieving and updated cache records in a cluster"
+      },
+      {
+        "module": "Cachex.Actions.GetTest",
+        "test": "retrieving keys from a cache"
+      },
+      {
+        "module": "Cachex.Actions.GetTest",
+        "test": "retrieving keys from a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.ImportTest",
+        "test": "importing records into a cache"
+      },
+      {
+        "module": "Cachex.Actions.IncrTest",
+        "test": "incrementing a non-numeric value"
+      },
+      {
+        "module": "Cachex.Actions.IncrTest",
+        "test": "incrementing cache items"
+      },
+      {
+        "module": "Cachex.Actions.IncrTest",
+        "test": "incrementing items in a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.InspectTest",
+        "test": "inspecting cache memory"
+      },
+      {
+        "module": "Cachex.Actions.InspectTest",
+        "test": "inspecting cache records"
+      },
+      {
+        "module": "Cachex.Actions.InspectTest",
+        "test": "inspecting cache state"
+      },
+      {
+        "module": "Cachex.Actions.InspectTest",
+        "test": "inspecting expired keys"
+      },
+      {
+        "module": "Cachex.Actions.InspectTest",
+        "test": "inspecting invalid options"
+      },
+      {
+        "module": "Cachex.Actions.InspectTest",
+        "test": "inspecting janitor metadata"
+      },
+      {
+        "module": "Cachex.Actions.InspectTest",
+        "test": "inspections always run on the local node"
+      },
+      {
+        "module": "Cachex.Actions.InvokeTest",
+        "test": "invoking :read commands"
+      },
+      {
+        "module": "Cachex.Actions.InvokeTest",
+        "test": "invoking :write commands"
+      },
+      {
+        "module": "Cachex.Actions.InvokeTest",
+        "test": "invoking commands in a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.InvokeTest",
+        "test": "invoking invalid commands"
+      },
+      {
+        "module": "Cachex.Actions.KeysTest",
+        "test": "checking if a cache cluster is empty"
+      },
+      {
+        "module": "Cachex.Actions.KeysTest",
+        "test": "retrieving the keys inside the cache"
+      },
+      {
+        "module": "Cachex.Actions.LoadTest",
+        "test": "loading a cache backup from a local disk"
+      },
+      {
+        "module": "Cachex.Actions.PersistTest",
+        "test": "removing the TTL on a key"
+      },
+      {
+        "module": "Cachex.Actions.PersistTest",
+        "test": "removing the TTL on a key in a cluster"
+      },
+      {
+        "module": "Cachex.Actions.PurgeTest",
+        "test": "purging expired records in a cache"
+      },
+      {
+        "module": "Cachex.Actions.PurgeTest",
+        "test": "purging expired records in a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.PutManyTest",
+        "test": "adding many new values to the cache"
+      },
+      {
+        "module": "Cachex.Actions.PutManyTest",
+        "test": "adding new entries to a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.PutManyTest",
+        "test": "handling empty pairs in a batch"
+      },
+      {
+        "module": "Cachex.Actions.PutManyTest",
+        "test": "handling invalid pairs in a batch"
+      },
+      {
+        "module": "Cachex.Actions.PutManyTest",
+        "test": "multiple slots will return a :cross_slot error"
+      },
+      {
+        "module": "Cachex.Actions.PutTest",
+        "test": "adding new entries to a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.PutTest",
+        "test": "adding new values to the cache"
+      },
+      {
+        "module": "Cachex.Actions.RefreshTest",
+        "test": "refreshing the TTL on a key in a cluster"
+      },
+      {
+        "module": "Cachex.Actions.RefreshTest",
+        "test": "refreshing the TTL time on a key"
+      },
+      {
+        "module": "Cachex.Actions.ResetTest",
+        "test": "resetting a cache"
+      },
+      {
+        "module": "Cachex.Actions.ResetTest",
+        "test": "resetting a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.ResetTest",
+        "test": "resetting only a cache"
+      },
+      {
+        "module": "Cachex.Actions.ResetTest",
+        "test": "resetting only a cache's hooks"
+      },
+      {
+        "module": "Cachex.Actions.SetManyTest",
+        "test": "adding new entries to a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.SetManyTest",
+        "test": "forwarding calls to put_many(2/3)"
+      },
+      {
+        "module": "Cachex.Actions.SetManyTest",
+        "test": "multiple slots will return a :cross_slot error"
+      },
+      {
+        "module": "Cachex.Actions.SetTest",
+        "test": "forwarding calls to put(3/4)"
+      },
+      {
+        "module": "Cachex.Actions.SetTest",
+        "test": "forwarding calls to put(3/4) in a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.SizeTest",
+        "test": "checking the total size of a cache"
+      },
+      {
+        "module": "Cachex.Actions.SizeTest",
+        "test": "checking the total size of a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.StatsTest",
+        "test": "retrieving different rate combinations"
+      },
+      {
+        "module": "Cachex.Actions.StatsTest",
+        "test": "retrieving stats for a cache"
+      },
+      {
+        "module": "Cachex.Actions.StatsTest",
+        "test": "retrieving stats for a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.StatsTest",
+        "test": "retrieving stats from a diabled cache"
+      },
+      {
+        "module": "Cachex.Actions.StreamTest",
+        "test": "streaming cache entries"
+      },
+      {
+        "module": "Cachex.Actions.StreamTest",
+        "test": "streaming custom patterns"
+      },
+      {
+        "module": "Cachex.Actions.StreamTest",
+        "test": "streaming invalid patterns"
+      },
+      {
+        "module": "Cachex.Actions.StreamTest",
+        "test": "streaming is disabled in a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.TakeTest",
+        "test": "taking entries from a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.TakeTest",
+        "test": "taking keys from a cache"
+      },
+      {
+        "module": "Cachex.Actions.TouchTest",
+        "test": "adding new entries to a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.TouchTest",
+        "test": "touching a key in the cache"
+      },
+      {
+        "module": "Cachex.Actions.TransactionTest",
+        "test": "executing a transaction is atomic"
+      },
+      {
+        "module": "Cachex.Actions.TransactionTest",
+        "test": "multiple slots will return a :cross_slot error"
+      },
+      {
+        "module": "Cachex.Actions.TransactionTest",
+        "test": "raising errors from inside transactions"
+      },
+      {
+        "module": "Cachex.Actions.TransactionTest",
+        "test": "transactions become enabled automatically"
+      },
+      {
+        "module": "Cachex.Actions.TransactionTest",
+        "test": "transcations inside a cache cluster"
+      },
+      {
+        "module": "Cachex.Actions.TtlTest",
+        "test": "retrieving a key TTL"
+      },
+      {
+        "module": "Cachex.Actions.TtlTest",
+        "test": "retrieving a key TTL in a cluster"
+      },
+      {
+        "module": "Cachex.Actions.UpdateTest",
+        "test": "updates against a missing key"
+      },
+      {
+        "module": "Cachex.Actions.UpdateTest",
+        "test": "updates against an existing key"
+      },
+      {
+        "module": "Cachex.Actions.UpdateTest",
+        "test": "updating a key in a cache cluster"
+      },
+      {
+        "module": "Cachex.ActionsTest",
+        "test": "carrying out generic read actions"
+      },
+      {
+        "module": "Cachex.ActionsTest",
+        "test": "carrying out generic write actions"
+      },
+      {
+        "module": "Cachex.ActionsTest",
+        "test": "normalizing commit/ignore return values"
+      },
+      {
+        "module": "Cachex.ActionsTest",
+        "test": "retrieving a module name to write with"
+      },
+      {
+        "module": "Cachex.DiskTest",
+        "test": "working with values going to/from disk"
+      },
+      {
+        "module": "Cachex.ErrorsTest",
+        "test": "error generation and mapping"
+      },
+      {
+        "module": "Cachex.ErrorsTest",
+        "test": "unknown error echoing"
+      },
+      {
+        "module": "Cachex.ExecutionErrorTest",
+        "test": "raising a default ExecutionError"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "adding a cache name to the state"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "getting options from a Keyword List"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "parsing :commands flags"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "parsing :compressed flags"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "parsing :expiration flags"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "parsing :fallback flags"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "parsing :hooks flags"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "parsing :limit flags"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "parsing :stats flags"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "parsing :transactional flags"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "parsing :warmers flags"
+      },
+      {
+        "module": "Cachex.OptionsTest",
+        "test": "transforming an option value in a Keyword List"
+      },
+      {
+        "module": "Cachex.OverseerTest",
+        "test": "adding and removing state in the table"
+      },
+      {
+        "module": "Cachex.OverseerTest",
+        "test": "ensuring a state"
+      },
+      {
+        "module": "Cachex.OverseerTest",
+        "test": "retrieving a state from the table"
+      },
+      {
+        "module": "Cachex.OverseerTest",
+        "test": "updating a state in the table"
+      },
+      {
+        "module": "Cachex.Policy.LRWTest",
+        "test": "evicting by removing expired keys"
+      },
+      {
+        "module": "Cachex.Policy.LRWTest",
+        "test": "evicting when a cache crosses a limit"
+      },
+      {
+        "module": "Cachex.Policy.LRWTest",
+        "test": "evicting with no upper bound"
+      },
+      {
+        "module": "Cachex.PolicyTest",
+        "test": "default policy implementations"
+      },
+      {
+        "module": "Cachex.QueryTest",
+        "test": "creating basic queries"
+      },
+      {
+        "module": "Cachex.QueryTest",
+        "test": "creating expired queries"
+      },
+      {
+        "module": "Cachex.QueryTest",
+        "test": "creating raw queries"
+      },
+      {
+        "module": "Cachex.QueryTest",
+        "test": "creating unexpired queries"
+      },
+      {
+        "module": "Cachex.Services.CourierTest",
+        "test": "dispatching tasks"
+      },
+      {
+        "module": "Cachex.Services.CourierTest",
+        "test": "dispatching tasks from multiple processes"
+      },
+      {
+        "module": "Cachex.Services.InformantTest",
+        "test": "broadcasting results to a list of hooks"
+      },
+      {
+        "module": "Cachex.Services.InformantTest",
+        "test": "notifying a list of Hooks"
+      },
+      {
+        "module": "Cachex.Services.JanitorTest",
+        "test": "checking whether an expiration has passed"
+      },
+      {
+        "module": "Cachex.Services.JanitorTest",
+        "test": "purging records on a schedule"
+      },
+      {
+        "module": "Cachex.Services.LocksmithTest",
+        "test": "detecting a transactional context"
+      },
+      {
+        "module": "Cachex.Services.LocksmithTest",
+        "test": "executing a crashing transaction"
+      },
+      {
+        "module": "Cachex.Services.LocksmithTest",
+        "test": "executing a transactional block"
+      },
+      {
+        "module": "Cachex.Services.LocksmithTest",
+        "test": "executing a write outside of a transaction"
+      },
+      {
+        "module": "Cachex.Services.LocksmithTest",
+        "test": "locking items in a table"
+      },
+      {
+        "module": "Cachex.Services.LocksmithTest",
+        "test": "setting a transactional context"
+      },
+      {
+        "module": "Cachex.ServicesTest",
+        "test": "generating application service definitions"
+      },
+      {
+        "module": "Cachex.ServicesTest",
+        "test": "generating cache limit specifications"
+      },
+      {
+        "module": "Cachex.ServicesTest",
+        "test": "generating default cache specifications"
+      },
+      {
+        "module": "Cachex.ServicesTest",
+        "test": "locating running services"
+      },
+      {
+        "module": "Cachex.ServicesTest",
+        "test": "skipping cache janitor specifications"
+      },
+      {
+        "module": "Cachex.Spec.ValidatorTest",
+        "test": "validation of command records"
+      },
+      {
+        "module": "Cachex.Spec.ValidatorTest",
+        "test": "validation of entry records"
+      },
+      {
+        "module": "Cachex.Spec.ValidatorTest",
+        "test": "validation of expiration records"
+      },
+      {
+        "module": "Cachex.Spec.ValidatorTest",
+        "test": "validation of fallback records"
+      },
+      {
+        "module": "Cachex.Spec.ValidatorTest",
+        "test": "validation of hook records"
+      },
+      {
+        "module": "Cachex.Spec.ValidatorTest",
+        "test": "validation of hooks records"
+      },
+      {
+        "module": "Cachex.Spec.ValidatorTest",
+        "test": "validation of limit records"
+      },
+      {
+        "module": "Cachex.Spec.ValidatorTest",
+        "test": "validation of warmer records"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "default command record values"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "default entry record values"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "default expiration record values"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "default fallback record values"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "default hook record values"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "default hooks record values"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "default limit record values"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "generating constants via macros"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "generating entries based on the current time"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "generating entry index locations"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "generating entry modifications"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "generating entry modifications with a touch time update"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "name generation for components"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "negative integer validation"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "nillable value verification"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "positive integer validation"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "retrieving the current time in milliseconds"
+      },
+      {
+        "module": "Cachex.SpecTest",
+        "test": "wrapping values inside tagged Tuples"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering clear actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering delete actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering exists? actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering fetch actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering get actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering incr/decr actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering invoke actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering purge actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering put actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering put_many actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering take actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "registering update actions"
+      },
+      {
+        "module": "Cachex.StatsTest",
+        "test": "retrieving the state of a stats hook"
+      },
+      {
+        "module": "Cachex.WarmerTest",
+        "test": "providing warmers with states"
+      },
+      {
+        "module": "Cachex.WarmerTest",
+        "test": "warmers which don't set values"
+      },
+      {
+        "module": "Cachex.WarmerTest",
+        "test": "warmers which set basic values"
+      },
+      {
+        "module": "Cachex.WarmerTest",
+        "test": "warmers which set values with options"
+      },
+      {
+        "module": "CachexTest",
+        "test": "cache execution with an invalid name"
+      },
+      {
+        "module": "CachexTest",
+        "test": "cache start when application not started"
+      },
+      {
+        "module": "CachexTest",
+        "test": "cache start with a link"
+      },
+      {
+        "module": "CachexTest",
+        "test": "cache start with existing cache name"
+      },
+      {
+        "module": "CachexTest",
+        "test": "cache start with invalid cache name"
+      },
+      {
+        "module": "CachexTest",
+        "test": "cache start with invalid options"
+      },
+      {
+        "module": "CachexTest",
+        "test": "cache start without a link"
+      },
+      {
+        "module": "CachexTest",
+        "test": "generating unsafe function delegates"
+      }
+    ]
+  },
+  "raw_test_count": 194,
+  "notes": "Unchanged upstream tests. REQUIRED_PASS is a gold inventory, not a claim about individual baseline transitions. No final sample or original validation changes."
+}

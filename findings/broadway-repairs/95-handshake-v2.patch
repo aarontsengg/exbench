@@ -1,0 +1,43 @@
+--- a/lib/broadway/terminator.ex
++++ b/lib/broadway/terminator.ex
+@@ -9,7 +9,7 @@
+ 
+   @spec trap_exit(GenServer.server()) :: :ok
+   def trap_exit(terminator) do
+-    GenServer.cast(terminator, :trap_exit)
++    GenServer.call(terminator, :trap_exit)
+   end
+ 
+   @impl true
+@@ -24,9 +24,9 @@
+   end
+ 
+   @impl true
+-  def handle_cast(:trap_exit, state) do
++  def handle_call(:trap_exit, _from, state) do
+     Process.flag(:trap_exit, true)
+-    {:noreply, state}
++    {:reply, :ok, state}
+   end
+ 
+   @impl true
+--- a/lib/broadway/server.ex
++++ b/lib/broadway/server.ex
+@@ -26,7 +26,7 @@
+ 
+   @impl true
+   def handle_info({:EXIT, supervisor_pid, reason}, %{supervisor_pid: supervisor_pid} = state) do
+-    {:stop, reason, state}
++    {:stop, reason, %{state | supervisor_pid: nil}}
+   end
+ 
+   def handle_info(_, state) do
+@@ -40,6 +40,8 @@
+   end
+ 
+   @impl true
++  def terminate(_reason, %{supervisor_pid: nil}), do: :ok
++
+   def terminate(reason, %{supervisor_pid: supervisor_pid, terminator: terminator}) do
+     Broadway.Terminator.trap_exit(terminator)
+     ref = Process.monitor(supervisor_pid)

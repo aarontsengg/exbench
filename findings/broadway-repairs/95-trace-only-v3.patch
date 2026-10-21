@@ -1,0 +1,37 @@
+--- a/test/broadway_test.exs
++++ b/test/broadway_test.exs
+@@ -1147,6 +1147,34 @@
+   describe "shutdown" do
+     setup tags do
+       Process.flag(:trap_exit, true)
++      if tags.test == :"test shutdown shutting down broadway waits until all events are processed even on incomplete batches" do
++      trace_path = System.fetch_env!("EXBENCH_TRACE_FILE")
++      test_pid = self()
++      tracer = spawn(fn ->
++        {:ok, device} = File.open(trace_path, [:write])
++        IO.write(device, "TARGETS " <> inspect([{:test, test_pid}], limit: :infinity) <> "\n")
++        loop = fn loop ->
++          receive do
++            {:finish, caller} -> File.close(device); send(caller, :trace_saved)
++            event ->
++              IO.write(device, inspect(event, limit: :infinity, printable_limit: :infinity, width: :infinity) <> "\n")
++              loop.(loop)
++          end
++        end
++        loop.(loop)
++      end)
++      traced = [self()]
++      Enum.each(traced, &:erlang.trace(&1, true, [:send, :receive, :procs, :set_on_spawn, :monotonic_timestamp, {:tracer, tracer}]))
++      on_exit(fn ->
++        Enum.each(traced, fn pid ->
++          if Process.alive?(pid), do: :erlang.trace(pid, false, [:all])
++        end)
++        delivered = :erlang.trace_delivered(:all)
++        receive do {:trace_delivered, :all, ^delivered} -> :ok end
++        send(tracer, {:finish, self()})
++        receive do :trace_saved -> :ok after 5000 -> raise "trace flush failed" end
++      end)
++      end
+       broadway_name = new_unique_name()
+ 
+       handle_message = fn

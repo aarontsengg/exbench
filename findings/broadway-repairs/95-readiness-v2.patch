@@ -1,0 +1,15 @@
+--- a/test/broadway_test.exs
++++ b/test/broadway_test.exs
+@@ -1206,7 +1206,11 @@
+     end
+ 
+     test "shutting down broadway cancels producers and waits for messages sent during cancellation",
+-         %{broadway: broadway} do
++         %{broadway: broadway, producer: producer} do
++      # Establish end-to-end readiness without calling the task's new API.
++      async_push_messages(producer, [:ready_1, :ready_2, :ready_3, :ready_4])
++      assert_receive {:ack, _, [%{data: :ready_1}, %{data: :ready_2},
++                               %{data: :ready_3}, %{data: :ready_4}], []}
+       Process.exit(broadway, :shutdown)
+ 
+       assert_receive {:ack, _, [%{data: :message_during_cancel}], []}

@@ -1,0 +1,3092 @@
+{
+  "complete": true,
+  "model_calls": 0,
+  "diagnostic_only": true,
+  "image_id": "sha256:74945f8a23e48fcb1cd48a1c58c80a51de6776725b6cd989be4cd8ea699759ec",
+  "base_commit": "ec377ca3ed62fd805907b117f4c6c13c3bd31cdf",
+  "runs": {
+    "regression-old": {
+      "exit_code": 2,
+      "log_sha256": "6839489640ca26d44da0562323745f4539720663bc0b6a048543d05ec9f8aae5",
+      "parse_error": "Completed test without module header"
+    },
+    "regression-fixed": {
+      "exit_code": 2,
+      "log_sha256": "08fc8562464ea9dbfcd83a7ae564ef275b77e8eb295600c0c61d2cc914ec4639",
+      "parse_error": "Completed test without module header"
+    },
+    "42-base": {
+      "exit_code": 2,
+      "log_sha256": "7b0a6bbbb20e6b09281103157ca46ba924b1f29a401301fa1cc6084ac255a4e0",
+      "tests": [
+        {
+          "module": "Broadway.BatcherTest",
+          "test": "max_demand defaults to batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.DummyProducerTest",
+          "test": "send message through",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys allow empty keys for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys default value for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys validate empty keys for :non_empty_keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProcessorTest",
+          "test": "set custom min and max demand",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "init with bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate forward call to wrapped module",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate returns :ok when the wrapped module doesn't define a terminate/2 callback",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "[doctest] module Broadway.TermStorage (1)",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "allows terms to be written and read",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns different references for different terms",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns the same reference for the same term",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} when an error is raised",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on bad acknowledger",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher messages are grouped by ack_ref + status (successful or failed) before sent for acknowledgement",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default context is :context_not_set",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of consumers is 1 per batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of processors is schedulers_online * 2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of producers is 1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration invalid configuration options",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of consumers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of processors",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of producers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher will be restarted in order to handle other messages",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash only the messages in the crashing batcher are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash batches are created normally (without the lost messages)",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash only the messages in the crashing processor are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor will be restarted in order to handle other messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash only the producer will be restarted",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash processors resubscribe to the restarted producers and keep processing messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers no batcher supervisor is initialized",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers successful messages are marked as :ok",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are not forwarded to the batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} when an error is raised while processing",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on bad acknowledger",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor successful messages are marked as :ok",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "push_messages/2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode bulk",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode flush by default",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown killing the supervisor brings down the broadway GenServer",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway cancels producers and waits for messages sent during cancellation",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway respects shutdown value",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until the Broadway.Supervisor is down",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer restart the producer if the transformation raises an error",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer transform all events",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1 with overriden options",
+          "status": "PASSED"
+        }
+      ]
+    },
+    "42-gold": {
+      "exit_code": 2,
+      "log_sha256": "31bbe03b6d98bdd74d44bdf05f084e0bbf77f75d3dad226d911579e93d879f52",
+      "tests": [
+        {
+          "module": "Broadway.BatcherTest",
+          "test": "max_demand defaults to batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.DummyProducerTest",
+          "test": "send message through",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys allow empty keys for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys default value for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys validate empty keys for :non_empty_keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProcessorTest",
+          "test": "set custom min and max demand",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "init with bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate forward call to wrapped module",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate returns :ok when the wrapped module doesn't define a terminate/2 callback",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "[doctest] module Broadway.TermStorage (1)",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "allows terms to be written and read",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns different references for different terms",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns the same reference for the same term",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} on bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} when an error is raised",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on bad acknowledger",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on broken link",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher messages are grouped by ack_ref + status (successful or failed) before sent for acknowledgement",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default context is :context_not_set",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of consumers is 1 per batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of processors is schedulers_online * 2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of producers is 1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration invalid configuration options",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of consumers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of processors",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of producers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher will be restarted in order to handle other messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash only the messages in the crashing batcher are lost",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash batches are created normally (without the lost messages)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash only the messages in the crashing processor are lost",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor will be restarted in order to handle other messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash only the producer will be restarted",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash processors resubscribe to the restarted producers and keep processing messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers no batcher supervisor is initialized",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers successful messages are marked as :ok",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are not forwarded to the batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} when an error is raised while processing",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on bad acknowledger",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on broken link",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor successful messages are marked as :ok",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "push_messages/2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches based on :batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode bulk",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode flush by default",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches based on :batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown killing the supervisor brings down the broadway GenServer",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway cancels producers and waits for messages sent during cancellation",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway respects shutdown value",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until the Broadway.Supervisor is down",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer restart the producer if the transformation raises an error",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer transform all events",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1 with overriden options",
+          "status": "PASSED"
+        }
+      ]
+    },
+    "7-base": {
+      "exit_code": 2,
+      "log_sha256": "dce5cfeebee51519c6e5a6b35dc145a12673a15b40a10d23597a47f042f4a886",
+      "tests": [
+        {
+          "module": "Broadway.BatcherTest",
+          "test": "max_demand defaults to batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.DummyProducerTest",
+          "test": "send message through",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys allow empty keys for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys default value for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys validate empty keys for :non_empty_keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProcessorTest",
+          "test": "set custom min and max demand",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "init with bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate forward call to wrapped module",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate returns :ok when the wrapped module doesn't define a terminate/2 callback",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "[doctest] module Broadway.TermStorage (1)",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "allows terms to be written and read",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns different references for different terms",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns the same reference for the same term",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} when an error is raised",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on bad acknowledger",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher messages are grouped by ack_ref + status (successful or failed) before sent for acknowledgement",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default context is :context_not_set",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of consumers is 1 per batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of processors is schedulers_online * 2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of producers is 1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration invalid configuration options",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of consumers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of processors",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of producers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher will be restarted in order to handle other messages",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash only the messages in the crashing batcher are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash batches are created normally (without the lost messages)",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash only the messages in the crashing processor are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor will be restarted in order to handle other messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash only the producer will be restarted",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash processors resubscribe to the restarted producers and keep processing messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers no batcher supervisor is initialized",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers successful messages are marked as :ok",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are not forwarded to the batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} when an error is raised while processing",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on bad acknowledger",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor successful messages are marked as :ok",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "push_messages/2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode bulk",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode flush by default",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown killing the supervisor brings down the broadway GenServer",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway cancels producers and waits for messages sent during cancellation",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway respects shutdown value",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until the Broadway.Supervisor is down",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer restart the producer if the transformation raises an error",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer transform all events",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1 with overriden options",
+          "status": "PASSED"
+        }
+      ]
+    },
+    "7-gold": {
+      "exit_code": 2,
+      "log_sha256": "5786a0e9ca9712e297b1b62663174fa9e0d3ab68e0e42f10dcdc27a3bd461f9f",
+      "tests": [
+        {
+          "module": "Broadway.BatcherTest",
+          "test": "max_demand defaults to batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.DummyProducerTest",
+          "test": "send message through",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys allow empty keys for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys default value for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys validate empty keys for :non_empty_keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProcessorTest",
+          "test": "set custom min and max demand",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "init with bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate forward call to wrapped module",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate returns :ok when the wrapped module doesn't define a terminate/2 callback",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "[doctest] module Broadway.TermStorage (1)",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "allows terms to be written and read",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns different references for different terms",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns the same reference for the same term",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} on bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} when an error is raised",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on bad acknowledger",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on broken link",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher messages are grouped by ack_ref + status (successful or failed) before sent for acknowledgement",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default context is :context_not_set",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of consumers is 1 per batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of processors is schedulers_online * 2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of producers is 1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration invalid configuration options",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of consumers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of processors",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of producers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher will be restarted in order to handle other messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash only the messages in the crashing batcher are lost",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash batches are created normally (without the lost messages)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash only the messages in the crashing processor are lost",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor will be restarted in order to handle other messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash only the producer will be restarted",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash processors resubscribe to the restarted producers and keep processing messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers no batcher supervisor is initialized",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers successful messages are marked as :ok",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are not forwarded to the batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} when an error is raised while processing",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on bad acknowledger",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on broken link",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor successful messages are marked as :ok",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "push_messages/2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches based on :batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode bulk",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode flush by default",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches based on :batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown killing the supervisor brings down the broadway GenServer",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway cancels producers and waits for messages sent during cancellation",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway respects shutdown value",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until the Broadway.Supervisor is down",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer restart the producer if the transformation raises an error",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer transform all events",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1 with overriden options",
+          "status": "PASSED"
+        }
+      ]
+    },
+    "123-base": {
+      "exit_code": 2,
+      "log_sha256": "635f715f2168cac4e7f19a30d761673366ad72bdeca241234c574d0efe3c8fc5",
+      "tests": [
+        {
+          "module": "Broadway.BatcherTest",
+          "test": "max_demand defaults to batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.DummyProducerTest",
+          "test": "send message through",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys allow empty keys for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys default value for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys validate empty keys for :non_empty_keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProcessorTest",
+          "test": "set custom min and max demand",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "init with bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate forward call to wrapped module",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate returns :ok when the wrapped module doesn't define a terminate/2 callback",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "[doctest] module Broadway.TermStorage (1)",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "allows terms to be written and read",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns different references for different terms",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns the same reference for the same term",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} when an error is raised",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on bad acknowledger",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher messages are grouped by ack_ref + status (successful or failed) before sent for acknowledgement",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default context is :context_not_set",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of consumers is 1 per batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of processors is schedulers_online * 2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of producers is 1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration invalid configuration options",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of consumers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of processors",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of producers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher will be restarted in order to handle other messages",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash only the messages in the crashing batcher are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash batches are created normally (without the lost messages)",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash only the messages in the crashing processor are lost",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor will be restarted in order to handle other messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash only the producer will be restarted",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash processors resubscribe to the restarted producers and keep processing messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers no batcher supervisor is initialized",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers successful messages are marked as :ok",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are not forwarded to the batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad batcher",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad return",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} when an error is raised while processing",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on bad acknowledger",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on broken link",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor successful messages are marked as :ok",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "push_messages/2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode bulk",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode flush by default",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches based on :batch_size",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown killing the supervisor brings down the broadway GenServer",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway cancels producers and waits for messages sent during cancellation",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway respects shutdown value",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until the Broadway.Supervisor is down",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer restart the producer if the transformation raises an error",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer transform all events",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1 with overriden options",
+          "status": "PASSED"
+        }
+      ]
+    },
+    "123-gold": {
+      "exit_code": 2,
+      "log_sha256": "ed8e194f7d76a12b3a6dd90e54b6d018ac594ec0b5f2eac77d99c368afc7c8a4",
+      "tests": [
+        {
+          "module": "Broadway.BatcherTest",
+          "test": "max_demand defaults to batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.DummyProducerTest",
+          "test": "send message through",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys allow empty keys for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys default value for :keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with custom keys validate empty keys for :non_empty_keyword_list",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys all required options present",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys known options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys nested options types",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "nested options with predefined keys unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "options with default values",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "required options missing",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation invalid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid atom",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mfa",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid mod_arg",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid non negative integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "type validation valid positive integer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.OptionsTest",
+          "test": "unknown options",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProcessorTest",
+          "test": "set custom min and max demand",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "init with bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_demand transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info raise an error if a message is not a %Message{}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state, :hibernate}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:noreply, [event], new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info returning {:stop, reason, new_state}",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap handle_info transform events into %Message{} structs using a transformer",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate forward call to wrapped module",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.ProducerTest",
+          "test": "wrap terminate returns :ok when the wrapped module doesn't define a terminate/2 callback",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "[doctest] module Broadway.TermStorage (1)",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "allows terms to be written and read",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns different references for different terms",
+          "status": "PASSED"
+        },
+        {
+          "module": "Broadway.TermStorageTest",
+          "test": "returns the same reference for the same term",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} on bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher all messages in the batch are marked as {:failed, reason} when an error is raised",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on bad acknowledger",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher consumers do not crash on broken link",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "batcher messages are grouped by ack_ref + status (successful or failed) before sent for acknowledgement",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default context is :context_not_set",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of consumers is 1 per batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of processors is schedulers_online * 2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration default number of producers is 1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration invalid configuration options",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of consumers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of processors",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "broadway configuration set number of producers",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash batcher will be restarted in order to handle other messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle batcher crash only the messages in the crashing batcher are lost",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash batches are created normally (without the lost messages)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash only the messages in the crashing processor are lost",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor crashes cascade down (but not up)",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle processor crash processor will be restarted in order to handle other messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash only the producer will be restarted",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "handle producer crash processors resubscribe to the restarted producers and keep processing messages",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers no batcher supervisor is initialized",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "pipeline without batchers successful messages are marked as :ok",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are marked as {:failed, reason}",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor failed messages are not forwarded to the batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad batcher",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} on bad return",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor messages are marked as {:failed, reason} when an error is raised while processing",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on bad acknowledger",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor processors do not crash on broken link",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "processor successful messages are marked as :ok",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "push_messages/2",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches based on :batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_key generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode bulk",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batch_mode flush by default",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches based on :batch_size",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "put_batcher generate batches with the remaining messages after :batch_timeout is reached",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown killing the supervisor brings down the broadway GenServer",
+          "status": "FAILED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway cancels producers and waits for messages sent during cancellation",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway respects shutdown value",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until all events are processed even on incomplete batches",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "shutdown shutting down broadway waits until the Broadway.Supervisor is down",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer restart the producer if the transformation raises an error",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "transformer transform all events",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1",
+          "status": "PASSED"
+        },
+        {
+          "module": "BroadwayTest",
+          "test": "use Broadway generates child_spec/1 with overriden options",
+          "status": "PASSED"
+        }
+      ]
+    }
+  },
+  "input_hashes": {
+    "gold.patch": "a72255579460da44f46fd2cf0e9286da144ff68e202f5546e861d2d7a946e15b",
+    "handshake_test.exs": "9f86122e0d7fb92e01e0b431ed23b5f75155d866761b89513c85962c10b43b28",
+    "handshake.patch": "9229cd373b44a822c1311fde1c4cba3763c7e80269dffccf7194e2e60d04587f",
+    "fixture.patch": "6fdf08fbcb123ec469aaf7b3b580f441cc5ccb4370478c164779114605bc14e6",
+    "tests.patch": "0a78416c88ccd2c9ed538d88690b815b1591ae7394b844787fc8a18cfda72ff5"
+  }
+}
